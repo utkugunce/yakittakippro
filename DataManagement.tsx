@@ -259,17 +259,25 @@ export const DataManagement: React.FC<DataManagementProps> = ({ logs, onImport, 
             let dateStr = new Date().toISOString().split('T')[0];
 
             if (rawDate) {
+                // Helper to format as YYYY-MM-DD using local time to avoid timezone shifts
+                const toLocalYMD = (d: Date) => {
+                    const y = d.getFullYear();
+                    const m = String(d.getMonth() + 1).padStart(2, '0');
+                    const day = String(d.getDate()).padStart(2, '0');
+                    return `${y}-${m}-${day}`;
+                };
+
                 if (rawDate instanceof Date) {
-                    dateStr = rawDate.toISOString().split('T')[0];
+                    dateStr = toLocalYMD(rawDate);
                 } else if (typeof rawDate === 'string') {
                     // Try parsing DD.MM.YYYY format common in Turkey
                     if (rawDate.match(/^\d{1,2}\.\d{1,2}\.\d{4}$/)) {
                         const [day, month, year] = rawDate.split('.').map(Number);
                         const d = new Date(year, month - 1, day);
-                        if (!isNaN(d.getTime())) dateStr = d.toISOString().split('T')[0];
+                        if (!isNaN(d.getTime())) dateStr = toLocalYMD(d);
                     } else {
                         const d = new Date(rawDate);
-                        if (!isNaN(d.getTime())) dateStr = d.toISOString().split('T')[0];
+                        if (!isNaN(d.getTime())) dateStr = toLocalYMD(d);
                     }
                 }
             }
