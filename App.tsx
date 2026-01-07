@@ -12,6 +12,8 @@ import { NotificationSettings } from './NotificationSettings';
 import { BudgetGoal } from './BudgetGoal';
 import { CloudSync } from './CloudSync';
 import { FuelMap } from './FuelMap';
+import { AIPredictions } from './AIPredictions';
+import { ThemeSettings, AccentColor } from './ThemeSettings';
 import { Car, LayoutDashboard, History, FileText, Moon, Sun, Settings, Wrench, Plus, X } from 'lucide-react';
 import { PwaReloadPrompt } from './PwaReloadPrompt';
 
@@ -28,6 +30,7 @@ export default function App() {
   const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'dashboard' | 'history' | 'reports' | 'maintenance' | 'settings'>('dashboard');
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [accentColor, setAccentColor] = useState<AccentColor>('blue');
   const [yearFilter, setYearFilter] = useState<'2026' | '2025' | 'all'>('all');
   const [showEntryModal, setShowEntryModal] = useState(false);
   const [editingLog, setEditingLog] = useState<DailyLog | null>(null);
@@ -89,6 +92,12 @@ export default function App() {
     if (savedTheme === 'dark') {
       setIsDarkMode(true);
       document.documentElement.classList.add('dark');
+    }
+
+    const savedAccent = localStorage.getItem('yakit_takip_accent_v1') as AccentColor;
+    if (savedAccent) {
+      setAccentColor(savedAccent);
+      document.documentElement.setAttribute('data-theme', savedAccent);
     }
   }, []);
 
@@ -360,6 +369,11 @@ export default function App() {
 
             <div className="space-y-6">
               <div className="lg:col-span-2 space-y-6">
+                <AIPredictions
+                  logs={logs}
+                  maintenanceItems={maintenanceItems}
+                  currentOdometer={lastOdometer}
+                />
                 {logs.length > 0 && <Charts logs={yearFilter === 'all' ? logs : logs.filter(l => new Date(l.date).getFullYear().toString() === yearFilter)} />}
 
                 {/* Recent 5 entries (no filter, simplified) */}
@@ -431,6 +445,26 @@ export default function App() {
 
         {activeTab === 'settings' && (
           <div className="animate-in fade-in duration-500 space-y-6">
+            <ThemeSettings
+              isDarkMode={isDarkMode}
+              onToggleTheme={() => {
+                const newMode = !isDarkMode;
+                setIsDarkMode(newMode);
+                if (newMode) {
+                  document.documentElement.classList.add('dark');
+                  localStorage.setItem(THEME_STORAGE_KEY, 'dark');
+                } else {
+                  document.documentElement.classList.remove('dark');
+                  localStorage.setItem(THEME_STORAGE_KEY, 'light');
+                }
+              }}
+              currentAccent={accentColor}
+              onChangeAccent={(color) => {
+                setAccentColor(color);
+                localStorage.setItem('yakit_takip_accent_v1', color);
+                document.documentElement.setAttribute('data-theme', color);
+              }}
+            />
             <CloudSync
               logs={logs}
               maintenanceItems={maintenanceItems}
