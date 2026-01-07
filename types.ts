@@ -9,6 +9,11 @@ export interface DailyLog {
   fuelPrice: number;       // Benzin Fiyatı (TL/L)
   notes?: string;          // Kullanıcı notları
 
+  // Location Data
+  latitude?: number;
+  longitude?: number;
+  locationName?: string;
+
   // Calculated fields (stored for easier history, though could be computed)
   dailyFuelConsumed: number; // Günlük Yakıt (L)
   dailyCost: number;         // Günlük Yakıt Harcaması (TL)

@@ -11,6 +11,7 @@ import { WeeklySummary } from './WeeklySummary';
 import { NotificationSettings } from './NotificationSettings';
 import { BudgetGoal } from './BudgetGoal';
 import { CloudSync } from './CloudSync';
+import { FuelMap } from './FuelMap';
 import { Car, LayoutDashboard, History, FileText, Moon, Sun, Settings, Wrench, Plus, X } from 'lucide-react';
 import { PwaReloadPrompt } from './PwaReloadPrompt';
 
@@ -391,7 +392,8 @@ export default function App() {
         )}
 
         {activeTab === 'reports' && (
-          <div className="animate-in fade-in duration-500">
+          <div className="animate-in fade-in duration-500 space-y-6">
+            <FuelMap logs={logs} />
             <Reports logs={logs} />
           </div>
         )}

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { DailyLog } from './types';
-import { PlusCircle, Fuel, Gauge, Calculator, Calendar, AlertCircle, Coins, Eraser, StickyNote, Camera } from 'lucide-react';
+import { PlusCircle, Fuel, Gauge, Calculator, Calendar, AlertCircle, Coins, Eraser, StickyNote, Camera, MapPin } from 'lucide-react';
 import { ExcelImport } from './ExcelImport';
 import { PhotoScanner } from './PhotoScanner';
 
@@ -35,6 +35,36 @@ export const EntryForm: React.FC<EntryFormProps> = ({ logs, onAdd, onUpdate, onI
   // Local error state for immediate feedback
   const [odoError, setOdoError] = useState<string | null>(null);
   const [showPhotoScanner, setShowPhotoScanner] = useState(false);
+
+  // Location State
+  const [addLocation, setAddLocation] = useState(false);
+  const [location, setLocation] = useState<{ latitude: number, longitude: number } | null>(null);
+
+  // Get Location Effect
+  useEffect(() => {
+    if (addLocation) {
+      if ("geolocation" in navigator) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            setLocation({
+              latitude: position.coords.latitude,
+              longitude: position.coords.longitude
+            });
+          },
+          (error) => {
+            console.error("Error getting location:", error);
+            setAddLocation(false); // Disable if error
+            alert("Konum alınamadı. Lütfen izinleri kontrol edin.");
+          }
+        );
+      } else {
+        alert("Tarayıcınız konum özelliğini desteklemiyor.");
+        setAddLocation(false);
+      }
+    } else {
+      setLocation(null);
+    }
+  }, [addLocation]);
 
   // Pre-fill current odometer from last log (only when not editing)
   useEffect(() => {
@@ -167,7 +197,9 @@ export const EntryForm: React.FC<EntryFormProps> = ({ logs, onAdd, onUpdate, onI
       dailyFuelConsumed,
       dailyCost,
       costPerKm,
-      notes: notes.trim()
+      notes: notes.trim(),
+      latitude: location?.latitude,
+      longitude: location?.longitude
     };
 
     if (isEditing && onUpdate) {
@@ -372,6 +404,32 @@ export const EntryForm: React.FC<EntryFormProps> = ({ logs, onAdd, onUpdate, onI
             />
           </div>
         </div>
+
+        {/* Location Toggle */}
+        <div className="flex items-center justify-between border-gray-100 dark:border-gray-700 mb-4">
+          <div className="flex items-center">
+            <MapPin className={`w-5 h-5 mr-2 ${location ? 'text-green-500' : 'text-gray-400'}`} />
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              {location ? 'Konum Eklendi' : 'Konum Ekle'}
+            </span>
+          </div>
+          <label className="relative inline-flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              checked={addLocation}
+              onChange={(e) => setAddLocation(e.target.checked)}
+              className="sr-only peer"
+            />
+            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+          </label>
+        </div>
+        {addLocation && (
+          <p className="text-xs text-gray-500 dark:text-gray-400 -mt-3 mb-4">
+            {location ?
+              `📍 ${location.latitude.toFixed(5)}, ${location.longitude.toFixed(5)}` :
+              "Konum alınıyor..."}
+          </p>
+        )}
 
         <div className="flex space-x-3 mt-6">
           <button
