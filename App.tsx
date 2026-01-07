@@ -1,0 +1,426 @@
+import React, { useState, useEffect, useMemo } from 'react';
+import { DailyLog, MaintenanceItem, DashboardStats } from './types';
+import { EntryForm } from './EntryForm';
+import { DashboardStatsCard } from './DashboardStatsCard';
+import { LogHistory } from './LogHistory';
+import { Charts } from './Charts';
+import { Reports } from './Reports';
+import { DataManagement } from './DataManagement';
+import { Maintenance } from './Maintenance';
+import { Car, LayoutDashboard, History, FileText, Moon, Sun, Settings, Wrench, Plus, X } from 'lucide-react';
+import { PwaReloadPrompt } from './PwaReloadPrompt';
+
+const LOCAL_STORAGE_KEY = 'yakit_takip_logs_v1';
+const MAINTENANCE_STORAGE_KEY = 'yakit_takip_maintenance_v1';
+const THEME_STORAGE_KEY = 'yakit_takip_theme_v1';
+
+export default function App() {
+  const [logs, setLogs] = useState<DailyLog[]>([]);
+  const [maintenanceItems, setMaintenanceItems] = useState<MaintenanceItem[]>([]);
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'history' | 'reports' | 'maintenance' | 'settings'>('dashboard');
+  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [yearFilter, setYearFilter] = useState<'2026' | '2025' | 'all'>('all');
+  const [showEntryModal, setShowEntryModal] = useState(false);
+  const [editingLog, setEditingLog] = useState<DailyLog | null>(null);
+
+  // Load logs and maintenance items from local storage
+  useEffect(() => {
+    const savedLogs = localStorage.getItem(LOCAL_STORAGE_KEY);
+    if (savedLogs) {
+      try {
+        setLogs(JSON.parse(savedLogs));
+      } catch (e) {
+        console.error("Failed to parse logs", e);
+      }
+    }
+
+    const savedMaintenance = localStorage.getItem(MAINTENANCE_STORAGE_KEY);
+    if (savedMaintenance) {
+      try {
+        setMaintenanceItems(JSON.parse(savedMaintenance));
+      } catch (e) {
+        console.error("Failed to parse maintenance items", e);
+      }
+    }
+
+    const savedTheme = localStorage.getItem(THEME_STORAGE_KEY);
+    if (savedTheme === 'dark') {
+      setIsDarkMode(true);
+      document.documentElement.classList.add('dark');
+    }
+  }, []);
+
+  // Save logs
+  useEffect(() => {
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(logs));
+  }, [logs]);
+
+  // Save maintenance items
+  useEffect(() => {
+    localStorage.setItem(MAINTENANCE_STORAGE_KEY, JSON.stringify(maintenanceItems));
+  }, [maintenanceItems]);
+
+  // Toggle Dark Mode
+  const toggleTheme = () => {
+    const newMode = !isDarkMode;
+    setIsDarkMode(newMode);
+    localStorage.setItem(THEME_STORAGE_KEY, newMode ? 'dark' : 'light');
+    if (newMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  };
+
+  const handleAddLog = (log: DailyLog) => {
+    setLogs(prev => [log, ...prev]);
+    setActiveTab('history');
+  };
+
+  const handleDeleteLog = (id: string) => {
+    if (window.confirm('Bu kaydı silmek istediğinizden emin misiniz?')) {
+      setLogs(prev => prev.filter(log => log.id !== id));
+    }
+  };
+
+  const handleEditLog = (log: DailyLog) => {
+    setEditingLog(log);
+    setShowEntryModal(true);
+  };
+
+  const handleUpdateLog = (updatedLog: DailyLog) => {
+    setLogs(prev => prev.map(log => log.id === updatedLog.id ? updatedLog : log));
+    setEditingLog(null);
+    setActiveTab('history');
+  };
+
+  const handleImportLogs = (importedLogs: DailyLog[]) => {
+    setLogs(prev => {
+      // Merge logs, avoid duplicates by ID if possible, or just append
+      // For simplicity in this version, we will just add them and let user manage
+      // But actually, DataManagement handles replacement or merge.
+      // If DataManagement returns a full list, we use it.
+      // But here we are waiting for a list of logs to ADD. 
+      // Let's assume the component passes the NEW FULL LIST or we append.
+      // The DataManagement component logic was: onImport(json). 
+      // Let's check DataManagement: it parses JSON and calls onImport. 
+      // Implementation plan said "Import" would replace or merge. 
+      // Let's assume we append for now or replace if user cleared. 
+      // Actually, let's just REPLACE for "Restore" functionality.
+      return importedLogs;
+    });
+    alert('Veriler başarıyla yüklendi!');
+  };
+
+  const handleClearLogs = () => {
+    setLogs([]);
+    setMaintenanceItems([]);
+  };
+
+  const handleAddMaintenance = (item: MaintenanceItem) => {
+    setMaintenanceItems(prev => [...prev, item]);
+  };
+
+  const handleDeleteMaintenance = (id: string) => {
+    setMaintenanceItems(prev => prev.filter(i => i.id !== id));
+  };
+
+  const handleUpdateMaintenance = (id: string, lastKm: number) => {
+    setMaintenanceItems(prev => prev.map(item => {
+      if (item.id === id) {
+        return {
+          ...item,
+          lastMaintenanceKm: lastKm,
+          nextDueKm: lastKm + item.intervalKm
+        };
+      }
+      return item;
+    }));
+  };
+
+  // Calculate stats based on year filter
+  const stats: DashboardStats = useMemo(() => {
+    const filteredLogs = yearFilter === 'all'
+      ? logs
+      : logs.filter(l => new Date(l.date).getFullYear().toString() === yearFilter);
+
+    if (filteredLogs.length === 0) return { totalDistance: 0, totalCost: 0, avgCostPerKm: 0, avgConsumption: 0, lastFuelPrice: 0 };
+
+    const totalDistance = filteredLogs.reduce((sum, log) => sum + log.dailyDistance, 0);
+    const totalCost = filteredLogs.reduce((sum, log) => sum + log.dailyCost, 0);
+
+    // Calculate average consumption
+    const validConsumptionLogs = filteredLogs.filter(l => l.avgConsumption > 0);
+    const avgConsumption = validConsumptionLogs.length > 0
+      ? validConsumptionLogs.reduce((sum, log) => sum + log.avgConsumption, 0) / validConsumptionLogs.length
+      : 0;
+
+    // Last fuel price (from all logs, not filtered)
+    const lastLog = logs.length > 0
+      ? logs.reduce((prev, current) => (prev.currentOdometer > current.currentOdometer) ? prev : current)
+      : null;
+    const lastFuelPrice = lastLog?.fuelPrice || 0;
+
+    return {
+      totalDistance,
+      totalCost,
+      avgCostPerKm: totalDistance > 0 ? totalCost / totalDistance : 0,
+      avgConsumption,
+      lastFuelPrice
+    };
+  }, [logs, yearFilter]);
+
+  const lastOdometer = logs.length > 0 ? Math.max(...logs.map(l => l.currentOdometer)) : 0;
+
+  const activeAlerts = maintenanceItems.filter(item => {
+    return (item.nextDueKm - lastOdometer) <= item.notifyBeforeKm;
+  }).sort((a, b) => (a.nextDueKm - lastOdometer) - (b.nextDueKm - lastOdometer));
+
+  return (
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200 flex flex-col">
+      {/* Header */}
+      <header className="bg-white dark:bg-gray-800 shadow-sm sticky top-0 z-10">
+        <div className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <div className="bg-blue-600 p-2 rounded-lg shadow-lg shadow-blue-600/20">
+              <Car className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold text-gray-900 dark:text-white leading-tight">Yakıt Takip Pro</h1>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Aracınızın kontrolü sizde</p>
+            </div>
+          </div>
+          <button
+            onClick={toggleTheme}
+            className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+          >
+            {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+          </button>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="flex-grow max-w-5xl mx-auto px-4 py-6 w-full space-y-6 pb-24 md:pb-6">
+
+        {/* Desktop Navigation Tabs */}
+        <div className="hidden md:flex p-1 space-x-1 bg-gray-200 dark:bg-gray-800 rounded-xl mb-4">
+          <button
+            onClick={() => setActiveTab('dashboard')}
+            className={`flex-1 flex items-center justify-center py-2.5 text-sm font-medium rounded-lg transition-all ${activeTab === 'dashboard'
+              ? 'bg-white dark:bg-gray-700 text-blue-700 dark:text-blue-300 shadow-sm'
+              : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+              }`}
+          >
+            <LayoutDashboard className="w-4 h-4 mr-2" />
+            <span>Panel & Giriş</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('history')}
+            className={`flex-1 flex items-center justify-center py-2.5 text-sm font-medium rounded-lg transition-all ${activeTab === 'history'
+              ? 'bg-white dark:bg-gray-700 text-blue-700 dark:text-blue-300 shadow-sm'
+              : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+              }`}
+          >
+            <History className="w-4 h-4 mr-2" />
+            Geçmiş
+          </button>
+          <button
+            onClick={() => setActiveTab('maintenance')}
+            className={`flex-1 flex items-center justify-center py-2.5 text-sm font-medium rounded-lg transition-all ${activeTab === 'maintenance'
+              ? 'bg-white dark:bg-gray-700 text-blue-700 dark:text-blue-300 shadow-sm'
+              : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+              }`}
+          >
+            <Wrench className="w-4 h-4 mr-2" />
+            Bakım
+          </button>
+          <button
+            onClick={() => setActiveTab('reports')}
+            className={`flex-1 flex items-center justify-center py-2.5 text-sm font-medium rounded-lg transition-all ${activeTab === 'reports'
+              ? 'bg-white dark:bg-gray-700 text-blue-700 dark:text-blue-300 shadow-sm'
+              : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+              }`}
+          >
+            <FileText className="w-4 h-4 mr-2" />
+            Raporlar
+          </button>
+          <button
+            onClick={() => setActiveTab('settings')}
+            className={`flex-1 flex items-center justify-center py-2.5 text-sm font-medium rounded-lg transition-all ${activeTab === 'settings'
+              ? 'bg-white dark:bg-gray-700 text-blue-700 dark:text-blue-300 shadow-sm'
+              : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+              }`}
+          >
+            <Settings className="w-4 h-4 mr-2" />
+            Ayarlar
+          </button>
+        </div>
+
+        {activeTab === 'dashboard' && (
+          <div className="space-y-6 animate-in fade-in duration-500">
+            <DashboardStatsCard stats={stats} alerts={activeAlerts} currentOdometer={lastOdometer} />
+
+            {/* Year Filter Tabs */}
+            <div className="flex justify-center">
+              <div className="inline-flex rounded-lg bg-gray-100 dark:bg-gray-800 p-1">
+                {(['2026', '2025', 'all'] as const).map((year) => (
+                  <button
+                    key={year}
+                    onClick={() => setYearFilter(year)}
+                    className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${yearFilter === year
+                      ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-sm'
+                      : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                      }`}
+                  >
+                    {year === 'all' ? 'Hepsi' : year}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-6">
+              <div className="lg:col-span-2 space-y-6">
+                {logs.length > 0 && <Charts logs={yearFilter === 'all' ? logs : logs.filter(l => new Date(l.date).getFullYear().toString() === yearFilter)} />}
+
+                {/* Recent 5 entries (no filter, simplified) */}
+                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+                  <div className="p-4 border-b border-gray-100 dark:border-gray-700">
+                    <h3 className="font-bold text-gray-800 dark:text-white">Son 5 Kayıt</h3>
+                  </div>
+                  <div className="divide-y divide-gray-100 dark:divide-gray-700">
+                    {[...logs].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 5).map(log => (
+                      <div key={log.id} className="p-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center space-x-3">
+                            <span className="text-sm font-medium text-gray-900 dark:text-white">
+                              {new Date(log.date).toLocaleDateString('tr-TR')}
+                            </span>
+                            <span className="text-xs text-gray-500 dark:text-gray-400">
+                              {log.dailyDistance} km
+                            </span>
+                          </div>
+                          <div className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+                            Tüketim: {log.avgConsumption} L/100km
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-sm font-bold text-gray-900 dark:text-white">₺{log.dailyCost.toFixed(2)}</span>
+                        </div>
+                      </div>
+                    ))}
+                    {logs.length === 0 && (
+                      <div className="p-8 text-center text-gray-500 dark:text-gray-400">
+                        Henüz kayıt yok
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'history' && (
+          <div className="animate-in fade-in duration-500">
+            <LogHistory logs={logs} onDelete={handleDeleteLog} onEdit={handleEditLog} />
+          </div>
+        )}
+
+        {activeTab === 'reports' && (
+          <div className="animate-in fade-in duration-500">
+            <Reports logs={logs} />
+          </div>
+        )}
+
+        {activeTab === 'maintenance' && (
+          <div className="animate-in fade-in duration-500">
+            <Maintenance
+              items={maintenanceItems}
+              currentOdometer={lastOdometer}
+              onAdd={handleAddMaintenance}
+              onDelete={handleDeleteMaintenance}
+              onUpdate={handleUpdateMaintenance}
+            />
+          </div>
+        )}
+
+        {activeTab === 'settings' && (
+          <div className="animate-in fade-in duration-500">
+            <DataManagement logs={logs} onImport={handleImportLogs} onClear={handleClearLogs} />
+          </div>
+        )}
+
+      </main>
+
+      {/* Mobile Bottom Navigation */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 pb-safe pt-2 px-2 z-50">
+        <div className="flex items-center justify-around">
+          <button onClick={() => setActiveTab('dashboard')} className={`flex flex-col items-center p-2 rounded-xl transition-colors ${activeTab === 'dashboard' ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400'}`}>
+            <LayoutDashboard className="w-6 h-6 mb-1" />
+            <span className="text-[10px] font-medium">Panel</span>
+          </button>
+          <button onClick={() => setActiveTab('history')} className={`flex flex-col items-center p-2 rounded-xl transition-colors ${activeTab === 'history' ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400'}`}>
+            <History className="w-6 h-6 mb-1" />
+            <span className="text-[10px] font-medium">Geçmiş</span>
+          </button>
+          <button onClick={() => setActiveTab('maintenance')} className={`flex flex-col items-center p-2 rounded-xl transition-colors ${activeTab === 'maintenance' ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400'}`}>
+            <Wrench className="w-6 h-6 mb-1" />
+            <span className="text-[10px] font-medium">Bakım</span>
+          </button>
+          <button onClick={() => setActiveTab('reports')} className={`flex flex-col items-center p-2 rounded-xl transition-colors ${activeTab === 'reports' ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400'}`}>
+            <FileText className="w-6 h-6 mb-1" />
+            <span className="text-[10px] font-medium">Rapor</span>
+          </button>
+          <button onClick={() => setActiveTab('settings')} className={`flex flex-col items-center p-2 rounded-xl transition-colors ${activeTab === 'settings' ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400'}`}>
+            <Settings className="w-6 h-6 mb-1" />
+            <span className="text-[10px] font-medium">Ayarlar</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Floating Action Button */}
+      <button
+        onClick={() => setShowEntryModal(true)}
+        className="fixed bottom-24 md:bottom-8 right-6 w-14 h-14 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center z-40"
+        title="Yeni Kayıt Ekle"
+      >
+        <Plus className="w-7 h-7" />
+      </button>
+
+      {/* Entry Form Modal */}
+      {showEntryModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white dark:bg-gray-800 p-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between z-10">
+              <h2 className="text-lg font-bold text-gray-800 dark:text-white">
+                {editingLog ? 'Kaydı Düzenle' : 'Yeni Kayıt Ekle'}
+              </h2>
+              <button onClick={() => { setShowEntryModal(false); setEditingLog(null); }} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-1">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            <div className="p-4">
+              <EntryForm
+                logs={logs}
+                onAdd={(log) => {
+                  handleAddLog(log);
+                  setShowEntryModal(false);
+                }}
+                onUpdate={(log) => {
+                  handleUpdateLog(log);
+                  setShowEntryModal(false);
+                }}
+                onImport={handleImportLogs}
+                lastOdometer={lastOdometer}
+                lastFuelPrice={stats.lastFuelPrice}
+                editingLog={editingLog}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      <PwaReloadPrompt />
+    </div>
+  );
+}
