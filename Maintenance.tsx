@@ -199,6 +199,26 @@ export const Maintenance: React.FC<MaintenanceProps> = ({
                                 <button type="button" onClick={() => setMaintenanceType('date')} className={`flex-1 py-1.5 text-xs font-bold rounded ${maintenanceType === 'date' ? 'bg-white dark:bg-gray-600 shadow-sm' : ''}`}>Tarih Bazlı</button>
                                 <button type="button" onClick={() => setMaintenanceType('both')} className={`flex-1 py-1.5 text-xs font-bold rounded ${maintenanceType === 'both' ? 'bg-white dark:bg-gray-600 shadow-sm' : ''}`}>Her İkisi</button>
                             </div>
+                            <div className="flex flex-wrap gap-2 mb-2">
+                                {['Periyodik Bakım', 'Muayene', 'Kasko', 'Trafik Sigortası'].map((suggestion) => (
+                                    <button
+                                        key={suggestion}
+                                        type="button"
+                                        onClick={() => {
+                                            setTitle(suggestion);
+                                            // Auto-select 'date' for insurance/inspection
+                                            if (suggestion === 'Kasko' || suggestion === 'Trafik Sigortası' || suggestion === 'Muayene') {
+                                                setMaintenanceType('date');
+                                            } else {
+                                                setMaintenanceType('km');
+                                            }
+                                        }}
+                                        className="px-2 py-1 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-xs text-gray-700 dark:text-gray-300 transition-colors"
+                                    >
+                                        {suggestion}
+                                    </button>
+                                ))}
+                            </div>
                             <input type="text" placeholder="Bakım Adı (Örn: Yağ Değişimi)" value={title} onChange={e => setTitle(e.target.value)} className="w-full p-2 rounded-lg border dark:bg-gray-700 dark:border-gray-600" required />
 
                             {(maintenanceType === 'km' || maintenanceType === 'both') && (
