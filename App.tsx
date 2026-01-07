@@ -7,6 +7,9 @@ import { Charts } from './Charts';
 import { Reports } from './Reports';
 import { DataManagement } from './DataManagement';
 import { Maintenance } from './Maintenance';
+import { WeeklySummary } from './WeeklySummary';
+import { NotificationSettings } from './NotificationSettings';
+import { BudgetGoal } from './BudgetGoal';
 import { Car, LayoutDashboard, History, FileText, Moon, Sun, Settings, Wrench, Plus, X } from 'lucide-react';
 import { PwaReloadPrompt } from './PwaReloadPrompt';
 
@@ -314,6 +317,12 @@ export default function App() {
           <div className="space-y-6 animate-in fade-in duration-500">
             <DashboardStatsCard stats={stats} alerts={activeAlerts} currentOdometer={lastOdometer} />
 
+            {/* Weekly/Monthly Summary & Budget */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <WeeklySummary logs={logs} />
+              <BudgetGoal logs={logs} />
+            </div>
+
             {/* Year Filter Tabs */}
             <div className="flex justify-center">
               <div className="inline-flex rounded-lg bg-gray-100 dark:bg-gray-800 p-1">
@@ -399,7 +408,8 @@ export default function App() {
         )}
 
         {activeTab === 'settings' && (
-          <div className="animate-in fade-in duration-500">
+          <div className="animate-in fade-in duration-500 space-y-6">
+            <NotificationSettings maintenanceItems={maintenanceItems} currentOdometer={lastOdometer} />
             <DataManagement logs={logs} onImport={handleImportLogs} onClear={handleClearLogs} />
           </div>
         )}
