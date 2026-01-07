@@ -1,271 +1,252 @@
-import React, { useState, useRef } from 'react';
-import { Camera, Loader2, CheckCircle, AlertCircle, X, Gauge, Receipt, Upload, Fuel, Route } from 'lucide-react';
-import { analyzeDashboardPhoto, analyzeReceiptPhoto } from './utils/geminiVision';
+import React, { useRef, useState } from 'react';
+import { Camera, X, Upload, Loader2, Check, AlertTriangle, RefreshCcw } from 'lucide-react';
+import { scanReceipt, ScanResult } from './utils/ocrUtils';
 
 interface PhotoScannerProps {
-    onDashboardData: (data: { odometer?: number; consumption?: number; distance?: number }) => void;
-    onReceiptData: (data: { fuelPrice?: number }) => void;
+    onDashboardData?: (data: { odometer?: number, consumption?: number, distance?: number }) => void;
+    onReceiptData?: (data: { fuelPrice?: number, total?: number, liters?: number, date?: string }) => void;
     onClose: () => void;
 }
 
-type ScanType = 'consumption' | 'distance' | 'receipt' | null;
-type ScanStatus = 'idle' | 'selectType' | 'selectSource' | 'scanning' | 'success' | 'error' | 'done';
-
-interface CollectedData {
-    consumption?: number;
-    distance?: number;
-    odometer?: number;
-    fuelPrice?: number;
-}
-
 export const PhotoScanner: React.FC<PhotoScannerProps> = ({ onDashboardData, onReceiptData, onClose }) => {
-    const [status, setStatus] = useState<ScanStatus>('selectType');
-    const [currentScanType, setCurrentScanType] = useState<ScanType>(null);
-    const [errorMessage, setErrorMessage] = useState<string>('');
-    const [previewUrl, setPreviewUrl] = useState<string>('');
-    const [collectedData, setCollectedData] = useState<CollectedData>({});
-    const cameraInputRef = useRef<HTMLInputElement>(null);
-    const galleryInputRef = useRef<HTMLInputElement>(null);
+    const videoRef = useRef<HTMLVideoElement>(null);
+    const [stream, setStream] = useState<MediaStream | null>(null);
+    const [image, setImage] = useState<string | null>(null);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [scanResult, setScanResult] = useState<ScanResult | null>(null);
 
-    const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file || !currentScanType) return;
-
-        setStatus('scanning');
-        setErrorMessage('');
-
+    const startCamera = async () => {
         try {
-            const reader = new FileReader();
-            reader.onload = async (event) => {
-                const base64 = event.target?.result as string;
-                setPreviewUrl(base64);
+            const mediaStream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: 'environment' }
+            });
+            setStream(mediaStream);
+            if (videoRef.current) {
+                videoRef.current.srcObject = mediaStream;
+            }
+            setError(null);
+        } catch (err) {
+            console.error("Camera access error:", err);
+            setError("Kameraya erişilemedi. Lütfen izinleri kontrol edin veya dosya yükleyin.");
+        }
+    };
 
-                try {
-                    if (currentScanType === 'consumption') {
-                        const result = await analyzeDashboardPhoto(base64, 'consumption');
-                        if (result.consumption) {
-                            setCollectedData(prev => ({ ...prev, consumption: result.consumption ?? undefined, odometer: result.odometer ?? prev.odometer }));
-                            // After consumption, ask for distance
-                            setCurrentScanType(null);
-                            setStatus('selectType');
-                            setPreviewUrl('');
-                        } else {
-                            setStatus('error');
-                            setErrorMessage('Tüketim değeri okunamadı. Tekrar deneyin.');
-                        }
-                    } else if (currentScanType === 'distance') {
-                        const result = await analyzeDashboardPhoto(base64, 'distance');
-                        if (result.distance) {
-                            const finalData = { ...collectedData, distance: result.distance ?? undefined, odometer: result.odometer ?? collectedData.odometer };
-                            setCollectedData(finalData);
-                            onDashboardData(finalData);
-                            setStatus('done');
-                            setTimeout(() => onClose(), 1500);
-                        } else {
-                            setStatus('error');
-                            setErrorMessage('Yapılan mesafe okunamadı. Tekrar deneyin.');
-                        }
-                    } else if (currentScanType === 'receipt') {
-                        const result = await analyzeReceiptPhoto(base64);
-                        if (result.pricePerLiter) {
-                            onReceiptData({ fuelPrice: result.pricePerLiter ?? undefined });
-                            setStatus('done');
-                            setTimeout(() => onClose(), 1500);
-                        } else {
-                            setStatus('error');
-                            setErrorMessage('Fiş üzerinden fiyat okunamadı. Tekrar deneyin.');
-                        }
-                    }
-                } catch (err: any) {
-                    setStatus('error');
-                    setErrorMessage(err.message || 'Analiz sırasında hata oluştu.');
-                }
+    const stopCamera = () => {
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+            setStream(null);
+        }
+    };
+
+    const capturePhoto = () => {
+        if (videoRef.current) {
+            const canvas = document.createElement('canvas');
+            canvas.width = videoRef.current.videoWidth;
+            canvas.height = videoRef.current.videoHeight;
+            const ctx = canvas.getContext('2d');
+            if (ctx) {
+                ctx.drawImage(videoRef.current, 0, 0);
+                const dataUrl = canvas.toDataURL('image/jpeg');
+                setImage(dataUrl);
+                stopCamera();
+                processImage(dataUrl);
+            }
+        }
+    };
+
+    const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const dataUrl = event.target?.result as string;
+                setImage(dataUrl);
+                processImage(dataUrl);
             };
             reader.readAsDataURL(file);
-        } catch (err: any) {
-            setStatus('error');
-            setErrorMessage('Dosya okunamadı.');
-        }
-
-        if (cameraInputRef.current) cameraInputRef.current.value = '';
-        if (galleryInputRef.current) galleryInputRef.current.value = '';
-    };
-
-    const selectType = (type: ScanType) => {
-        setCurrentScanType(type);
-        setStatus('selectSource');
-    };
-
-    const triggerCamera = () => cameraInputRef.current?.click();
-    const triggerGallery = () => galleryInputRef.current?.click();
-
-    const goBack = () => {
-        if (status === 'selectSource') {
-            setStatus('selectType');
-            setCurrentScanType(null);
-        } else if (status === 'error') {
-            setStatus('selectSource');
         }
     };
 
-    const hasConsumption = collectedData.consumption !== undefined;
+    const processImage = async (dataUrl: string) => {
+        setLoading(true);
+        setError(null);
+        try {
+            // Convert DataURL to File
+            const res = await fetch(dataUrl);
+            const blob = await res.blob();
+            const file = new File([blob], "scan.jpg", { type: "image/jpeg" });
+
+            const result = await scanReceipt(file);
+            setScanResult(result);
+
+            // Auto-apply confident results
+            if (result.unitPrice || result.totalAmount) {
+                if (onReceiptData) {
+                    onReceiptData({
+                        fuelPrice: result.unitPrice,
+                        total: result.totalAmount,
+                        liters: result.liters,
+                        date: result.date
+                    });
+                }
+            }
+
+        } catch (err) {
+            console.error(err);
+            setError("Görüntü işlenirken bir hata oluştu. Lütfen tekrar deneyin.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const reset = () => {
+        setImage(null);
+        setScanResult(null);
+        setError(null);
+    };
+
+    // Cleanup on unmount
+    React.useEffect(() => {
+        return () => stopCamera();
+    }, []);
 
     return (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
-                {/* Header */}
-                <div className="p-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between bg-gradient-to-r from-blue-600 to-purple-600 text-white">
-                    <div className="flex items-center space-x-2">
-                        <Camera className="w-5 h-5" />
-                        <h2 className="font-bold">Fotoğraftan Oku</h2>
-                    </div>
-                    <button onClick={onClose} className="hover:bg-white/20 p-1 rounded-full transition-colors">
-                        <X className="w-5 h-5" />
-                    </button>
-                </div>
+        <div className="fixed inset-0 z-[100] bg-black/90 flex flex-col">
+            {/* Header */}
+            <div className="p-4 flex items-center justify-between bg-black/50 backdrop-blur-sm absolute top-0 w-full z-10 text-white">
+                <h3 className="font-bold flex items-center">
+                    <Camera className="w-5 h-5 mr-2" />
+                    Fiş Tara
+                </h3>
+                <button onClick={onClose} className="p-2 bg-white/10 rounded-full hover:bg-white/20">
+                    <X className="w-6 h-6" />
+                </button>
+            </div>
 
-                {/* Progress indicator for dashboard */}
-                {(status === 'selectType' || status === 'selectSource') && !currentScanType?.includes('receipt') && (
-                    <div className="px-4 pt-4">
-                        <div className="flex items-center space-x-2 text-xs">
-                            <div className={`flex items-center px-2 py-1 rounded-full ${hasConsumption ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400'}`}>
-                                <Fuel className="w-3 h-3 mr-1" />
-                                {hasConsumption ? `✓ ${collectedData.consumption} L/100km` : '1. Tüketim'}
-                            </div>
-                            <span className="text-gray-300">→</span>
-                            <div className={`flex items-center px-2 py-1 rounded-full bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400`}>
-                                <Route className="w-3 h-3 mr-1" />
-                                2. Mesafe
-                            </div>
-                        </div>
+            {/* Main Content */}
+            <div className="flex-1 flex flex-col items-center justify-center relative overflow-hidden">
+                {error && (
+                    <div className="absolute top-20 left-4 right-4 z-20 bg-red-500/90 text-white p-4 rounded-xl text-center shadow-lg backdrop-blur-sm">
+                        <AlertTriangle className="w-8 h-8 mx-auto mb-2" />
+                        <p>{error}</p>
                     </div>
                 )}
 
-                {/* Content */}
-                <div className="p-6 space-y-4">
-                    {/* Hidden file inputs */}
-                    <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" onChange={handleFileSelect} className="hidden" />
-                    <input ref={galleryInputRef} type="file" accept="image/*" onChange={handleFileSelect} className="hidden" />
-
-                    {/* Scanning */}
-                    {status === 'scanning' && (
-                        <div className="text-center py-8">
-                            <Loader2 className="w-12 h-12 text-blue-500 animate-spin mx-auto mb-3" />
-                            <p className="text-gray-600 dark:text-gray-300 font-medium">Fotoğraf analiz ediliyor...</p>
-                            {previewUrl && <img src={previewUrl} alt="Preview" className="w-full h-32 object-cover rounded-lg mt-4 opacity-50" />}
-                        </div>
-                    )}
-
-                    {/* Done */}
-                    {status === 'done' && (
-                        <div className="text-center py-8">
-                            <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-3" />
-                            <p className="text-green-600 dark:text-green-400 font-bold">Veriler başarıyla okundu!</p>
-                            {collectedData.consumption && <p className="text-sm text-gray-500">Tüketim: {collectedData.consumption} L/100km</p>}
-                            {collectedData.distance && <p className="text-sm text-gray-500">Mesafe: {collectedData.distance} km</p>}
-                        </div>
-                    )}
-
-                    {/* Error */}
-                    {status === 'error' && (
-                        <div className="text-center py-6">
-                            <AlertCircle className="w-10 h-10 text-red-500 mx-auto mb-2" />
-                            <p className="text-red-600 dark:text-red-400 font-medium mb-4">{errorMessage}</p>
-                            <button onClick={goBack} className="px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 dark:hover:bg-gray-600">
-                                Tekrar Dene
-                            </button>
-                        </div>
-                    )}
-
-                    {/* Select Type */}
-                    {status === 'selectType' && (
-                        <div className="space-y-3">
-                            <p className="text-sm text-gray-500 dark:text-gray-400 text-center mb-4">
-                                {hasConsumption ? 'Şimdi mesafe ekranını okutun' : 'Ne okutmak istiyorsunuz?'}
-                            </p>
-
-                            {/* Consumption button - show if not collected yet */}
-                            {!hasConsumption && (
-                                <button onClick={() => selectType('consumption')} className="w-full flex items-center p-4 bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-900/30 dark:to-amber-900/30 border-2 border-orange-200 dark:border-orange-700 rounded-xl hover:border-orange-400 transition-all group">
-                                    <div className="w-12 h-12 bg-orange-500 rounded-xl flex items-center justify-center mr-4 group-hover:scale-110 transition-transform">
-                                        <Fuel className="w-6 h-6 text-white" />
-                                    </div>
-                                    <div className="text-left flex-1">
-                                        <h3 className="font-bold text-gray-800 dark:text-white">1. Tüketim Ekranı</h3>
-                                        <p className="text-xs text-gray-500 dark:text-gray-400">Ortalama yakıt tüketimi (L/100km)</p>
-                                    </div>
+                {!image ? (
+                    <>
+                        {/* Camera Preview */}
+                        {stream ? (
+                            <video
+                                ref={videoRef}
+                                autoPlay
+                                playsInline
+                                className="w-full h-full object-cover"
+                            />
+                        ) : (
+                            <div className="text-center p-8">
+                                <p className="text-gray-400 mb-6">Fişinizin net bir fotoğrafını çekin veya yükleyin.</p>
+                                <button
+                                    onClick={startCamera}
+                                    className="px-6 py-3 bg-blue-600 rounded-full text-white font-bold flex items-center mx-auto mb-4"
+                                >
+                                    <Camera className="w-5 h-5 mr-2" />
+                                    Kamerayı Aç
                                 </button>
-                            )}
-
-                            {/* Distance button - show if consumption collected */}
-                            {hasConsumption && (
-                                <button onClick={() => selectType('distance')} className="w-full flex items-center p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 border-2 border-blue-200 dark:border-blue-700 rounded-xl hover:border-blue-400 transition-all group">
-                                    <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center mr-4 group-hover:scale-110 transition-transform">
-                                        <Route className="w-6 h-6 text-white" />
-                                    </div>
-                                    <div className="text-left flex-1">
-                                        <h3 className="font-bold text-gray-800 dark:text-white">2. Yol Bilgisi Ekranı</h3>
-                                        <p className="text-xs text-gray-500 dark:text-gray-400">Yapılan mesafe (km)</p>
-                                    </div>
-                                </button>
-                            )}
-
-                            {/* Divider */}
-                            {!hasConsumption && (
-                                <>
-                                    <div className="flex items-center my-2">
-                                        <div className="flex-1 border-t border-gray-200 dark:border-gray-700"></div>
-                                        <span className="px-3 text-xs text-gray-400">veya</span>
-                                        <div className="flex-1 border-t border-gray-200 dark:border-gray-700"></div>
-                                    </div>
-
-                                    {/* Receipt button */}
-                                    <button onClick={() => selectType('receipt')} className="w-full flex items-center p-4 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/30 dark:to-emerald-900/30 border-2 border-green-200 dark:border-green-700 rounded-xl hover:border-green-400 transition-all group">
-                                        <div className="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center mr-4 group-hover:scale-110 transition-transform">
-                                            <Receipt className="w-6 h-6 text-white" />
-                                        </div>
-                                        <div className="text-left flex-1">
-                                            <h3 className="font-bold text-gray-800 dark:text-white">Benzin Fişi</h3>
-                                            <p className="text-xs text-gray-500 dark:text-gray-400">Litre fiyatı</p>
-                                        </div>
+                                <div className="relative">
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={handleFileUpload}
+                                        className="absolute inset-0 opacity-0 cursor-pointer"
+                                    />
+                                    <button className="px-6 py-3 bg-gray-700 rounded-full text-white font-bold flex items-center mx-auto">
+                                        <Upload className="w-5 h-5 mr-2" />
+                                        Dosya Yükle
                                     </button>
-                                </>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Capture Button */}
+                        {stream && (
+                            <button
+                                onClick={capturePhoto}
+                                className="absolute bottom-10 left-1/2 transform -translate-x-1/2 w-20 h-20 bg-white rounded-full border-4 border-gray-300 shadow-xl flex items-center justify-center active:scale-95 transition-all"
+                            >
+                                <div className="w-16 h-16 bg-white rounded-full border-2 border-black" />
+                            </button>
+                        )}
+                    </>
+                ) : (
+                    // Result View
+                    <div className="w-full h-full flex flex-col bg-gray-900">
+                        <div className="flex-1 relative">
+                            <img src={image} alt="Scan" className="w-full h-full object-contain" />
+                            {loading && (
+                                <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center backdrop-blur-sm">
+                                    <Loader2 className="w-12 h-12 text-blue-500 animate-spin mb-4" />
+                                    <p className="text-white font-bold text-lg animate-pulse">Analiz ediliyor...</p>
+                                    <p className="text-gray-400 text-sm mt-2">Tesseract OCR çalışıyor</p>
+                                </div>
                             )}
                         </div>
-                    )}
 
-                    {/* Select Source */}
-                    {status === 'selectSource' && (
-                        <div className="space-y-3">
-                            <button onClick={goBack} className="text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 flex items-center">
-                                ← Geri
-                            </button>
+                        {!loading && scanResult && (
+                            <div className="bg-white dark:bg-gray-800 p-6 rounded-t-3xl animate-in slide-in-from-bottom-full transition-all duration-500">
+                                <div className="w-12 h-1 bg-gray-300 dark:bg-gray-600 rounded-full mx-auto mb-6" />
 
-                            <p className="text-sm text-gray-500 dark:text-gray-400 text-center mb-4">
-                                {currentScanType === 'consumption' && '📊 Tüketim ekranı'}
-                                {currentScanType === 'distance' && '🛣️ Yol bilgisi ekranı'}
-                                {currentScanType === 'receipt' && '🧾 Benzin fişi'}
-                                {' için fotoğraf kaynağı seçin'}
-                            </p>
+                                <h4 className="font-bold text-lg text-gray-800 dark:text-white mb-4 flex items-center">
+                                    <Check className="w-5 h-5 text-green-500 mr-2" />
+                                    Tespit Edilen Veriler
+                                </h4>
 
-                            <div className="grid grid-cols-2 gap-3">
-                                <button onClick={triggerCamera} className="flex flex-col items-center p-5 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/30 dark:to-pink-900/30 border-2 border-purple-200 dark:border-purple-700 rounded-xl hover:border-purple-400 transition-all group">
-                                    <div className="w-14 h-14 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                                        <Camera className="w-7 h-7 text-white" />
+                                <div className="grid grid-cols-2 gap-4 mb-6">
+                                    <div className="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                                        <p className="text-xs text-gray-500 uppercase">Tarih</p>
+                                        <p className="font-bold text-lg text-gray-800 dark:text-white">
+                                            {scanResult.date || <span className="text-gray-400 text-sm">-</span>}
+                                        </p>
                                     </div>
-                                    <h3 className="font-bold text-gray-800 dark:text-white text-sm">Kamera</h3>
-                                </button>
-
-                                <button onClick={triggerGallery} className="flex flex-col items-center p-5 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/30 dark:to-orange-900/30 border-2 border-amber-200 dark:border-amber-700 rounded-xl hover:border-amber-400 transition-all group">
-                                    <div className="w-14 h-14 bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                                        <Upload className="w-7 h-7 text-white" />
+                                    <div className="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                                        <p className="text-xs text-gray-500 uppercase">Toplam Tutar</p>
+                                        <p className="font-bold text-lg text-gray-800 dark:text-white">
+                                            {scanResult.totalAmount ? `₺${scanResult.totalAmount}` : <span className="text-gray-400 text-sm">-</span>}
+                                        </p>
                                     </div>
-                                    <h3 className="font-bold text-gray-800 dark:text-white text-sm">Galeri</h3>
-                                </button>
+                                    <div className="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                                        <p className="text-xs text-gray-500 uppercase">Birim Fiyat</p>
+                                        <p className="font-bold text-lg text-gray-800 dark:text-white">
+                                            {scanResult.unitPrice ? `₺${scanResult.unitPrice}` : <span className="text-gray-400 text-sm">-</span>}
+                                        </p>
+                                    </div>
+                                    <div className="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                                        <p className="text-xs text-gray-500 uppercase">Litre</p>
+                                        <p className="font-bold text-lg text-gray-800 dark:text-white">
+                                            {scanResult.liters ? `${scanResult.liters} L` : <span className="text-gray-400 text-sm">-</span>}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="flex gap-3">
+                                    <button
+                                        onClick={reset}
+                                        className="flex-1 py-3 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white rounded-xl font-bold flex items-center justify-center"
+                                    >
+                                        <RefreshCcw className="w-4 h-4 mr-2" />
+                                        Tekrar Tara
+                                    </button>
+                                    <button
+                                        onClick={onClose}
+                                        className="flex-[2] py-3 bg-blue-600 text-white rounded-xl font-bold shadow-lg shadow-blue-500/30"
+                                    >
+                                        Onayla ve Kullan
+                                    </button>
+                                </div>
                             </div>
-                        </div>
-                    )}
-                </div>
+                        )}
+                    </div>
+                )}
             </div>
         </div>
     );
