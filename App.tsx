@@ -241,9 +241,28 @@ export default function App() {
 
   const lastOdometer = logs.length > 0 ? Math.max(...logs.map(l => l.currentOdometer)) : 0;
 
-  const activeAlerts = maintenanceItems.filter(item => {
-    return (item.nextDueKm - lastOdometer) <= item.notifyBeforeKm;
-  }).sort((a, b) => (a.nextDueKm - lastOdometer) - (b.nextDueKm - lastOdometer));
+  const activeAlerts = useMemo(() => {
+    const maintAlerts = maintenanceItems.filter(item => {
+      // Basic KM check for now
+      if (!item.nextDueKm) return false;
+      return (item.nextDueKm - lastOdometer) <= (item.notifyBeforeKm || 1000);
+    });
+
+    const partAlerts = vehicleParts.filter(part => {
+      if (!part.lifespanKm || !part.isActive) return false;
+      const dueKm = part.installKm + part.lifespanKm;
+      return (dueKm - lastOdometer) <= 1000;
+    }).map(part => ({
+      id: part.id,
+      title: `${part.name} (Parça)`,
+      type: 'km',
+      nextDueKm: part.installKm + part.lifespanKm!,
+      notifyBeforeKm: 1000,
+      status: 'warning'
+    } as MaintenanceItem));
+
+    return [...maintAlerts, ...partAlerts].sort((a, b) => (a.nextDueKm || 0) - (b.nextDueKm || 0));
+  }, [maintenanceItems, vehicleParts, lastOdometer]);
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200 flex flex-col">
@@ -251,7 +270,7 @@ export default function App() {
       <header className="bg-white dark:bg-gray-800 shadow-sm sticky top-0 z-10">
         <div className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className="bg-blue-600 p-2 rounded-lg shadow-lg shadow-blue-600/20">
+            <div className="bg-primary-600 p-2 rounded-lg shadow-lg shadow-primary-600/20">
               <Car className="w-6 h-6 text-white" />
             </div>
             <div>
@@ -265,7 +284,7 @@ export default function App() {
               <select
                 value={selectedVehicleId || ''}
                 onChange={(e) => setSelectedVehicleId(e.target.value)}
-                className="px-3 py-2 text-sm bg-gray-100 dark:bg-gray-700 border-0 rounded-lg text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-blue-500"
+                className="px-3 py-2 text-sm bg-gray-100 dark:bg-gray-700 border-0 rounded-lg text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-primary-500"
               >
                 {vehicles.map(v => (
                   <option key={v.id} value={v.id}>{v.name}</option>
@@ -290,7 +309,7 @@ export default function App() {
           <button
             onClick={() => setActiveTab('dashboard')}
             className={`flex-1 flex items-center justify-center py-2.5 text-sm font-medium rounded-lg transition-all ${activeTab === 'dashboard'
-              ? 'bg-white dark:bg-gray-700 text-blue-700 dark:text-blue-300 shadow-sm'
+              ? 'bg-white dark:bg-gray-700 text-primary-700 dark:text-primary-300 shadow-sm'
               : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
               }`}
           >
@@ -357,7 +376,7 @@ export default function App() {
                     key={year}
                     onClick={() => setYearFilter(year)}
                     className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${yearFilter === year
-                      ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-sm'
+                      ? 'bg-white dark:bg-gray-700 text-primary-600 dark:text-primary-400 shadow-sm'
                       : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
                       }`}
                   >
@@ -372,6 +391,7 @@ export default function App() {
                 <AIPredictions
                   logs={logs}
                   maintenanceItems={maintenanceItems}
+                  vehicleParts={vehicleParts}
                   currentOdometer={lastOdometer}
                 />
                 {logs.length > 0 && <Charts logs={yearFilter === 'all' ? logs : logs.filter(l => new Date(l.date).getFullYear().toString() === yearFilter)} />}
@@ -490,23 +510,23 @@ export default function App() {
       {/* Mobile Bottom Navigation */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 pb-safe pt-2 px-2 z-50">
         <div className="flex items-center justify-around">
-          <button onClick={() => setActiveTab('dashboard')} className={`flex flex-col items-center p-2 rounded-xl transition-colors ${activeTab === 'dashboard' ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400'}`}>
+          <button onClick={() => setActiveTab('dashboard')} className={`flex flex-col items-center p-2 rounded-xl transition-colors ${activeTab === 'dashboard' ? 'text-primary-600 dark:text-primary-400' : 'text-gray-500 dark:text-gray-400'}`}>
             <LayoutDashboard className="w-6 h-6 mb-1" />
             <span className="text-[10px] font-medium">Panel</span>
           </button>
-          <button onClick={() => setActiveTab('history')} className={`flex flex-col items-center p-2 rounded-xl transition-colors ${activeTab === 'history' ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400'}`}>
+          <button onClick={() => setActiveTab('history')} className={`flex flex-col items-center p-2 rounded-xl transition-colors ${activeTab === 'history' ? 'text-primary-600 dark:text-primary-400' : 'text-gray-500 dark:text-gray-400'}`}>
             <History className="w-6 h-6 mb-1" />
             <span className="text-[10px] font-medium">Geçmiş</span>
           </button>
-          <button onClick={() => setActiveTab('maintenance')} className={`flex flex-col items-center p-2 rounded-xl transition-colors ${activeTab === 'maintenance' ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400'}`}>
+          <button onClick={() => setActiveTab('maintenance')} className={`flex flex-col items-center p-2 rounded-xl transition-colors ${activeTab === 'maintenance' ? 'text-primary-600 dark:text-primary-400' : 'text-gray-500 dark:text-gray-400'}`}>
             <Wrench className="w-6 h-6 mb-1" />
             <span className="text-[10px] font-medium">Bakım</span>
           </button>
-          <button onClick={() => setActiveTab('reports')} className={`flex flex-col items-center p-2 rounded-xl transition-colors ${activeTab === 'reports' ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400'}`}>
+          <button onClick={() => setActiveTab('reports')} className={`flex flex-col items-center p-2 rounded-xl transition-colors ${activeTab === 'reports' ? 'text-primary-600 dark:text-primary-400' : 'text-gray-500 dark:text-gray-400'}`}>
             <FileText className="w-6 h-6 mb-1" />
             <span className="text-[10px] font-medium">Rapor</span>
           </button>
-          <button onClick={() => setActiveTab('settings')} className={`flex flex-col items-center p-2 rounded-xl transition-colors ${activeTab === 'settings' ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400'}`}>
+          <button onClick={() => setActiveTab('settings')} className={`flex flex-col items-center p-2 rounded-xl transition-colors ${activeTab === 'settings' ? 'text-primary-600 dark:text-primary-400' : 'text-gray-500 dark:text-gray-400'}`}>
             <Settings className="w-6 h-6 mb-1" />
             <span className="text-[10px] font-medium">Ayarlar</span>
           </button>
@@ -516,7 +536,7 @@ export default function App() {
       {/* Floating Action Button */}
       <button
         onClick={() => setShowEntryModal(true)}
-        className="fixed bottom-24 md:bottom-8 right-6 w-14 h-14 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center z-40"
+        className="fixed bottom-24 md:bottom-8 right-6 w-14 h-14 bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center z-40"
         title="Yeni Kayıt Ekle"
       >
         <Plus className="w-7 h-7" />

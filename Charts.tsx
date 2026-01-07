@@ -34,8 +34,8 @@ export const Charts: React.FC<ChartsProps> = ({ logs }) => {
   if (logs.length < 2) {
     return (
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-12 flex flex-col items-center justify-center text-center h-full min-h-[400px] transition-colors">
-        <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-full mb-4">
-          <Activity className="w-8 h-8 text-blue-400 dark:text-blue-300" />
+        <div className="bg-primary-50 dark:bg-primary-900/20 p-4 rounded-full mb-4">
+          <Activity className="w-8 h-8 text-primary-400 dark:text-primary-300" />
         </div>
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Yetersiz Veri</h3>
         <p className="text-gray-500 dark:text-gray-400 max-w-sm">
@@ -107,8 +107,8 @@ export const Charts: React.FC<ChartsProps> = ({ logs }) => {
             <AreaChart data={data}>
               <defs>
                 <linearGradient id="colorMaliyet" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8} />
-                  <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                  <stop offset="5%" stopColor="var(--primary-500)" stopOpacity={0.8} />
+                  <stop offset="95%" stopColor="var(--primary-500)" stopOpacity={0} />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#374151" strokeOpacity={0.1} />
@@ -136,7 +136,7 @@ export const Charts: React.FC<ChartsProps> = ({ logs }) => {
               <Area
                 type="monotone"
                 dataKey="maliyet"
-                stroke="#3b82f6"
+                stroke="var(--primary-500)"
                 strokeWidth={3}
                 fillOpacity={1}
                 fill="url(#colorMaliyet)"
@@ -264,8 +264,8 @@ export const Charts: React.FC<ChartsProps> = ({ logs }) => {
       {monthlyData.length >= 2 && (
         <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 transition-colors">
           <div className="flex items-center space-x-2 mb-6">
-            <div className="p-2 bg-purple-50 dark:bg-purple-900/30 rounded-lg">
-              <Activity className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+            <div className="p-2 bg-primary-50 dark:bg-primary-900/30 rounded-lg">
+              <Activity className="w-5 h-5 text-primary-600 dark:text-primary-400" />
             </div>
             <h3 className="text-lg font-bold text-gray-800 dark:text-white">Aylık Trend (Son 6 Ay)</h3>
           </div>
@@ -283,7 +283,7 @@ export const Charts: React.FC<ChartsProps> = ({ logs }) => {
                   yAxisId="left"
                   axisLine={false}
                   tickLine={false}
-                  tick={{ fill: '#3b82f6', fontSize: 11 }}
+                  tick={{ fill: 'var(--primary-500)', fontSize: 11 }}
                   tickFormatter={(v) => `₺${v >= 1000 ? (v / 1000).toFixed(0) + 'K' : v}`}
                 />
                 <YAxis
@@ -303,7 +303,7 @@ export const Charts: React.FC<ChartsProps> = ({ logs }) => {
                   }}
                 />
                 <Legend />
-                <Bar yAxisId="left" dataKey="maliyet" name="Maliyet" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                <Bar yAxisId="left" dataKey="maliyet" name="Maliyet" fill="var(--primary-500)" radius={[4, 4, 0, 0]} />
                 <Bar yAxisId="right" dataKey="mesafe" name="Mesafe" fill="#10b981" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>

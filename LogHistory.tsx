@@ -80,14 +80,14 @@ export const LogHistory: React.FC<LogHistoryProps> = ({ logs, onDelete, onEdit }
                 placeholder="Min KM"
                 value={minKm}
                 onChange={(e) => setMinKm(e.target.value)}
-                className="flex-1 px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-white"
+                className="flex-1 px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 dark:text-white"
               />
               <input
                 type="number"
                 placeholder="Max KM"
                 value={maxKm}
                 onChange={(e) => setMaxKm(e.target.value)}
-                className="flex-1 px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-white"
+                className="flex-1 px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 dark:text-white"
               />
             </div>
           </div>
@@ -100,13 +100,13 @@ export const LogHistory: React.FC<LogHistoryProps> = ({ logs, onDelete, onEdit }
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="flex-1 px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-white"
+                className="flex-1 px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 dark:text-white"
               />
               <input
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="flex-1 px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-white"
+                className="flex-1 px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 dark:text-white"
               />
             </div>
           </div>
@@ -169,7 +169,7 @@ export const LogHistory: React.FC<LogHistoryProps> = ({ logs, onDelete, onEdit }
                       <div className="flex items-center justify-center space-x-1">
                         <button
                           onClick={() => onEdit(log)}
-                          className="text-gray-400 hover:text-blue-600 transition-colors p-1"
+                          className="text-gray-400 hover:text-primary-600 transition-colors p-1"
                           title="Düzenle"
                         >
                           <Pencil className="w-4 h-4" />

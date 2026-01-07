@@ -35,8 +35,8 @@ export const FuelMap: React.FC<FuelMapProps> = ({ logs }) => {
     if (pins.length === 0) {
         return (
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-8 text-center">
-                <div className="bg-blue-50 dark:bg-blue-900/30 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Fuel className="w-8 h-8 text-blue-500" />
+                <div className="bg-primary-50 dark:bg-primary-900/30 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Fuel className="w-8 h-8 text-primary-500" />
                 </div>
                 <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-2">Henüz Konum Verisi Yok</h3>
                 <p className="text-gray-500 dark:text-gray-400">
@@ -67,7 +67,7 @@ export const FuelMap: React.FC<FuelMapProps> = ({ logs }) => {
                         <Popup>
                             <div className="p-1">
                                 <div className="flex items-center gap-2 mb-2 font-bold text-gray-800 border-b pb-1">
-                                    <Calendar className="w-4 h-4 text-blue-500" />
+                                    <Calendar className="w-4 h-4 text-primary-500" />
                                     {new Date(log.date).toLocaleDateString('tr-TR')}
                                 </div>
                                 <div className="space-y-1 text-sm text-gray-600">

@@ -1,14 +1,15 @@
 import React, { useMemo } from 'react';
-import { DailyLog, MaintenanceItem } from './types';
+import { DailyLog, MaintenanceItem, VehiclePart } from './types';
 import { Brain, Calendar, TrendingUp, AlertTriangle, Droplets } from 'lucide-react';
 
 interface AIPredictionsProps {
     logs: DailyLog[];
     maintenanceItems: MaintenanceItem[];
+    vehicleParts: VehiclePart[];
     currentOdometer: number;
 }
 
-export const AIPredictions: React.FC<AIPredictionsProps> = ({ logs, maintenanceItems, currentOdometer }) => {
+export const AIPredictions: React.FC<AIPredictionsProps> = ({ logs, maintenanceItems, vehicleParts, currentOdometer }) => {
 
     const predictions = useMemo(() => {
         if (logs.length < 2) return null;
@@ -24,8 +25,6 @@ export const AIPredictions: React.FC<AIPredictionsProps> = ({ logs, maintenanceI
         const avgDailyKm = totalDays > 0 ? totalKm / totalDays : 0;
 
         // 2. Predict Next Refuel Date
-        // Assumption: User refuels when tank is near empty. usage pattern matches average.
-        // We look at the average days between refuels
         const refuelLogs = sortedLogs.filter(l => l.isRefuelDay);
         let avgDaysBetweenRefuels = 0;
         if (refuelLogs.length > 1) {
@@ -38,12 +37,12 @@ export const AIPredictions: React.FC<AIPredictionsProps> = ({ logs, maintenanceI
         }
 
         const nextRefuelDate = new Date(lastLog.date);
-        nextRefuelDate.setDate(nextRefuelDate.getDate() + (avgDaysBetweenRefuels || 7)); // Default 7 if not enough data
+        nextRefuelDate.setDate(nextRefuelDate.getDate() + (avgDaysBetweenRefuels || 7));
 
-        // 3. Predict Next Maintenance Date
-        // Find the soonest maintenance item by KM
-        let nextMaintenance: { item: MaintenanceItem, date: Date } | null = null;
+        // 3. Predict Next Service (Maintenance or Part Change)
+        let nextService: { title: string, date: Date, type: 'maintenance' | 'part' } | null = null;
 
+        // Check Maintenance Items
         maintenanceItems.forEach(item => {
             if (item.type === 'km' && item.nextDueKm) {
                 const remainingKm = item.nextDueKm - currentOdometer;
@@ -52,8 +51,24 @@ export const AIPredictions: React.FC<AIPredictionsProps> = ({ logs, maintenanceI
                     const date = new Date();
                     date.setDate(date.getDate() + daysToMaintenance);
 
-                    if (!nextMaintenance || date < nextMaintenance.date) {
-                        nextMaintenance = { item, date };
+                    if (!nextService || date < nextService.date) {
+                        nextService = { title: item.title, date, type: 'maintenance' };
+                    }
+                }
+            }
+        });
+
+        // Check Parts
+        (vehicleParts || []).forEach(part => {
+            if (part.isActive && part.lifespanKm) {
+                const remaining = (part.installKm + part.lifespanKm) - currentOdometer;
+                if (remaining > 0 && avgDailyKm > 0) {
+                    const days = remaining / avgDailyKm;
+                    const date = new Date();
+                    date.setDate(date.getDate() + days);
+
+                    if (!nextService || date < nextService.date) {
+                        nextService = { title: `${part.name} Değişimi`, date, type: 'part' };
                     }
                 }
             }
@@ -73,18 +88,18 @@ export const AIPredictions: React.FC<AIPredictionsProps> = ({ logs, maintenanceI
         return {
             avgDailyKm,
             nextRefuelDate,
-            nextMaintenance,
+            nextService,
             estimatedMonthlyCost,
             thisMonthCost
         };
-    }, [logs, maintenanceItems, currentOdometer]);
+    }, [logs, maintenanceItems, vehicleParts, currentOdometer]);
 
     if (!predictions) return null;
 
     return (
-        <div className="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 p-5 rounded-2xl border border-indigo-100 dark:border-indigo-800 shadow-sm animate-in fade-in duration-700">
+        <div className="bg-gradient-to-br from-primary-50 to-primary-100 dark:from-primary-900/20 dark:to-primary-900/10 p-5 rounded-2xl border border-primary-100 dark:border-primary-800 shadow-sm animate-in fade-in duration-700">
             <div className="flex items-center gap-2 mb-4">
-                <Brain className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                <Brain className="w-5 h-5 text-primary-600 dark:text-primary-400" />
                 <h3 className="text-lg font-bold text-gray-800 dark:text-white">AI Asistanı & Tahminler</h3>
             </div>
 
@@ -101,23 +116,23 @@ export const AIPredictions: React.FC<AIPredictionsProps> = ({ logs, maintenanceI
                     <p className="text-[10px] text-gray-400 mt-1">Sürüş alışkanlığına göre tahmini</p>
                 </div>
 
-                {/* Maintenance Prediction */}
+                {/* Maintenance/Part Prediction */}
                 <div className="bg-white/60 dark:bg-gray-800/60 p-3 rounded-xl border border-white/50 dark:border-gray-700 backdrop-blur-sm">
                     <div className="flex items-center gap-2 mb-1 text-xs font-bold text-gray-500 uppercase">
                         <AlertTriangle className="w-3 h-3" />
-                        Sıradaki Bakım
+                        Sıradaki İşlem
                     </div>
-                    {predictions.nextMaintenance ? (
+                    {predictions.nextService ? (
                         <>
-                            <div className="text-sm font-semibold text-gray-800 dark:text-white truncate">
-                                {predictions.nextMaintenance.item.title}
+                            <div className="text-sm font-semibold text-gray-800 dark:text-white truncate" title={predictions.nextService.title}>
+                                {predictions.nextService.title}
                             </div>
-                            <p className="text-[10px] text-indigo-500 font-medium mt-1">
-                                {predictions.nextMaintenance.date.toLocaleDateString('tr-TR')} (Tahmini)
+                            <p className="text-[10px] text-primary-500 font-medium mt-1">
+                                {predictions.nextService.date.toLocaleDateString('tr-TR')} (Tahmini)
                             </p>
                         </>
                     ) : (
-                        <span className="text-sm text-gray-400">Yaklaşan bakım yok</span>
+                        <span className="text-sm text-gray-400">Planlı işlem yok</span>
                     )}
                 </div>
 

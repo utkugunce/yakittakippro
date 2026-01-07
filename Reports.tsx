@@ -221,8 +221,8 @@ export const Reports: React.FC<ReportsProps> = ({ logs }) => {
 
       {/* Month-over-Month Comparison */}
       {stats?.comparison && (stats.comparison.lastMonth.totalCost > 0 || stats.comparison.thisMonth.totalCost > 0) && (
-        <div className="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-xl p-5 border border-indigo-200 dark:border-indigo-800">
-          <h3 className="font-bold text-indigo-900 dark:text-indigo-300 mb-4 flex items-center">
+        <div className="bg-gradient-to-r from-primary-50 to-primary-100 dark:from-primary-900/20 dark:to-primary-900/10 rounded-xl p-5 border border-primary-200 dark:border-primary-800">
+          <h3 className="font-bold text-primary-900 dark:text-primary-300 mb-4 flex items-center">
             <TrendingUp className="w-5 h-5 mr-2" />
             <div>
               Bu Ay vs Geçen Ay <span className="text-xs font-normal opacity-70 ml-1">(İlk {new Date().getDate()} gün)</span>
@@ -232,8 +232,8 @@ export const Reports: React.FC<ReportsProps> = ({ logs }) => {
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
             {/* Cost Comparison */}
             <div className="text-center p-3 bg-white/50 dark:bg-black/20 rounded-xl">
-              <p className="text-xs text-indigo-600 dark:text-indigo-400 mb-1">Toplam Harcama</p>
-              <p className="text-lg font-bold text-indigo-900 dark:text-white">
+              <p className="text-xs text-primary-600 dark:text-primary-400 mb-1">Toplam Harcama</p>
+              <p className="text-lg font-bold text-primary-900 dark:text-white">
                 ₺{stats.comparison.thisMonth.totalCost.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}
               </p>
               <div className={`flex items-center justify-center text-xs font-bold mt-1 ${stats.comparison.costChange > 0 ? 'text-red-500' : 'text-green-500'}`}>
@@ -244,8 +244,8 @@ export const Reports: React.FC<ReportsProps> = ({ logs }) => {
 
             {/* Distance Comparison */}
             <div className="text-center p-3 bg-white/50 dark:bg-black/20 rounded-xl">
-              <p className="text-xs text-indigo-600 dark:text-indigo-400 mb-1">Toplam Mesafe</p>
-              <p className="text-lg font-bold text-indigo-900 dark:text-white">
+              <p className="text-xs text-primary-600 dark:text-primary-400 mb-1">Toplam Mesafe</p>
+              <p className="text-lg font-bold text-primary-900 dark:text-white">
                 {stats.comparison.thisMonth.totalDistance.toLocaleString('tr-TR')} <span className="text-xs">km</span>
               </p>
               <div className={`flex items-center justify-center text-xs font-bold mt-1 ${stats.comparison.distanceChange > 0 ? 'text-blue-500' : 'text-orange-500'}`}>
@@ -256,8 +256,8 @@ export const Reports: React.FC<ReportsProps> = ({ logs }) => {
 
             {/* Fuel Comparison */}
             <div className="text-center p-3 bg-white/50 dark:bg-black/20 rounded-xl">
-              <p className="text-xs text-indigo-600 dark:text-indigo-400 mb-1">Toplam Yakıt</p>
-              <p className="text-lg font-bold text-indigo-900 dark:text-white">
+              <p className="text-xs text-primary-600 dark:text-primary-400 mb-1">Toplam Yakıt</p>
+              <p className="text-lg font-bold text-primary-900 dark:text-white">
                 {stats.comparison.thisMonth.totalFuel.toFixed(0)} <span className="text-xs">L</span>
               </p>
               <div className={`flex items-center justify-center text-xs font-bold mt-1 ${stats.comparison.fuelChange > 0 ? 'text-red-500' : 'text-green-500'}`}>
@@ -278,8 +278,8 @@ export const Reports: React.FC<ReportsProps> = ({ logs }) => {
 
               return (
                 <div className="text-center p-3 bg-white/50 dark:bg-black/20 rounded-xl">
-                  <p className="text-xs text-indigo-600 dark:text-indigo-400 mb-1">Ort. Tüketim</p>
-                  <p className="text-lg font-bold text-indigo-900 dark:text-white">
+                  <p className="text-xs text-primary-600 dark:text-primary-400 mb-1">Ort. Tüketim</p>
+                  <p className="text-lg font-bold text-primary-900 dark:text-white">
                     {thisMonthAvg.toFixed(1)} <span className="text-xs">L/100</span>
                   </p>
                   <div className={`flex items-center justify-center text-xs font-bold mt-1 ${avgChange > 0 ? 'text-red-500' : 'text-green-500'}`}>
@@ -302,8 +302,8 @@ export const Reports: React.FC<ReportsProps> = ({ logs }) => {
 
               return (
                 <div className="text-center p-3 bg-white/50 dark:bg-black/20 rounded-xl">
-                  <p className="text-xs text-indigo-600 dark:text-indigo-400 mb-1">KM Başına</p>
-                  <p className="text-lg font-bold text-indigo-900 dark:text-white">
+                  <p className="text-xs text-primary-600 dark:text-primary-400 mb-1">KM Başına</p>
+                  <p className="text-lg font-bold text-primary-900 dark:text-white">
                     ₺{thisMonthCPK.toFixed(2)}
                   </p>
                   <div className={`flex items-center justify-center text-xs font-bold mt-1 ${cpkChange > 0 ? 'text-red-500' : 'text-green-500'}`}>
@@ -326,8 +326,8 @@ export const Reports: React.FC<ReportsProps> = ({ logs }) => {
 
               return (
                 <div className="text-center p-3 bg-white/50 dark:bg-black/20 rounded-xl">
-                  <p className="text-xs text-indigo-600 dark:text-indigo-400 mb-1">Yakıt Fiyatı (Ort)</p>
-                  <p className="text-lg font-bold text-indigo-900 dark:text-white">
+                  <p className="text-xs text-primary-600 dark:text-primary-400 mb-1">Yakıt Fiyatı (Ort)</p>
+                  <p className="text-lg font-bold text-primary-900 dark:text-white">
                     ₺{thisMonthPrice.toFixed(2)}
                   </p>
                   <div className={`flex items-center justify-center text-xs font-bold mt-1 ${priceChange > 0 ? 'text-orange-500' : 'text-blue-500'}`}>
@@ -341,7 +341,7 @@ export const Reports: React.FC<ReportsProps> = ({ logs }) => {
 
           <div className="mt-4 flex flex-col sm:flex-row gap-3 text-xs text-gray-600 dark:text-gray-400 bg-white/50 dark:bg-black/20 p-3 rounded-lg">
             <div className="flex-1">
-              <span className="font-bold text-indigo-700 dark:text-indigo-300 block mb-1">📊 Analiz:</span>
+              <span className="font-bold text-primary-700 dark:text-primary-300 block mb-1">📊 Analiz:</span>
               {(() => {
                 const changes = [];
                 const thisMonthAvg = stats.comparison.thisMonth.totalDistance > 0 ? (stats.comparison.thisMonth.totalFuel / stats.comparison.thisMonth.totalDistance) * 100 : 0;
@@ -367,7 +367,7 @@ export const Reports: React.FC<ReportsProps> = ({ logs }) => {
       {/* Detailed Statistics */}
       <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4 border border-gray-100 dark:border-gray-700">
         <h3 className="font-bold text-gray-800 dark:text-white mb-4 flex items-center">
-          <BarChart3 className="w-5 h-5 mr-2 text-purple-600 dark:text-purple-400" />
+          <BarChart3 className="w-5 h-5 mr-2 text-primary-600 dark:text-primary-400" />
           Detaylı İstatistikler
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -420,7 +420,7 @@ export const Reports: React.FC<ReportsProps> = ({ logs }) => {
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
         <div className="p-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
           <h3 className="font-bold text-gray-800 dark:text-white flex items-center">
-            <Calendar className="w-5 h-5 mr-2 text-blue-600 dark:text-blue-400" />
+            <Calendar className="w-5 h-5 mr-2 text-primary-600 dark:text-primary-400" />
             Aylık Özet
           </h3>
         </div>

@@ -218,21 +218,21 @@ export const EntryForm: React.FC<EntryFormProps> = ({ logs, onAdd, onUpdate, onI
     setOdoError(null);
   };
 
-  const inputBaseClasses = "w-full pl-10 pr-4 py-3 min-h-[48px] bg-[#333333] dark:bg-gray-700 text-gray-100 placeholder-gray-500 border border-transparent rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all [color-scheme:dark] appearance-none box-border";
+  const inputBaseClasses = "w-full pl-10 pr-4 py-3 min-h-[48px] bg-[#333333] dark:bg-gray-700 text-gray-100 placeholder-gray-500 border border-transparent rounded-lg focus:ring-2 focus:ring-primary-500 outline-none transition-all [color-scheme:dark] appearance-none box-border";
   const labelClasses = "text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1 block";
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 sticky top-24 transition-colors">
       <div className="flex items-center justify-between mb-6 border-b border-gray-100 dark:border-gray-700 pb-4">
         <div className="flex items-center space-x-2">
-          <PlusCircle className="text-blue-600 dark:text-blue-400 w-5 h-5" />
+          <PlusCircle className="text-primary-600 dark:text-primary-400 w-5 h-5" />
           <h2 className="text-lg font-bold text-gray-800 dark:text-white">Veri Girişi</h2>
         </div>
         <div className="flex items-center space-x-2">
           <button
             type="button"
             onClick={() => setShowPhotoScanner(true)}
-            className="flex items-center px-3 py-2 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white text-sm font-medium rounded-lg shadow-sm transition-all"
+            className="flex items-center px-3 py-2 bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white text-sm font-medium rounded-lg shadow-sm transition-all"
           >
             <Camera className="w-4 h-4 mr-1.5" />
             Fotoğraftan
@@ -355,8 +355,8 @@ export const EntryForm: React.FC<EntryFormProps> = ({ logs, onAdd, onUpdate, onI
 
         {/* Dynamic Calculations Panel */}
         {liveStats && (
-          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-lg p-4 animate-in fade-in slide-in-from-top-2">
-            <h4 className="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wide mb-2">Tahmini Sonuçlar</h4>
+          <div className="bg-primary-50 dark:bg-primary-900/20 border border-primary-100 dark:border-primary-800 rounded-lg p-4 animate-in fade-in slide-in-from-top-2">
+            <h4 className="text-xs font-bold text-primary-600 dark:text-primary-400 uppercase tracking-wide mb-2">Tahmini Sonuçlar</h4>
             <div className="flex justify-between items-end">
               <div>
                 <span className="text-sm text-gray-500 dark:text-gray-400 block">Günlük Tüketim</span>
@@ -385,7 +385,7 @@ export const EntryForm: React.FC<EntryFormProps> = ({ logs, onAdd, onUpdate, onI
                 }}
                 className="sr-only peer"
               />
-              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
             </label>
           </div>
         </div>
@@ -443,7 +443,7 @@ export const EntryForm: React.FC<EntryFormProps> = ({ logs, onAdd, onUpdate, onI
 
           <button
             type="submit"
-            className="flex-[2] bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl shadow-md hover:shadow-lg transition-all transform active:scale-[0.98] flex items-center justify-center space-x-2"
+            className="flex-[2] bg-primary-600 hover:bg-primary-700 text-white font-bold py-3 px-4 rounded-xl shadow-md hover:shadow-lg transition-all transform active:scale-[0.98] flex items-center justify-center space-x-2"
           >
             <PlusCircle className="w-5 h-5" />
             <span>Kaydet</span>

@@ -41,7 +41,7 @@ export const DashboardStatsCard: React.FC<Props> = ({ stats, alerts, currentOdom
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         {/* Total Distance */}
         <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 transition-colors">
-          <div className="flex items-center space-x-2 text-blue-600 dark:text-blue-400 mb-2">
+          <div className="flex items-center space-x-2 text-primary-600 dark:text-primary-400 mb-2">
             <Navigation className="w-4 h-4" />
             <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Toplam Yol</h3>
           </div>

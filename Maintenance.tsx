@@ -126,7 +126,7 @@ export const Maintenance: React.FC<MaintenanceProps> = ({
             <div className="flex flex-col space-y-4">
                 <div className="flex items-center justify-between">
                     <h3 className="text-lg font-bold text-gray-800 dark:text-white flex items-center">
-                        <Wrench className="w-5 h-5 mr-2 text-blue-600 dark:text-blue-400" />
+                        <Wrench className="w-5 h-5 mr-2 text-primary-600 dark:text-primary-400" />
                         Bakım & Parçalar
                     </h3>
                     <div className="px-3 py-1 text-xs font-normal bg-gray-100 dark:bg-gray-700 rounded-full text-gray-600 dark:text-gray-300">
@@ -137,13 +137,13 @@ export const Maintenance: React.FC<MaintenanceProps> = ({
                 <div className="flex p-1 bg-gray-100 dark:bg-gray-700 rounded-xl">
                     <button
                         onClick={() => setSubTab('scheduled')}
-                        className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${subTab === 'scheduled' ? 'bg-white dark:bg-gray-600 text-blue-600 dark:text-blue-300 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                        className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${subTab === 'scheduled' ? 'bg-white dark:bg-gray-600 text-primary-600 dark:text-primary-300 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
                     >
                         Periyodik Bakım
                     </button>
                     <button
                         onClick={() => setSubTab('parts')}
-                        className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${subTab === 'parts' ? 'bg-white dark:bg-gray-600 text-blue-600 dark:text-blue-300 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                        className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${subTab === 'parts' ? 'bg-white dark:bg-gray-600 text-primary-600 dark:text-primary-300 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
                     >
                         Parça & Lastik
                     </button>
@@ -153,7 +153,7 @@ export const Maintenance: React.FC<MaintenanceProps> = ({
             {/* Add Button */}
             <button
                 onClick={handleAddClick}
-                className="w-full py-3 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl text-gray-500 hover:border-blue-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 font-bold transition-all flex items-center justify-center"
+                className="w-full py-3 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl text-gray-500 hover:border-primary-500 hover:text-primary-600 dark:text-gray-400 dark:hover:text-primary-400 font-bold transition-all flex items-center justify-center"
             >
                 <Plus className="w-5 h-5 mr-2" />
                 {subTab === 'scheduled' ? 'Yeni Bakım Hatırlatıcısı' : 'Yeni Parça Ekle'}
@@ -188,7 +188,7 @@ export const Maintenance: React.FC<MaintenanceProps> = ({
                                     <button
                                         key={t} type="button"
                                         onClick={() => setPartType(t)}
-                                        className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap border ${partType === t ? 'bg-blue-100 border-blue-200 text-blue-700 dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-300' : 'bg-gray-50 border-gray-200 text-gray-600 dark:bg-gray-700 dark:border-gray-600'}`}
+                                        className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap border ${partType === t ? 'bg-primary-100 border-primary-200 text-primary-700 dark:bg-primary-900/30 dark:border-primary-800 dark:text-primary-300' : 'bg-gray-50 border-gray-200 text-gray-600 dark:bg-gray-700 dark:border-gray-600'}`}
                                     >
                                         {t === 'tire' ? 'Lastik' : t === 'battery' ? 'Akü' : t === 'pad' ? 'Balata' : t === 'wiper' ? 'Silecek' : 'Diğer'}
                                     </button>
@@ -208,7 +208,7 @@ export const Maintenance: React.FC<MaintenanceProps> = ({
                             <input type="number" placeholder="Beklenen Ömür (KM) - Opsiyonel" value={lifespanKm} onChange={e => setLifespanKm(e.target.value)} className="w-full p-2 rounded-lg border dark:bg-gray-700 dark:border-gray-600" />
                         </>
                     )}
-                    <button type="submit" className="w-full bg-blue-600 text-white font-bold py-2 rounded-lg">Kaydet</button>
+                    <button type="submit" className="w-full bg-primary-600 text-white font-bold py-2 rounded-lg">Kaydet</button>
                 </form>
             )}
 
@@ -256,14 +256,14 @@ export const Maintenance: React.FC<MaintenanceProps> = ({
                                     )}
 
                                     <div className="flex items-start gap-3 relative z-10">
-                                        <div className={`p-2 rounded-lg ${part.isActive ? 'bg-blue-50 text-blue-600' : 'bg-gray-100 text-gray-400'}`}>
+                                        <div className={`p-2 rounded-lg ${part.isActive ? 'bg-primary-50 text-primary-600' : 'bg-gray-100 text-gray-400'}`}>
                                             {getPartIcon(part.type)}
                                         </div>
                                         <div className="flex-1">
                                             <h4 className="font-bold text-gray-800 dark:text-white text-sm">{part.name}</h4>
                                             <div className="text-xs text-gray-500 mt-1 space-y-0.5">
                                                 <p>Takılma: {part.installKm.toLocaleString()} km ({new Date(part.installDate).toLocaleDateString('tr-TR')})</p>
-                                                <p className="font-bold text-blue-600 dark:text-blue-400">Kullanım: {usage.toLocaleString()} km</p>
+                                                <p className="font-bold text-primary-600 dark:text-primary-400">Kullanım: {usage.toLocaleString()} km</p>
                                             </div>
 
                                             {/* Lifespan Bar */}
@@ -274,7 +274,7 @@ export const Maintenance: React.FC<MaintenanceProps> = ({
                                                         <span>%{lifePercent.toFixed(0)}</span>
                                                     </div>
                                                     <div className="h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
-                                                        <div className={`h-full rounded-full ${lifePercent > 90 ? 'bg-red-500' : 'bg-blue-500'}`} style={{ width: `${lifePercent}%` }}></div>
+                                                        <div className={`h-full rounded-full ${lifePercent > 90 ? 'bg-red-500' : 'bg-primary-500'}`} style={{ width: `${lifePercent}%` }}></div>
                                                     </div>
                                                 </div>
                                             )}

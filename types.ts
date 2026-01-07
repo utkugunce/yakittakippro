@@ -53,3 +53,16 @@ export interface MaintenanceItem {
   // Common
   status: 'ok' | 'warning' | 'critical'; // Durum
 }
+
+export type PartType = 'tire' | 'battery' | 'pad' | 'wiper' | 'other';
+
+export interface VehiclePart {
+  id: string;
+  type: PartType;
+  name: string;
+  installDate: string;
+  installKm: number;
+  lifespanKm?: number; // Expected lifespan
+  isActive: boolean;
+  notes?: string;
+}
