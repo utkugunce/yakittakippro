@@ -35,7 +35,7 @@ export const FuelMap: React.FC<FuelMapProps> = ({ logs }) => {
     if (pins.length === 0) {
         return (
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-8 text-center">
-                <div className="bg-primary-50 dark:bg-primary-900/30 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                <div className="bg-primary-50 dark:bg-gray-800 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                     <Fuel className="w-8 h-8 text-primary-500" />
                 </div>
                 <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-2">Henüz Konum Verisi Yok</h3>

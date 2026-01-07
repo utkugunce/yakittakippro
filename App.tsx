@@ -270,7 +270,7 @@ export default function App() {
       <header className="bg-white dark:bg-gray-800 shadow-sm sticky top-0 z-10">
         <div className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className="bg-primary-600 p-2 rounded-lg shadow-lg shadow-primary-600/20">
+            <div className="bg-primary-600 p-2 rounded-lg shadow-lg">
               <Car className="w-6 h-6 text-white" />
             </div>
             <div>

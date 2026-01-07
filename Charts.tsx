@@ -34,7 +34,7 @@ export const Charts: React.FC<ChartsProps> = ({ logs }) => {
   if (logs.length < 2) {
     return (
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-12 flex flex-col items-center justify-center text-center h-full min-h-[400px] transition-colors">
-        <div className="bg-primary-50 dark:bg-primary-900/20 p-4 rounded-full mb-4">
+        <div className="bg-primary-50 dark:bg-gray-800 p-4 rounded-full mb-4">
           <Activity className="w-8 h-8 text-primary-400 dark:text-primary-300" />
         </div>
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Yetersiz Veri</h3>
@@ -264,7 +264,7 @@ export const Charts: React.FC<ChartsProps> = ({ logs }) => {
       {monthlyData.length >= 2 && (
         <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 transition-colors">
           <div className="flex items-center space-x-2 mb-6">
-            <div className="p-2 bg-primary-50 dark:bg-primary-900/30 rounded-lg">
+            <div className="p-2 bg-primary-50 dark:bg-gray-700 rounded-lg">
               <Activity className="w-5 h-5 text-primary-600 dark:text-primary-400" />
             </div>
             <h3 className="text-lg font-bold text-gray-800 dark:text-white">Aylık Trend (Son 6 Ay)</h3>

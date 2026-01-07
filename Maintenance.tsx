@@ -188,7 +188,7 @@ export const Maintenance: React.FC<MaintenanceProps> = ({
                                     <button
                                         key={t} type="button"
                                         onClick={() => setPartType(t)}
-                                        className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap border ${partType === t ? 'bg-primary-100 border-primary-200 text-primary-700 dark:bg-primary-900/30 dark:border-primary-800 dark:text-primary-300' : 'bg-gray-50 border-gray-200 text-gray-600 dark:bg-gray-700 dark:border-gray-600'}`}
+                                        className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap border ${partType === t ? 'bg-primary-100 border-primary-200 text-primary-700 dark:bg-gray-800 dark:border-primary-500 dark:text-primary-300' : 'bg-gray-50 border-gray-200 text-gray-600 dark:bg-gray-700 dark:border-gray-600'}`}
                                     >
                                         {t === 'tire' ? 'Lastik' : t === 'battery' ? 'Akü' : t === 'pad' ? 'Balata' : t === 'wiper' ? 'Silecek' : 'Diğer'}
                                     </button>

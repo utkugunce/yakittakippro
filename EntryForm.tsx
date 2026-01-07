@@ -355,7 +355,7 @@ export const EntryForm: React.FC<EntryFormProps> = ({ logs, onAdd, onUpdate, onI
 
         {/* Dynamic Calculations Panel */}
         {liveStats && (
-          <div className="bg-primary-50 dark:bg-primary-900/20 border border-primary-100 dark:border-primary-800 rounded-lg p-4 animate-in fade-in slide-in-from-top-2">
+          <div className="bg-primary-50 dark:bg-gray-800 border border-primary-100 dark:border-primary-900 rounded-lg p-4 animate-in fade-in slide-in-from-top-2">
             <h4 className="text-xs font-bold text-primary-600 dark:text-primary-400 uppercase tracking-wide mb-2">Tahmini Sonuçlar</h4>
             <div className="flex justify-between items-end">
               <div>

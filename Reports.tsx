@@ -221,7 +221,7 @@ export const Reports: React.FC<ReportsProps> = ({ logs }) => {
 
       {/* Month-over-Month Comparison */}
       {stats?.comparison && (stats.comparison.lastMonth.totalCost > 0 || stats.comparison.thisMonth.totalCost > 0) && (
-        <div className="bg-gradient-to-r from-primary-50 to-primary-100 dark:from-primary-900/20 dark:to-primary-900/10 rounded-xl p-5 border border-primary-200 dark:border-primary-800">
+        <div className="bg-gradient-to-r from-primary-50 to-primary-100 dark:from-gray-800 dark:to-gray-900 rounded-xl p-5 border border-primary-200 dark:border-primary-900">
           <h3 className="font-bold text-primary-900 dark:text-primary-300 mb-4 flex items-center">
             <TrendingUp className="w-5 h-5 mr-2" />
             <div>

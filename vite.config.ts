@@ -87,6 +87,22 @@ export default defineConfig(({ mode }) => {
       alias: {
         '@': path.resolve(__dirname, '.'),
       }
+    },
+    build: {
+      chunkSizeWarningLimit: 1000,
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            'vendor-react': ['react', 'react-dom'],
+            'vendor-charts': ['recharts'],
+            'vendor-maps': ['leaflet', 'react-leaflet'],
+            'vendor-ocr': ['tesseract.js'],
+            'vendor-db': ['@supabase/supabase-js'],
+            'vendor-pdf': ['jspdf', 'jspdf-autotable'],
+            'vendor-utils': ['xlsx', 'lucide-react']
+          }
+        }
+      }
     }
   };
 });

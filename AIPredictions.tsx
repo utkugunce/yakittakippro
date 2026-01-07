@@ -97,7 +97,7 @@ export const AIPredictions: React.FC<AIPredictionsProps> = ({ logs, maintenanceI
     if (!predictions) return null;
 
     return (
-        <div className="bg-gradient-to-br from-primary-50 to-primary-100 dark:from-primary-900/20 dark:to-primary-900/10 p-5 rounded-2xl border border-primary-100 dark:border-primary-800 shadow-sm animate-in fade-in duration-700">
+        <div className="bg-gradient-to-br from-primary-50 to-primary-100 dark:from-gray-800 dark:to-gray-900 p-5 rounded-2xl border border-primary-100 dark:border-primary-900 shadow-sm animate-in fade-in duration-700">
             <div className="flex items-center gap-2 mb-4">
                 <Brain className="w-5 h-5 text-primary-600 dark:text-primary-400" />
                 <h3 className="text-lg font-bold text-gray-800 dark:text-white">AI Asistanı & Tahminler</h3>
