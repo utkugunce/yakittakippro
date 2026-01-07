@@ -10,6 +10,7 @@ import { Maintenance } from './Maintenance';
 import { WeeklySummary } from './WeeklySummary';
 import { NotificationSettings } from './NotificationSettings';
 import { BudgetGoal } from './BudgetGoal';
+import { CloudSync } from './CloudSync';
 import { Car, LayoutDashboard, History, FileText, Moon, Sun, Settings, Wrench, Plus, X } from 'lucide-react';
 import { PwaReloadPrompt } from './PwaReloadPrompt';
 
@@ -409,6 +410,14 @@ export default function App() {
 
         {activeTab === 'settings' && (
           <div className="animate-in fade-in duration-500 space-y-6">
+            <CloudSync
+              logs={logs}
+              maintenanceItems={maintenanceItems}
+              vehicles={vehicles}
+              onImportLogs={(imported) => setLogs(prev => [...prev, ...imported.filter(l => !prev.find(p => p.id === l.id))])}
+              onImportMaintenance={(imported) => setMaintenanceItems(imported)}
+              onImportVehicles={(imported) => setVehicles(imported)}
+            />
             <NotificationSettings maintenanceItems={maintenanceItems} currentOdometer={lastOdometer} />
             <DataManagement logs={logs} onImport={handleImportLogs} onClear={handleClearLogs} />
           </div>
