@@ -414,7 +414,14 @@ export default function App() {
               logs={logs}
               maintenanceItems={maintenanceItems}
               vehicles={vehicles}
-              onImportLogs={(imported) => setLogs(prev => [...prev, ...imported.filter(l => !prev.find(p => p.id === l.id))])}
+              onImportLogs={(imported) => {
+                setLogs(prev => {
+                  // Merge new logs with existing ones, avoiding duplicates by ID
+                  const existingIds = new Set(prev.map(p => p.id));
+                  const newLogs = imported.filter(l => !existingIds.has(l.id));
+                  return [...prev, ...newLogs];
+                });
+              }}
               onImportMaintenance={(imported) => setMaintenanceItems(imported)}
               onImportVehicles={(imported) => setVehicles(imported)}
             />

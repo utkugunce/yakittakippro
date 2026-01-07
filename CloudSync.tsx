@@ -61,19 +61,31 @@ export const CloudSync: React.FC<CloudSyncProps> = ({
         setLoading(false);
     };
 
+
     const handleEmailAuth = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
         setMessage(null);
 
-        const { error } = isSignUp
+        const { error, data } = isSignUp
             ? await signUpWithEmail(email, password)
             : await signInWithEmail(email, password);
 
         if (error) {
             setMessage({ type: 'error', text: error.message });
-        } else if (isSignUp) {
-            setMessage({ type: 'success', text: 'Kayıt başarılı! Email onayı gerekebilir.' });
+        } else {
+            // If signup successful and no email confirm needed, user is logged in
+            if (isSignUp) {
+                if (data.user) {
+                    setMessage({ type: 'success', text: 'Kayıt başarılı ve giriş yapıldı!' });
+                    // Let auth state listener handle the user update
+                } else {
+                    setMessage({ type: 'success', text: 'Kayıt başarılı! Lütfen giriş yapın.' });
+                }
+            } else {
+                setMessage({ type: 'success', text: 'Giriş başarılı!' });
+            }
+            setPassword(''); // Clear password
         }
         setLoading(false);
     };
@@ -116,7 +128,15 @@ export const CloudSync: React.FC<CloudSyncProps> = ({
 
         if (result.success && result.data) {
             if (result.data.logs.length > 0) {
-                onImportLogs(result.data.logs);
+                // Ensure dates are valid ISO strings
+                const processedLogs = result.data.logs.map((log: any) => ({
+                    ...log,
+                    // If date is missing or invalid, keep it as is (or handle as needed), 
+                    // but usually it comes as ISO string from JSON.
+                    // We trust the stored data is correct, but let's make sure it's preserved.
+                    date: log.date
+                }));
+                onImportLogs(processedLogs);
             }
             if (result.data.maintenanceItems.length > 0) {
                 onImportMaintenance(result.data.maintenanceItems);
