@@ -190,45 +190,143 @@ export const Reports: React.FC<ReportsProps> = ({ logs }) => {
       )}
 
       {/* Month-over-Month Comparison */}
-      {stats?.comparison && stats.comparison.lastMonth.totalCost > 0 && (
+      {stats?.comparison && (stats.comparison.lastMonth.totalCost > 0 || stats.comparison.thisMonth.totalCost > 0) && (
         <div className="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-xl p-5 border border-indigo-200 dark:border-indigo-800">
           <h3 className="font-bold text-indigo-900 dark:text-indigo-300 mb-4 flex items-center">
             <TrendingUp className="w-5 h-5 mr-2" />
-            Bu Ay vs Geçen Ay
+            Bu Ay vs Geçen Ay Detaylı Analiz
           </h3>
-          <div className="grid grid-cols-3 gap-4">
+
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
             {/* Cost Comparison */}
-            <div className="text-center">
-              <p className="text-xs text-indigo-600 dark:text-indigo-400 mb-1">Harcama</p>
-              <p className="text-xl font-bold text-indigo-900 dark:text-white">
+            <div className="text-center p-3 bg-white/50 dark:bg-black/20 rounded-xl">
+              <p className="text-xs text-indigo-600 dark:text-indigo-400 mb-1">Toplam Harcama</p>
+              <p className="text-lg font-bold text-indigo-900 dark:text-white">
                 ₺{stats.comparison.thisMonth.totalCost.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}
               </p>
-              <div className={`flex items-center justify-center text-xs font-bold mt-1 ${stats.comparison.costChange >= 0 ? 'text-red-600' : 'text-green-600'}`}>
-                {stats.comparison.costChange >= 0 ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+              <div className={`flex items-center justify-center text-xs font-bold mt-1 ${stats.comparison.costChange > 0 ? 'text-red-500' : 'text-green-500'}`}>
+                {stats.comparison.costChange > 0 ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
                 {Math.abs(stats.comparison.costChange).toFixed(0)}%
               </div>
             </div>
+
             {/* Distance Comparison */}
-            <div className="text-center">
-              <p className="text-xs text-indigo-600 dark:text-indigo-400 mb-1">Mesafe</p>
-              <p className="text-xl font-bold text-indigo-900 dark:text-white">
-                {stats.comparison.thisMonth.totalDistance.toLocaleString('tr-TR')} km
+            <div className="text-center p-3 bg-white/50 dark:bg-black/20 rounded-xl">
+              <p className="text-xs text-indigo-600 dark:text-indigo-400 mb-1">Toplam Mesafe</p>
+              <p className="text-lg font-bold text-indigo-900 dark:text-white">
+                {stats.comparison.thisMonth.totalDistance.toLocaleString('tr-TR')} <span className="text-xs">km</span>
               </p>
-              <div className={`flex items-center justify-center text-xs font-bold mt-1 ${stats.comparison.distanceChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {stats.comparison.distanceChange >= 0 ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+              <div className={`flex items-center justify-center text-xs font-bold mt-1 ${stats.comparison.distanceChange > 0 ? 'text-blue-500' : 'text-orange-500'}`}>
+                {stats.comparison.distanceChange > 0 ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
                 {Math.abs(stats.comparison.distanceChange).toFixed(0)}%
               </div>
             </div>
+
             {/* Fuel Comparison */}
-            <div className="text-center">
-              <p className="text-xs text-indigo-600 dark:text-indigo-400 mb-1">Yakıt</p>
-              <p className="text-xl font-bold text-indigo-900 dark:text-white">
-                {stats.comparison.thisMonth.totalFuel.toFixed(0)} L
+            <div className="text-center p-3 bg-white/50 dark:bg-black/20 rounded-xl">
+              <p className="text-xs text-indigo-600 dark:text-indigo-400 mb-1">Toplam Yakıt</p>
+              <p className="text-lg font-bold text-indigo-900 dark:text-white">
+                {stats.comparison.thisMonth.totalFuel.toFixed(0)} <span className="text-xs">L</span>
               </p>
-              <div className={`flex items-center justify-center text-xs font-bold mt-1 ${stats.comparison.fuelChange >= 0 ? 'text-red-600' : 'text-green-600'}`}>
-                {stats.comparison.fuelChange >= 0 ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+              <div className={`flex items-center justify-center text-xs font-bold mt-1 ${stats.comparison.fuelChange > 0 ? 'text-red-500' : 'text-green-500'}`}>
+                {stats.comparison.fuelChange > 0 ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
                 {Math.abs(stats.comparison.fuelChange).toFixed(0)}%
               </div>
+            </div>
+
+            {/* Avg Consumption Comparison - DERIVED */}
+            {(() => {
+              const thisMonthAvg = stats.comparison.thisMonth.totalDistance > 0
+                ? (stats.comparison.thisMonth.totalFuel / stats.comparison.thisMonth.totalDistance) * 100
+                : 0;
+              const lastMonthAvg = stats.comparison.lastMonth.totalDistance > 0
+                ? (stats.comparison.lastMonth.totalFuel / stats.comparison.lastMonth.totalDistance) * 100
+                : 0;
+              const avgChange = lastMonthAvg > 0 ? ((thisMonthAvg - lastMonthAvg) / lastMonthAvg) * 100 : 0;
+
+              return (
+                <div className="text-center p-3 bg-white/50 dark:bg-black/20 rounded-xl">
+                  <p className="text-xs text-indigo-600 dark:text-indigo-400 mb-1">Ort. Tüketim</p>
+                  <p className="text-lg font-bold text-indigo-900 dark:text-white">
+                    {thisMonthAvg.toFixed(1)} <span className="text-xs">L/100</span>
+                  </p>
+                  <div className={`flex items-center justify-center text-xs font-bold mt-1 ${avgChange > 0 ? 'text-red-500' : 'text-green-500'}`}>
+                    {avgChange > 0 ? <ArrowUpRight className="w-3 h-3" /> : (avgChange < 0 ? <ArrowDownRight className="w-3 h-3" /> : <span className="text-gray-400">-</span>)}
+                    {Math.abs(avgChange).toFixed(1)}%
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Cost Per KM Comparison - DERIVED */}
+            {(() => {
+              const thisMonthCPK = stats.comparison.thisMonth.totalDistance > 0
+                ? (stats.comparison.thisMonth.totalCost / stats.comparison.thisMonth.totalDistance)
+                : 0;
+              const lastMonthCPK = stats.comparison.lastMonth.totalDistance > 0
+                ? (stats.comparison.lastMonth.totalCost / stats.comparison.lastMonth.totalDistance)
+                : 0;
+              const cpkChange = lastMonthCPK > 0 ? ((thisMonthCPK - lastMonthCPK) / lastMonthCPK) * 100 : 0;
+
+              return (
+                <div className="text-center p-3 bg-white/50 dark:bg-black/20 rounded-xl">
+                  <p className="text-xs text-indigo-600 dark:text-indigo-400 mb-1">KM Başına</p>
+                  <p className="text-lg font-bold text-indigo-900 dark:text-white">
+                    ₺{thisMonthCPK.toFixed(2)}
+                  </p>
+                  <div className={`flex items-center justify-center text-xs font-bold mt-1 ${cpkChange > 0 ? 'text-red-500' : 'text-green-500'}`}>
+                    {cpkChange > 0 ? <ArrowUpRight className="w-3 h-3" /> : (cpkChange < 0 ? <ArrowDownRight className="w-3 h-3" /> : <span className="text-gray-400">-</span>)}
+                    {Math.abs(cpkChange).toFixed(1)}%
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Fuel Price Avg - DERIVED EST. */}
+            {(() => {
+              const thisMonthPrice = stats.comparison.thisMonth.totalFuel > 0
+                ? (stats.comparison.thisMonth.totalCost / stats.comparison.thisMonth.totalFuel)
+                : 0;
+              const lastMonthPrice = stats.comparison.lastMonth.totalFuel > 0
+                ? (stats.comparison.lastMonth.totalCost / stats.comparison.lastMonth.totalFuel)
+                : 0;
+              const priceChange = lastMonthPrice > 0 ? ((thisMonthPrice - lastMonthPrice) / lastMonthPrice) * 100 : 0;
+
+              return (
+                <div className="text-center p-3 bg-white/50 dark:bg-black/20 rounded-xl">
+                  <p className="text-xs text-indigo-600 dark:text-indigo-400 mb-1">Yakıt Fiyatı (Ort)</p>
+                  <p className="text-lg font-bold text-indigo-900 dark:text-white">
+                    ₺{thisMonthPrice.toFixed(2)}
+                  </p>
+                  <div className={`flex items-center justify-center text-xs font-bold mt-1 ${priceChange > 0 ? 'text-orange-500' : 'text-blue-500'}`}>
+                    {priceChange > 0 ? <ArrowUpRight className="w-3 h-3" /> : (priceChange < 0 ? <ArrowDownRight className="w-3 h-3" /> : <span className="text-gray-400">-</span>)}
+                    {Math.abs(priceChange).toFixed(1)}%
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
+
+          <div className="mt-4 flex flex-col sm:flex-row gap-3 text-xs text-gray-600 dark:text-gray-400 bg-white/50 dark:bg-black/20 p-3 rounded-lg">
+            <div className="flex-1">
+              <span className="font-bold text-indigo-700 dark:text-indigo-300 block mb-1">📊 Analiz:</span>
+              {(() => {
+                const changes = [];
+                const thisMonthAvg = stats.comparison.thisMonth.totalDistance > 0 ? (stats.comparison.thisMonth.totalFuel / stats.comparison.thisMonth.totalDistance) * 100 : 0;
+                const lastMonthAvg = stats.comparison.lastMonth.totalDistance > 0 ? (stats.comparison.lastMonth.totalFuel / stats.comparison.lastMonth.totalDistance) * 100 : 0;
+
+                if (thisMonthAvg < lastMonthAvg) changes.push("Sürüş verimliliğiniz artmış, araç daha az yakıyor. 👏");
+                else if (thisMonthAvg > lastMonthAvg) changes.push("Yakıt tüketiminiz artmış, agresif sürüş veya trafik etkisi olabilir.");
+
+                const thisMonthPrice = stats.comparison.thisMonth.totalFuel > 0 ? (stats.comparison.thisMonth.totalCost / stats.comparison.thisMonth.totalFuel) : 0;
+                const lastMonthPrice = stats.comparison.lastMonth.totalFuel > 0 ? (stats.comparison.lastMonth.totalCost / stats.comparison.lastMonth.totalFuel) : 0;
+
+                if (thisMonthPrice > lastMonthPrice) changes.push("Yakıt fiyatlarındaki artış harcamanızı etkiliyor.");
+
+                if (stats.comparison.distanceChange > 20) changes.push("Bu ay geçen aya göre belirgin şekilde daha çok yol yapmışsınız.");
+
+                return changes.length > 0 ? changes.join(" ") : "Veriler geçen ayla benzer seyrediyor.";
+              })()}
             </div>
           </div>
         </div>
