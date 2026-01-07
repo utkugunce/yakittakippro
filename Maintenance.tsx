@@ -15,36 +15,88 @@ export const Maintenance: React.FC<MaintenanceProps> = ({ items, currentOdometer
 
     // Form State
     const [title, setTitle] = useState('');
+    const [maintenanceType, setMaintenanceType] = useState<'km' | 'date'>('km');
     const [intervalKm, setIntervalKm] = useState('');
     const [lastKm, setLastKm] = useState('');
+    const [dueDate, setDueDate] = useState('');
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!title || !intervalKm || !lastKm) return;
+        if (!title) return;
 
-        const interval = parseInt(intervalKm);
-        const last = parseInt(lastKm);
-        const nextDue = last + interval;
+        if (maintenanceType === 'km') {
+            if (!intervalKm || !lastKm) return;
+            const interval = parseInt(intervalKm);
+            const last = parseInt(lastKm);
+            const nextDue = last + interval;
 
-        const newItem: MaintenanceItem = {
-            id: crypto.randomUUID(),
-            title,
-            intervalKm: interval,
-            lastMaintenanceKm: last,
-            notifyBeforeKm: 1000, // Default 1000km warning
-            nextDueKm: nextDue,
-            status: 'ok' // Will be recalculated by App
-        };
+            const newItem: MaintenanceItem = {
+                id: crypto.randomUUID(),
+                title,
+                type: 'km',
+                intervalKm: interval,
+                lastMaintenanceKm: last,
+                notifyBeforeKm: 1000,
+                nextDueKm: nextDue,
+                status: 'ok'
+            };
+            onAdd(newItem);
+        } else {
+            if (!dueDate) return;
+            const newItem: MaintenanceItem = {
+                id: crypto.randomUUID(),
+                title,
+                type: 'date',
+                dueDate,
+                notifyBeforeDays: 30,
+                status: 'ok'
+            };
+            onAdd(newItem);
+        }
 
-        onAdd(newItem);
         setTitle('');
         setIntervalKm('');
         setLastKm('');
+        setDueDate('');
         setShowAddForm(false);
     };
 
-    const calculateStatus = (item: MaintenanceItem): { color: string, text: string, icon: React.ReactNode, remaining: number } => {
-        const remaining = item.nextDueKm - currentOdometer;
+    const calculateStatus = (item: MaintenanceItem): { color: string, text: string, icon: React.ReactNode, remaining: number | string } => {
+        // Date-based items (muayene, sigorta)
+        if (item.type === 'date' && item.dueDate) {
+            const dueDate = new Date(item.dueDate);
+            const today = new Date();
+            const diffTime = dueDate.getTime() - today.getTime();
+            const daysRemaining = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            const notifyDays = item.notifyBeforeDays || 30;
+
+            if (daysRemaining < 0) {
+                return {
+                    color: 'text-red-600 bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800',
+                    text: 'Süresi Dolmuş',
+                    icon: <AlertCircle className="w-5 h-5 text-red-600" />,
+                    remaining: `${Math.abs(daysRemaining)} gün geçti`
+                };
+            } else if (daysRemaining <= notifyDays) {
+                return {
+                    color: 'text-amber-600 bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800',
+                    text: 'Yaklaşıyor',
+                    icon: <AlertTriangle className="w-5 h-5 text-amber-600" />,
+                    remaining: `${daysRemaining} gün kaldı`
+                };
+            } else {
+                return {
+                    color: 'text-green-600 bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800',
+                    text: 'Durum İyi',
+                    icon: <CheckCircle className="w-5 h-5 text-green-600" />,
+                    remaining: `${daysRemaining} gün kaldı`
+                };
+            }
+        }
+
+        // KM-based items (default)
+        const remaining = (item.nextDueKm || 0) - currentOdometer;
+        const notifyKm = item.notifyBeforeKm || 1000;
 
         if (remaining < 0) {
             return {
@@ -53,7 +105,7 @@ export const Maintenance: React.FC<MaintenanceProps> = ({ items, currentOdometer
                 icon: <AlertCircle className="w-5 h-5 text-red-600" />,
                 remaining
             };
-        } else if (remaining <= item.notifyBeforeKm) {
+        } else if (remaining <= notifyKm) {
             return {
                 color: 'text-amber-600 bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800',
                 text: 'Bakım Yaklaşıyor',
@@ -90,45 +142,82 @@ export const Maintenance: React.FC<MaintenanceProps> = ({ items, currentOdometer
             </div>
 
             {showAddForm && (
-                <form onSubmit={handleSubmit} className="bg-gray-50 dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 grid grid-cols-1 md:grid-cols-4 gap-4 animate-in slide-in-from-top-2">
-                    <div className="md:col-span-1">
-                        <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">Bakım Adı</label>
-                        <input
-                            type="text"
-                            placeholder="Örn: Yağ Değişimi"
-                            value={title}
-                            onChange={e => setTitle(e.target.value)}
-                            className="w-full p-2 rounded-lg bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                            required
-                        />
-                    </div>
-                    <div>
-                        <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">Periyot (KM)</label>
-                        <input
-                            type="number"
-                            placeholder="10000"
-                            value={intervalKm}
-                            onChange={e => setIntervalKm(e.target.value)}
-                            className="w-full p-2 rounded-lg bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                            required
-                        />
-                    </div>
-                    <div>
-                        <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">En Son Yapılan KM</label>
-                        <input
-                            type="number"
-                            placeholder="125000"
-                            value={lastKm}
-                            onChange={e => setLastKm(e.target.value)}
-                            className="w-full p-2 rounded-lg bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                            required
-                        />
-                    </div>
-                    <div className="flex items-end">
-                        <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold p-2 rounded-lg text-sm transition-colors">
-                            Kaydet
+                <form onSubmit={handleSubmit} className="bg-gray-50 dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 space-y-4 animate-in slide-in-from-top-2">
+                    {/* Type Selector */}
+                    <div className="flex rounded-lg bg-gray-200 dark:bg-gray-700 p-1">
+                        <button
+                            type="button"
+                            onClick={() => setMaintenanceType('km')}
+                            className={`flex-1 py-2 text-sm font-bold rounded-md transition-all ${maintenanceType === 'km' ? 'bg-white dark:bg-gray-600 text-blue-600 dark:text-blue-400 shadow-sm' : 'text-gray-500'}`}
+                        >
+                            KM Bazlı
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setMaintenanceType('date')}
+                            className={`flex-1 py-2 text-sm font-bold rounded-md transition-all ${maintenanceType === 'date' ? 'bg-white dark:bg-gray-600 text-blue-600 dark:text-blue-400 shadow-sm' : 'text-gray-500'}`}
+                        >
+                            Tarih Bazlı
                         </button>
                     </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">
+                                {maintenanceType === 'km' ? 'Bakım Adı' : 'Hatırlatıcı Adı'}
+                            </label>
+                            <input
+                                type="text"
+                                placeholder={maintenanceType === 'km' ? 'Örn: Yağ Değişimi' : 'Örn: Araç Muayenesi'}
+                                value={title}
+                                onChange={e => setTitle(e.target.value)}
+                                className="w-full p-2 rounded-lg bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                                required
+                            />
+                        </div>
+
+                        {maintenanceType === 'km' ? (
+                            <>
+                                <div>
+                                    <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">Periyot (KM)</label>
+                                    <input
+                                        type="number"
+                                        placeholder="10000"
+                                        value={intervalKm}
+                                        onChange={e => setIntervalKm(e.target.value)}
+                                        className="w-full p-2 rounded-lg bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                                        required
+                                    />
+                                </div>
+                                <div>
+                                    <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">En Son Yapılan KM</label>
+                                    <input
+                                        type="number"
+                                        placeholder="125000"
+                                        value={lastKm}
+                                        onChange={e => setLastKm(e.target.value)}
+                                        className="w-full p-2 rounded-lg bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                                        required
+                                    />
+                                </div>
+                            </>
+                        ) : (
+                            <div className="md:col-span-2">
+                                <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">Son Tarih</label>
+                                <input
+                                    type="date"
+                                    value={dueDate}
+                                    onChange={e => setDueDate(e.target.value)}
+                                    className="w-full p-2 rounded-lg bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                                    required
+                                />
+                            </div>
+                        )}
+                    </div>
+
+                    <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold p-2 rounded-lg text-sm transition-colors">
+                        Kaydet
+                    </button>
                 </form>
             )}
 
@@ -196,7 +285,7 @@ export const Maintenance: React.FC<MaintenanceProps> = ({ items, currentOdometer
                     })
                 )}
             </div>
-        </div>
+        </div >
     );
 };
 

@@ -36,9 +36,15 @@ export interface DashboardStats {
 export interface MaintenanceItem {
   id: string;
   title: string;
-  intervalKm: number;    // Kaç km'de bir yapılmalı (örn: 10000)
-  lastMaintenanceKm: number; // En son kaç km'de yapıldı
-  notifyBeforeKm: number; // Kaç km kala uyar (örn: 1000)
-  nextDueKm: number; // Hesaplanmış sonraki bakım km'si
+  type?: 'km' | 'date' | 'both';  // Bakım türü
+  // KM-based tracking
+  intervalKm?: number;    // Kaç km'de bir yapılmalı (örn: 10000)
+  lastMaintenanceKm?: number; // En son kaç km'de yapıldı
+  notifyBeforeKm?: number; // Kaç km kala uyar (örn: 1000)
+  nextDueKm?: number; // Hesaplanmış sonraki bakım km'si
+  // Date-based tracking (muayene, sigorta vb.)
+  dueDate?: string;       // Son tarih (ISO string)
+  notifyBeforeDays?: number; // Kaç gün kala uyar (örn: 30)
+  // Common
   status: 'ok' | 'warning' | 'critical'; // Durum
 }
