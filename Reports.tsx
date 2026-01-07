@@ -99,21 +99,51 @@ export const Reports: React.FC<ReportsProps> = ({ logs }) => {
     const monthlyData = Object.values(monthlyGroups) as MonthData[];
     monthlyData.sort((a, b) => b.month.localeCompare(a.month));
 
-    // Month-over-month comparison
+    // Month-over-Month Comparison (Partial / Date-to-Date)
     const now = new Date();
-    const thisMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-    const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-    const lastMonthKey = `${lastMonth.getFullYear()}-${String(lastMonth.getMonth() + 1).padStart(2, '0')}`;
+    const currentDay = now.getDate();
 
-    const thisMonthData = monthlyGroups[thisMonthKey] || { totalCost: 0, totalDistance: 0, totalFuel: 0, logCount: 0 };
-    const lastMonthData = monthlyGroups[lastMonthKey] || { totalCost: 0, totalDistance: 0, totalFuel: 0, logCount: 0 };
+    // This Month Ranges
+    const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const thisMonthEnd = now; // Now
 
+    // Last Month Ranges (Date-to-Date)
+    const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    // Handle edge cases where last month has fewer days (e.g. March 30 -> Feb 28)
+    const daysInLastMonth = new Date(now.getFullYear(), now.getMonth(), 0).getDate();
+    const targetDayInLastMonth = Math.min(currentDay, daysInLastMonth);
+    const lastMonthSameDay = new Date(now.getFullYear(), now.getMonth() - 1, targetDayInLastMonth, 23, 59, 59);
+
+    // Filter Helper
+    const getLogsInPeriod = (start: Date, end: Date) => {
+      return logs.filter(l => {
+        const d = new Date(l.date);
+        return d >= start && d <= end;
+      });
+    };
+
+    const thisMonthLogs = getLogsInPeriod(thisMonthStart, thisMonthEnd);
+    const lastMonthLogs = getLogsInPeriod(lastMonthStart, lastMonthSameDay);
+
+    const sumStats = (arr: DailyLog[]) => ({
+      totalCost: arr.reduce((sum, l) => sum + l.dailyCost, 0),
+      totalDistance: arr.reduce((sum, l) => sum + l.dailyDistance, 0),
+      totalFuel: arr.reduce((sum, l) => sum + l.dailyFuelConsumed, 0),
+      logCount: arr.length
+    });
+
+    const thisMonthData = sumStats(thisMonthLogs);
+    const lastMonthData = sumStats(lastMonthLogs);
+
+    // Calculate changes
     const comparison = {
       thisMonth: thisMonthData,
       lastMonth: lastMonthData,
       costChange: lastMonthData.totalCost > 0 ? ((thisMonthData.totalCost - lastMonthData.totalCost) / lastMonthData.totalCost) * 100 : 0,
       distanceChange: lastMonthData.totalDistance > 0 ? ((thisMonthData.totalDistance - lastMonthData.totalDistance) / lastMonthData.totalDistance) * 100 : 0,
-      fuelChange: lastMonthData.totalFuel > 0 ? ((thisMonthData.totalFuel - lastMonthData.totalFuel) / lastMonthData.totalFuel) * 100 : 0
+      fuelChange: lastMonthData.totalFuel > 0 ? ((thisMonthData.totalFuel - lastMonthData.totalFuel) / lastMonthData.totalFuel) * 100 : 0,
+      // Store date range info for UI
+      lastMonthDate: lastMonthSameDay
     };
 
     return {
@@ -194,7 +224,9 @@ export const Reports: React.FC<ReportsProps> = ({ logs }) => {
         <div className="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-xl p-5 border border-indigo-200 dark:border-indigo-800">
           <h3 className="font-bold text-indigo-900 dark:text-indigo-300 mb-4 flex items-center">
             <TrendingUp className="w-5 h-5 mr-2" />
-            Bu Ay vs Geçen Ay Detaylı Analiz
+            <div>
+              Bu Ay vs Geçen Ay <span className="text-xs font-normal opacity-70 ml-1">(İlk {new Date().getDate()} gün)</span>
+            </div>
           </h3>
 
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
