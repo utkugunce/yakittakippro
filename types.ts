@@ -7,6 +7,7 @@ export interface DailyLog {
   avgConsumption: number;  // Ortalama Tüketim (L/100km)
   isRefuelDay: boolean;    // Yakıt alındı mı?
   fuelPrice: number;       // Benzin Fiyatı (TL/L)
+  fuelStation?: string;    // Yakıt İstasyonu / Marka (Shell, Opet vb.)
   notes?: string;          // Kullanıcı notları
 
   // Location Data

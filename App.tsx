@@ -482,7 +482,11 @@ export default function App() {
         {activeTab === 'reports' && (
           <div className="animate-in fade-in duration-500 space-y-6">
             <FuelMap logs={logs} />
-            <Reports logs={logs} />
+            <Reports
+              logs={logs}
+              maintenanceItems={maintenanceItems}
+              vehicleParts={vehicleParts}
+            />
           </div>
         )}
 
