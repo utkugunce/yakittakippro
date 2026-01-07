@@ -103,7 +103,7 @@ export const WeeklySummary: React.FC<WeeklySummaryProps> = ({ logs }) => {
                             <span className="text-xs text-gray-600 dark:text-gray-400 flex items-center">
                                 <Wallet className="w-3 h-3 mr-1" /> Harcama
                             </span>
-                            <div className="flex items-center space-x-1">
+                            <div className="flex flex-col items-end">
                                 <span className="text-sm font-bold text-gray-800 dark:text-white">₺{summary.thisWeek.cost.toFixed(0)}</span>
                                 {renderChange(summary.thisWeek.cost, summary.lastWeek.cost, true)}
                             </div>
@@ -125,7 +125,7 @@ export const WeeklySummary: React.FC<WeeklySummaryProps> = ({ logs }) => {
                             <span className="text-xs text-gray-600 dark:text-gray-400 flex items-center">
                                 <Wallet className="w-3 h-3 mr-1" /> Harcama
                             </span>
-                            <div className="flex items-center space-x-1">
+                            <div className="flex flex-col items-end">
                                 <span className="text-sm font-bold text-gray-800 dark:text-white">₺{summary.thisMonth.cost.toFixed(0)}</span>
                                 {renderChange(summary.thisMonth.cost, summary.lastMonth.cost, true)}
                             </div>
