@@ -230,7 +230,8 @@ export const Maintenance: React.FC<MaintenanceProps> = ({ items, currentOdometer
                 ) : (
                     items.map(item => {
                         const status = calculateStatus(item);
-                        const percent = Math.min(100, Math.max(0, ((currentOdometer - item.lastMaintenanceKm) / item.intervalKm) * 100));
+                        const isDateBased = item.type === 'date';
+                        const percent = isDateBased ? 0 : Math.min(100, Math.max(0, ((currentOdometer - (item.lastMaintenanceKm || 0)) / (item.intervalKm || 1)) * 100));
 
                         return (
                             <div key={item.id} className={`p-4 rounded-xl border ${status.color} transition-all`}>
@@ -240,21 +241,25 @@ export const Maintenance: React.FC<MaintenanceProps> = ({ items, currentOdometer
                                         <div>
                                             <h4 className="font-bold text-gray-800 dark:text-white">{item.title}</h4>
                                             <p className="text-xs opacity-70">
-                                                Periyot: {item.intervalKm.toLocaleString()} km
+                                                {isDateBased
+                                                    ? `Son Tarih: ${new Date(item.dueDate!).toLocaleDateString('tr-TR')}`
+                                                    : `Periyot: ${(item.intervalKm || 0).toLocaleString()} km`}
                                             </p>
                                         </div>
                                     </div>
                                     <div className="flex items-center space-x-2">
-                                        <button
-                                            onClick={() => {
-                                                if (window.confirm(`${item.title} bakımını şimdi yaptığınızı onaylıyor musunuz? (Yeni KM: ${currentOdometer})`)) {
-                                                    onUpdate(item.id, currentOdometer);
-                                                }
-                                            }}
-                                            className="px-3 py-1.5 text-xs font-bold bg-white/50 hover:bg-white/80 dark:bg-black/20 dark:hover:bg-black/40 rounded-lg transition-colors"
-                                        >
-                                            Bakım Yapıldı
-                                        </button>
+                                        {!isDateBased && (
+                                            <button
+                                                onClick={() => {
+                                                    if (window.confirm(`${item.title} bakımını şimdi yaptığınızı onaylıyor musunuz? (Yeni KM: ${currentOdometer})`)) {
+                                                        onUpdate(item.id, currentOdometer);
+                                                    }
+                                                }}
+                                                className="px-3 py-1.5 text-xs font-bold bg-white/50 hover:bg-white/80 dark:bg-black/20 dark:hover:bg-black/40 rounded-lg transition-colors"
+                                            >
+                                                Bakım Yapıldı
+                                            </button>
+                                        )}
                                         <button
                                             onClick={() => onDelete(item.id)}
                                             className="p-1.5 text-red-500 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors"
@@ -266,19 +271,23 @@ export const Maintenance: React.FC<MaintenanceProps> = ({ items, currentOdometer
 
                                 <div className="space-y-2">
                                     <div className="flex justify-between text-xs font-medium opacity-80">
-                                        <span>{Math.floor(percent)}% Kullanıldı</span>
-                                        <span>Kalan: {status.remaining.toLocaleString()} km</span>
+                                        <span>{status.text}</span>
+                                        <span>{typeof status.remaining === 'string' ? status.remaining : `${status.remaining.toLocaleString()} km kaldı`}</span>
                                     </div>
-                                    <div className="w-full bg-black/10 dark:bg-white/10 rounded-full h-2">
-                                        <div
-                                            className={`h-2 rounded-full transition-all duration-500 ${remainingIsCritical(status.remaining) ? 'bg-red-500' : remainingIsWarning(status.remaining, item.notifyBeforeKm) ? 'bg-amber-500' : 'bg-green-500'}`}
-                                            style={{ width: `${percent}%` }}
-                                        ></div>
-                                    </div>
-                                    <div className="flex justify-between text-[10px] opacity-60">
-                                        <span>Son: {item.lastMaintenanceKm.toLocaleString()}</span>
-                                        <span>Hedef: {item.nextDueKm.toLocaleString()}</span>
-                                    </div>
+                                    {!isDateBased && (
+                                        <>
+                                            <div className="w-full bg-black/10 dark:bg-white/10 rounded-full h-2">
+                                                <div
+                                                    className={`h-2 rounded-full transition-all duration-500 ${typeof status.remaining === 'number' && status.remaining < 0 ? 'bg-red-500' : typeof status.remaining === 'number' && status.remaining <= (item.notifyBeforeKm || 1000) ? 'bg-amber-500' : 'bg-green-500'}`}
+                                                    style={{ width: `${percent}%` }}
+                                                ></div>
+                                            </div>
+                                            <div className="flex justify-between text-[10px] opacity-60">
+                                                <span>Son: {(item.lastMaintenanceKm || 0).toLocaleString()}</span>
+                                                <span>Hedef: {(item.nextDueKm || 0).toLocaleString()}</span>
+                                            </div>
+                                        </>
+                                    )}
                                 </div>
                             </div>
                         );
@@ -288,6 +297,3 @@ export const Maintenance: React.FC<MaintenanceProps> = ({ items, currentOdometer
         </div >
     );
 };
-
-const remainingIsCritical = (remaining: number) => remaining < 0;
-const remainingIsWarning = (remaining: number, notifyLimit: number) => remaining <= notifyLimit;
