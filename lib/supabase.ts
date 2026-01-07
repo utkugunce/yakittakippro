@@ -33,6 +33,16 @@ export const getCurrentUser = async (): Promise<User | null> => {
     return user;
 };
 
+export const signInWithEmail = async (email: string, password: string) => {
+    if (!supabase) return { error: new Error('Supabase not configured') };
+    return await supabase.auth.signInWithPassword({ email, password });
+};
+
+export const signUpWithEmail = async (email: string, password: string) => {
+    if (!supabase) return { error: new Error('Supabase not configured') };
+    return await supabase.auth.signUp({ email, password });
+};
+
 export const signOut = async () => {
     if (!supabase) return;
     await supabase.auth.signOut();

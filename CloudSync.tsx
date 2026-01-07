@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { User } from '@supabase/supabase-js';
-import { Cloud, CloudOff, LogOut, Download, Upload, Loader2, Check, AlertCircle, Phone } from 'lucide-react';
+import { Cloud, CloudOff, LogOut, Download, Upload, Loader2, Check, AlertCircle, Mail } from 'lucide-react';
 import {
     supabase,
     isSupabaseConfigured,
     getCurrentUser,
+    signInWithEmail,
+    signUpWithEmail,
     signOut,
     saveToCloud,
     loadFromCloud
@@ -33,11 +35,10 @@ export const CloudSync: React.FC<CloudSyncProps> = ({
     const [syncing, setSyncing] = useState(false);
     const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-    // Phone auth states
-    const [phone, setPhone] = useState('');
-    const [otp, setOtp] = useState('');
-    const [otpSent, setOtpSent] = useState(false);
-    const [sendingOtp, setSendingOtp] = useState(false);
+    // Email auth states
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [isSignUp, setIsSignUp] = useState(false);
 
     useEffect(() => {
         checkUser();
@@ -60,68 +61,28 @@ export const CloudSync: React.FC<CloudSyncProps> = ({
         setLoading(false);
     };
 
-    const formatPhoneNumber = (input: string) => {
-        // Remove non-digits
-        let digits = input.replace(/\D/g, '');
-        // Add Turkey country code if not present
-        if (digits.startsWith('0')) {
-            digits = '90' + digits.substring(1);
-        } else if (!digits.startsWith('90')) {
-            digits = '90' + digits;
-        }
-        return '+' + digits;
-    };
-
-    const handleSendOtp = async (e: React.FormEvent) => {
+    const handleEmailAuth = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!supabase || !phone) return;
-
-        setSendingOtp(true);
-        setMessage(null);
-
-        const formattedPhone = formatPhoneNumber(phone);
-
-        const { error } = await supabase.auth.signInWithOtp({
-            phone: formattedPhone
-        });
-
-        if (error) {
-            setMessage({ type: 'error', text: error.message });
-        } else {
-            setOtpSent(true);
-            setMessage({ type: 'success', text: 'SMS kodu gönderildi!' });
-        }
-
-        setSendingOtp(false);
-    };
-
-    const handleVerifyOtp = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!supabase || !phone || !otp) return;
-
         setLoading(true);
         setMessage(null);
 
-        const formattedPhone = formatPhoneNumber(phone);
-
-        const { error } = await supabase.auth.verifyOtp({
-            phone: formattedPhone,
-            token: otp,
-            type: 'sms'
-        });
+        const { error } = isSignUp
+            ? await signUpWithEmail(email, password)
+            : await signInWithEmail(email, password);
 
         if (error) {
             setMessage({ type: 'error', text: error.message });
-            setLoading(false);
+        } else if (isSignUp) {
+            setMessage({ type: 'success', text: 'Kayıt başarılı! Email onayı gerekebilir.' });
         }
+        setLoading(false);
     };
 
     const handleLogout = async () => {
         await signOut();
         setUser(null);
-        setOtpSent(false);
-        setPhone('');
-        setOtp('');
+        setEmail('');
+        setPassword('');
         setMessage({ type: 'success', text: 'Çıkış yapıldı' });
     };
 
@@ -212,63 +173,40 @@ export const CloudSync: React.FC<CloudSyncProps> = ({
                 </h3>
 
                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                    Telefon numaranızla giriş yapın ve verilerinizi bulutta yedekleyin.
+                    Email adresinizle giriş yapın ve verilerinizi bulutta yedekleyin.
                 </p>
 
-                {!otpSent ? (
-                    <form onSubmit={handleSendOtp} className="space-y-3">
-                        <div className="flex">
-                            <span className="inline-flex items-center px-3 text-sm text-gray-600 bg-gray-100 dark:bg-gray-700 dark:text-gray-300 border-r-0 border border-gray-300 dark:border-gray-600 rounded-l-lg">
-                                +90
-                            </span>
-                            <input
-                                type="tel"
-                                placeholder="5XX XXX XX XX"
-                                value={phone}
-                                onChange={(e) => setPhone(e.target.value)}
-                                className="flex-1 p-2 rounded-r-lg bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 outline-none"
-                                required
-                            />
-                        </div>
-                        <button
-                            type="submit"
-                            disabled={sendingOtp || !phone}
-                            className="w-full flex items-center justify-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-4 rounded-lg transition-colors disabled:opacity-50"
-                        >
-                            {sendingOtp ? <Loader2 className="w-5 h-5 animate-spin" /> : <Phone className="w-5 h-5" />}
-                            <span>{sendingOtp ? 'Gönderiliyor...' : 'SMS Kodu Gönder'}</span>
+                <form onSubmit={handleEmailAuth} className="space-y-3">
+                    <input
+                        type="email"
+                        placeholder="Email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="w-full p-2 rounded-lg bg-gray-100 dark:bg-gray-700 border-0 focus:ring-2 focus:ring-blue-500 outline-none"
+                        required
+                    />
+                    <input
+                        type="password"
+                        placeholder="Şifre"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="w-full p-2 rounded-lg bg-gray-100 dark:bg-gray-700 border-0 focus:ring-2 focus:ring-blue-500 outline-none"
+                        required
+                    />
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        className="w-full flex items-center justify-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors"
+                    >
+                        {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Mail className="w-5 h-5" />}
+                        <span>{isSignUp ? 'Kayıt Ol' : 'Giriş Yap'}</span>
+                    </button>
+                    <div className="flex justify-center text-sm">
+                        <button type="button" onClick={() => setIsSignUp(!isSignUp)} className="text-blue-600 hover:underline">
+                            {isSignUp ? 'Hesabım var, giriş yap' : 'Yeni hesap oluştur'}
                         </button>
-                    </form>
-                ) : (
-                    <form onSubmit={handleVerifyOtp} className="space-y-3">
-                        <p className="text-sm text-green-600 dark:text-green-400">
-                            ✓ Kod gönderildi: +90{phone.replace(/\D/g, '').replace(/^0/, '')}
-                        </p>
-                        <input
-                            type="text"
-                            placeholder="6 haneli kod"
-                            value={otp}
-                            onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                            className="w-full p-3 text-center text-2xl tracking-widest rounded-lg bg-gray-100 dark:bg-gray-700 border-0 focus:ring-2 focus:ring-blue-500 outline-none"
-                            maxLength={6}
-                            required
-                        />
-                        <button
-                            type="submit"
-                            disabled={loading || otp.length !== 6}
-                            className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2.5 px-4 rounded-lg transition-colors disabled:opacity-50"
-                        >
-                            {loading ? 'Doğrulanıyor...' : 'Doğrula'}
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => { setOtpSent(false); setOtp(''); }}
-                            className="w-full text-sm text-gray-500 hover:underline"
-                        >
-                            Farklı numara kullan
-                        </button>
-                    </form>
-                )}
+                    </div>
+                </form>
 
                 {message && (
                     <div className={`mt-4 p-3 rounded-lg flex items-center space-x-2 ${message.type === 'success' ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300' : 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300'}`}>
@@ -289,7 +227,7 @@ export const CloudSync: React.FC<CloudSyncProps> = ({
                     Cloud Yedekleme
                 </h3>
                 <div className="flex items-center space-x-2">
-                    <span className="text-xs text-gray-500 dark:text-gray-400">{user.phone}</span>
+                    <span className="text-xs text-gray-500 dark:text-gray-400">{user.email}</span>
                     <button
                         onClick={handleLogout}
                         className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
