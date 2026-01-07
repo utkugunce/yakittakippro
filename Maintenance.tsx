@@ -22,7 +22,7 @@ export const Maintenance: React.FC<MaintenanceProps> = ({
 
     // --- Scheduled Maintenance Form State ---
     const [title, setTitle] = useState('');
-    const [maintenanceType, setMaintenanceType] = useState<'km' | 'date'>('km');
+    const [maintenanceType, setMaintenanceType] = useState<'km' | 'date' | 'both'>('km');
     const [intervalKm, setIntervalKm] = useState('');
     const [lastKm, setLastKm] = useState('');
     const [dueDate, setDueDate] = useState('');
@@ -40,35 +40,31 @@ export const Maintenance: React.FC<MaintenanceProps> = ({
 
         if (subTab === 'scheduled') {
             if (!title) return;
-            if (maintenanceType === 'km') {
+
+            let newItem: MaintenanceItem = {
+                id: crypto.randomUUID(),
+                title,
+                type: maintenanceType,
+                status: 'ok'
+            };
+
+            if (maintenanceType === 'km' || maintenanceType === 'both') {
                 if (!intervalKm || !lastKm) return;
                 const interval = parseInt(intervalKm);
                 const last = parseInt(lastKm);
-                const nextDue = last + interval;
-
-                const newItem: MaintenanceItem = {
-                    id: crypto.randomUUID(),
-                    title,
-                    type: 'km',
-                    intervalKm: interval,
-                    lastMaintenanceKm: last,
-                    notifyBeforeKm: 1000,
-                    nextDueKm: nextDue,
-                    status: 'ok'
-                };
-                onAdd(newItem);
-            } else {
-                if (!dueDate) return;
-                const newItem: MaintenanceItem = {
-                    id: crypto.randomUUID(),
-                    title,
-                    type: 'date',
-                    dueDate,
-                    notifyBeforeDays: 30,
-                    status: 'ok'
-                };
-                onAdd(newItem);
+                newItem.intervalKm = interval;
+                newItem.lastMaintenanceKm = last;
+                newItem.nextDueKm = last + interval;
+                newItem.notifyBeforeKm = 1000;
             }
+
+            if (maintenanceType === 'date' || maintenanceType === 'both') {
+                if (!dueDate) return;
+                newItem.dueDate = dueDate;
+                newItem.notifyBeforeDays = 30;
+            }
+
+            onAdd(newItem);
             setTitle(''); setIntervalKm(''); setLastKm(''); setDueDate('');
         } else {
             // Add Part
@@ -91,17 +87,50 @@ export const Maintenance: React.FC<MaintenanceProps> = ({
     };
 
     const calculateStatus = (item: MaintenanceItem) => {
-        if (item.type === 'date' && item.dueDate) {
-            const daysRemaining = Math.ceil((new Date(item.dueDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
-            if (daysRemaining < 0) return { color: 'text-red-600 border-red-200 bg-red-50 dark:bg-red-900/20 dark:border-red-800', text: 'Süresi Dolmuş', icon: <AlertCircle className="w-5 h-5 text-red-600" />, remaining: `${Math.abs(daysRemaining)} gün geçti` };
-            if (daysRemaining <= (item.notifyBeforeDays || 30)) return { color: 'text-amber-600 border-amber-200 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-800', text: 'Yaklaşıyor', icon: <AlertTriangle className="w-5 h-5 text-amber-600" />, remaining: `${daysRemaining} gün kaldı` };
-            return { color: 'text-green-600 border-green-200 bg-green-50 dark:bg-green-900/20 dark:border-green-800', text: 'Durum İyi', icon: <CheckCircle className="w-5 h-5 text-green-600" />, remaining: `${daysRemaining} gün kaldı` };
+        // Date Check
+        let dateStatus = { isDue: false, diff: 0, text: '' };
+        if ((item.type === 'date' || item.type === 'both') && item.dueDate) {
+            const days = Math.ceil((new Date(item.dueDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+            if (days < 0) dateStatus = { isDue: true, diff: days, text: `${Math.abs(days)} gün geçti` };
+            else if (days <= (item.notifyBeforeDays || 30)) dateStatus = { isDue: true, diff: days, text: `${days} gün kaldı` };
+            else dateStatus = { isDue: false, diff: days, text: `${days} gün kaldı` };
         }
-        const remaining = (item.nextDueKm || 0) - currentOdometer;
-        if (remaining < 0) return { color: 'text-red-600 border-red-200 bg-red-50 dark:bg-red-900/20 dark:border-red-800', text: 'Acil Bakım', icon: <AlertCircle className="w-5 h-5 text-red-600" />, remaining };
-        if (remaining <= (item.notifyBeforeKm || 1000)) return { color: 'text-amber-600 border-amber-200 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-800', text: 'Yaklaşıyor', icon: <AlertTriangle className="w-5 h-5 text-amber-600" />, remaining };
-        return { color: 'text-green-600 border-green-200 bg-green-50 dark:bg-green-900/20 dark:border-green-800', text: 'Durum İyi', icon: <CheckCircle className="w-5 h-5 text-green-600" />, remaining };
+
+        // KM Check
+        let kmStatus = { isDue: false, diff: 0, text: '' };
+        if ((item.type === 'km' || item.type === 'both') && item.nextDueKm) {
+            const remaining = item.nextDueKm - currentOdometer;
+            if (remaining < 0) kmStatus = { isDue: true, diff: remaining, text: `${Math.abs(remaining).toLocaleString()} km geçti` };
+            else if (remaining <= (item.notifyBeforeKm || 1000)) kmStatus = { isDue: true, diff: remaining, text: `${remaining.toLocaleString()} km kaldı` };
+            else kmStatus = { isDue: false, diff: remaining, text: `${remaining.toLocaleString()} km kaldı` };
+        }
+
+        // Combine
+        if (item.type === 'date') return getStatusObject(dateStatus.diff, dateStatus.text, dateStatus.isDue, 'date');
+        if (item.type === 'km') return getStatusObject(kmStatus.diff, kmStatus.text, kmStatus.isDue, 'km');
+
+        // Both - return the worse one
+        // If one is overdue (negative), return that. If both, return most overdue.
+        // If neither overdue, return closest.
+        if (dateStatus.diff < 0 || kmStatus.diff < 0) {
+            // Priority to the one passed
+            if (dateStatus.diff < 0 && kmStatus.diff >= 0) return getStatusObject(dateStatus.diff, dateStatus.text, true, 'date');
+            if (kmStatus.diff < 0 && dateStatus.diff >= 0) return getStatusObject(kmStatus.diff, kmStatus.text, true, 'km');
+            return getStatusObject(kmStatus.diff, `${kmStatus.text} / ${dateStatus.text}`, true, 'both');
+        }
+
+        // Both future - return closest relative to urgency threshold? Or just show both?
+        // Let's show both texts or the most urgent one.
+        // Simple heuristic: if day < 30 or km < 1000
+        const isWarning = dateStatus.isDue || kmStatus.isDue;
+        return getStatusObject(0, `${kmStatus.text} / ${dateStatus.text}`, isWarning, 'both');
     };
+
+    const getStatusObject = (diff: number, text: string, isWarning: boolean, type: string) => {
+        if (diff < 0) return { color: 'text-red-600 border-red-200 bg-red-50 dark:bg-red-900/20 dark:border-red-800', text: 'Süresi Dolmuş', icon: <AlertCircle className="w-5 h-5 text-red-600" />, remaining: text };
+        if (isWarning) return { color: 'text-amber-600 border-amber-200 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-800', text: 'Yaklaşıyor', icon: <AlertTriangle className="w-5 h-5 text-amber-600" />, remaining: text };
+        return { color: 'text-green-600 border-green-200 bg-green-50 dark:bg-green-900/20 dark:border-green-800', text: 'Durum İyi', icon: <CheckCircle className="w-5 h-5 text-green-600" />, remaining: text };
+    }
 
     const getPartIcon = (type: PartType) => {
         switch (type) {
@@ -168,14 +197,18 @@ export const Maintenance: React.FC<MaintenanceProps> = ({
                             <div className="flex rounded-lg bg-gray-100 dark:bg-gray-700 p-1 mb-2">
                                 <button type="button" onClick={() => setMaintenanceType('km')} className={`flex-1 py-1.5 text-xs font-bold rounded ${maintenanceType === 'km' ? 'bg-white dark:bg-gray-600 shadow-sm' : ''}`}>KM Bazlı</button>
                                 <button type="button" onClick={() => setMaintenanceType('date')} className={`flex-1 py-1.5 text-xs font-bold rounded ${maintenanceType === 'date' ? 'bg-white dark:bg-gray-600 shadow-sm' : ''}`}>Tarih Bazlı</button>
+                                <button type="button" onClick={() => setMaintenanceType('both')} className={`flex-1 py-1.5 text-xs font-bold rounded ${maintenanceType === 'both' ? 'bg-white dark:bg-gray-600 shadow-sm' : ''}`}>Her İkisi</button>
                             </div>
                             <input type="text" placeholder="Bakım Adı (Örn: Yağ Değişimi)" value={title} onChange={e => setTitle(e.target.value)} className="w-full p-2 rounded-lg border dark:bg-gray-700 dark:border-gray-600" required />
-                            {maintenanceType === 'km' ? (
+
+                            {(maintenanceType === 'km' || maintenanceType === 'both') && (
                                 <div className="grid grid-cols-2 gap-2">
                                     <input type="number" placeholder="Periyot (KM)" value={intervalKm} onChange={e => setIntervalKm(e.target.value)} className="w-full p-2 rounded-lg border dark:bg-gray-700 dark:border-gray-600" required />
                                     <input type="number" placeholder="Son Yapılan KM" value={lastKm} onChange={e => setLastKm(e.target.value)} className="w-full p-2 rounded-lg border dark:bg-gray-700 dark:border-gray-600" required />
                                 </div>
-                            ) : (
+                            )}
+
+                            {(maintenanceType === 'date' || maintenanceType === 'both') && (
                                 <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} className="w-full p-2 rounded-lg border dark:bg-gray-700 dark:border-gray-600" required />
                             )}
                         </>
@@ -219,6 +252,7 @@ export const Maintenance: React.FC<MaintenanceProps> = ({
                         items.map(item => {
                             const status = calculateStatus(item);
                             const isDate = item.type === 'date';
+                            const isBoth = item.type === 'both';
                             return (
                                 <div key={item.id} className={`p-4 rounded-xl border ${status.color} bg-white dark:bg-gray-800`}>
                                     <div className="flex justify-between items-start mb-2">
@@ -226,17 +260,25 @@ export const Maintenance: React.FC<MaintenanceProps> = ({
                                             {status.icon}
                                             <div>
                                                 <h4 className="font-bold text-gray-800 dark:text-white">{item.title}</h4>
-                                                <p className="text-xs opacity-70">{isDate ? `Son: ${item.dueDate}` : `Periyot: ${item.intervalKm} km`}</p>
+                                                <div className="text-xs opacity-70">
+                                                    {isDate && `Son Tarih: ${new Date(item.dueDate!).toLocaleDateString('tr-TR')}`}
+                                                    {item.type === 'km' && `Periyot: ${item.intervalKm} km`}
+                                                    {isBoth && (
+                                                        <span>
+                                                            {item.intervalKm} km / {new Date(item.dueDate!).toLocaleDateString('tr-TR')}
+                                                        </span>
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
                                         <div className="flex gap-2">
-                                            {!isDate && <button onClick={() => { if (confirm('Bakım yapıldı mı?')) onUpdate(item.id, currentOdometer) }} className="px-2 py-1 text-xs bg-white/50 rounded font-bold">Yapıldı</button>}
+                                            {(item.type === 'km' || isBoth) && <button onClick={() => { if (confirm('Bakım yapıldı mı?')) onUpdate(item.id, currentOdometer) }} className="px-2 py-1 text-xs bg-white/50 rounded font-bold">Yapıldı</button>}
                                             <button onClick={() => onDelete(item.id)} className="text-red-500"><Trash2 className="w-4 h-4" /></button>
                                         </div>
                                     </div>
                                     <div className="flex justify-between text-xs font-bold opacity-80">
                                         <span>{status.text}</span>
-                                        <span>{typeof status.remaining === 'number' ? `${status.remaining.toLocaleString()} km kaldı` : status.remaining}</span>
+                                        <span>{status.remaining}</span>
                                     </div>
                                 </div>
                             );

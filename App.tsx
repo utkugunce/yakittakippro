@@ -243,25 +243,64 @@ export default function App() {
 
   const activeAlerts = useMemo(() => {
     const maintAlerts = maintenanceItems.filter(item => {
-      // Basic KM check for now
-      if (!item.nextDueKm) return false;
-      return (item.nextDueKm - lastOdometer) <= (item.notifyBeforeKm || 1000);
+      let isDue = false;
+
+      // 1. Check KM
+      if (item.type === 'km' || item.type === 'both') {
+        if (item.nextDueKm) {
+          const remainingKm = item.nextDueKm - lastOdometer;
+          if (remainingKm <= (item.notifyBeforeKm || 1000)) isDue = true;
+        }
+      }
+
+      // 2. Check Date
+      if (!isDue && (item.type === 'date' || item.type === 'both')) {
+        if (item.dueDate) {
+          const today = new Date();
+          const due = new Date(item.dueDate);
+          const diffTime = due.getTime() - today.getTime();
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+          if (diffDays <= (item.notifyBeforeDays || 30)) isDue = true;
+        }
+      }
+
+      return isDue;
+    }).map(item => {
+      // Calculate sorting urgency score (lower is more urgent)
+      let urgency = 999999;
+      let displayRemaining = "";
+
+      if (item.type === 'date' && item.dueDate) {
+        const days = Math.ceil((new Date(item.dueDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+        urgency = days * 100; // rough heuristic: 1 day ~= 100km
+        displayRemaining = `${days} gün`;
+      } else if (item.nextDueKm) {
+        urgency = item.nextDueKm - lastOdometer;
+        displayRemaining = `${urgency} km`;
+      }
+
+      return { ...item, urgency, displayRemaining };
     });
 
     const partAlerts = vehicleParts.filter(part => {
       if (!part.lifespanKm || !part.isActive) return false;
       const dueKm = part.installKm + part.lifespanKm;
       return (dueKm - lastOdometer) <= 1000;
-    }).map(part => ({
-      id: part.id,
-      title: `${part.name} (Parça)`,
-      type: 'km',
-      nextDueKm: part.installKm + part.lifespanKm!,
-      notifyBeforeKm: 1000,
-      status: 'warning'
-    } as MaintenanceItem));
+    }).map(part => {
+      const remaining = (part.installKm + part.lifespanKm!) - lastOdometer;
+      return {
+        id: part.id,
+        title: `${part.name} (Parça)`,
+        type: 'km',
+        nextDueKm: part.installKm + part.lifespanKm!,
+        notifyBeforeKm: 1000,
+        status: 'warning',
+        urgency: remaining,
+        displayRemaining: `${remaining} km`
+      } as MaintenanceItem & { urgency: number, displayRemaining: string };
+    });
 
-    return [...maintAlerts, ...partAlerts].sort((a, b) => (a.nextDueKm || 0) - (b.nextDueKm || 0));
+    return [...maintAlerts, ...partAlerts].sort((a, b) => a.urgency - b.urgency);
   }, [maintenanceItems, vehicleParts, lastOdometer]);
 
   return (
