@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { DailyLog, MaintenanceItem, DashboardStats } from './types';
+import { DailyLog, MaintenanceItem, DashboardStats, Vehicle } from './types';
 import { EntryForm } from './EntryForm';
 import { DashboardStatsCard } from './DashboardStatsCard';
 import { LogHistory } from './LogHistory';
@@ -12,18 +12,29 @@ import { PwaReloadPrompt } from './PwaReloadPrompt';
 
 const LOCAL_STORAGE_KEY = 'yakit_takip_logs_v1';
 const MAINTENANCE_STORAGE_KEY = 'yakit_takip_maintenance_v1';
+const VEHICLES_STORAGE_KEY = 'yakit_takip_vehicles_v1';
 const THEME_STORAGE_KEY = 'yakit_takip_theme_v1';
 
 export default function App() {
   const [logs, setLogs] = useState<DailyLog[]>([]);
   const [maintenanceItems, setMaintenanceItems] = useState<MaintenanceItem[]>([]);
+  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'dashboard' | 'history' | 'reports' | 'maintenance' | 'settings'>('dashboard');
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [yearFilter, setYearFilter] = useState<'2026' | '2025' | 'all'>('all');
   const [showEntryModal, setShowEntryModal] = useState(false);
   const [editingLog, setEditingLog] = useState<DailyLog | null>(null);
 
-  // Load logs and maintenance items from local storage
+  // Default vehicle for backwards compatibility
+  const defaultVehicle: Vehicle = {
+    id: 'default',
+    name: 'Aracım',
+    fuelType: 'benzin',
+    createdAt: new Date().toISOString()
+  };
+
+  // Load data from local storage
   useEffect(() => {
     const savedLogs = localStorage.getItem(LOCAL_STORAGE_KEY);
     if (savedLogs) {
@@ -43,6 +54,22 @@ export default function App() {
       }
     }
 
+    const savedVehicles = localStorage.getItem(VEHICLES_STORAGE_KEY);
+    if (savedVehicles) {
+      try {
+        const parsed = JSON.parse(savedVehicles);
+        setVehicles(parsed.length > 0 ? parsed : [defaultVehicle]);
+        setSelectedVehicleId(parsed.length > 0 ? parsed[0].id : 'default');
+      } catch (e) {
+        console.error("Failed to parse vehicles", e);
+        setVehicles([defaultVehicle]);
+        setSelectedVehicleId('default');
+      }
+    } else {
+      setVehicles([defaultVehicle]);
+      setSelectedVehicleId('default');
+    }
+
     const savedTheme = localStorage.getItem(THEME_STORAGE_KEY);
     if (savedTheme === 'dark') {
       setIsDarkMode(true);
@@ -59,6 +86,19 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem(MAINTENANCE_STORAGE_KEY, JSON.stringify(maintenanceItems));
   }, [maintenanceItems]);
+
+  // Save vehicles
+  useEffect(() => {
+    if (vehicles.length > 0) {
+      localStorage.setItem(VEHICLES_STORAGE_KEY, JSON.stringify(vehicles));
+    }
+  }, [vehicles]);
+
+  // Filter logs by selected vehicle
+  const filteredLogs = useMemo(() => {
+    if (!selectedVehicleId || selectedVehicleId === 'all') return logs;
+    return logs.filter(log => !log.vehicleId || log.vehicleId === selectedVehicleId);
+  }, [logs, selectedVehicleId]);
 
   // Toggle Dark Mode
   const toggleTheme = () => {
@@ -190,12 +230,26 @@ export default function App() {
               <p className="text-xs text-gray-500 dark:text-gray-400">Aracınızın kontrolü sizde</p>
             </div>
           </div>
-          <button
-            onClick={toggleTheme}
-            className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-          >
-            {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-          </button>
+          <div className="flex items-center space-x-2">
+            {/* Vehicle Selector */}
+            {vehicles.length > 1 && (
+              <select
+                value={selectedVehicleId || ''}
+                onChange={(e) => setSelectedVehicleId(e.target.value)}
+                className="px-3 py-2 text-sm bg-gray-100 dark:bg-gray-700 border-0 rounded-lg text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-blue-500"
+              >
+                {vehicles.map(v => (
+                  <option key={v.id} value={v.id}>{v.name}</option>
+                ))}
+              </select>
+            )}
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+            >
+              {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            </button>
+          </div>
         </div>
       </header>
 
