@@ -1,7 +1,9 @@
 import React, { useState, useRef } from 'react';
 import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import { DailyLog } from './types';
-import { Download, Upload, Trash2, AlertTriangle, FileJson, Check, FileSpreadsheet, ArrowRight, X, Loader2 } from 'lucide-react';
+import { Download, Upload, Trash2, AlertTriangle, FileJson, Check, FileSpreadsheet, ArrowRight, X, Loader2, FileText } from 'lucide-react';
 
 interface DataManagementProps {
     logs: DailyLog[];
@@ -74,6 +76,85 @@ export const DataManagement: React.FC<DataManagementProps> = ({ logs, onImport, 
         } catch (error) {
             console.error("Export error:", error);
             alert("Excel dosyası oluşturulurken bir hata oluştu.");
+        }
+    };
+
+    const handleExportPDF = () => {
+        if (logs.length === 0) {
+            alert("Dışa aktarılacak kayıt bulunamadı.");
+            return;
+        }
+        try {
+            const doc = new jsPDF();
+
+            // Title
+            doc.setFontSize(20);
+            doc.setTextColor(59, 130, 246); // Blue
+            doc.text('Yakıt Takip Pro - Rapor', 14, 20);
+
+            // Date
+            doc.setFontSize(10);
+            doc.setTextColor(100);
+            doc.text(`Oluşturulma Tarihi: ${new Date().toLocaleDateString('tr-TR')}`, 14, 28);
+
+            // Summary Stats
+            const totalDistance = logs.reduce((sum, log) => sum + log.dailyDistance, 0);
+            const totalCost = logs.reduce((sum, log) => sum + log.dailyCost, 0);
+            const totalFuel = logs.reduce((sum, log) => sum + log.dailyFuelConsumed, 0);
+            const avgConsumption = logs.length > 0 ? logs.reduce((sum, log) => sum + log.avgConsumption, 0) / logs.length : 0;
+
+            doc.setFontSize(12);
+            doc.setTextColor(0);
+            doc.text('Özet İstatistikler', 14, 40);
+
+            doc.setFontSize(10);
+            doc.text(`Toplam Mesafe: ${totalDistance.toLocaleString('tr-TR')} km`, 14, 48);
+            doc.text(`Toplam Harcama: ₺${totalCost.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}`, 14, 55);
+            doc.text(`Toplam Yakıt: ${totalFuel.toFixed(1)} L`, 14, 62);
+            doc.text(`Ortalama Tüketim: ${avgConsumption.toFixed(2)} L/100km`, 14, 69);
+            doc.text(`Kayıt Sayısı: ${logs.length}`, 14, 76);
+
+            // Table
+            const tableData = logs.slice(0, 50).map(log => [
+                new Date(log.date).toLocaleDateString('tr-TR'),
+                log.currentOdometer.toLocaleString('tr-TR'),
+                log.dailyDistance.toString(),
+                log.avgConsumption.toFixed(1),
+                `₺${log.dailyCost.toFixed(2)}`,
+                log.isRefuelDay ? 'Evet' : '-'
+            ]);
+
+            autoTable(doc, {
+                startY: 85,
+                head: [['Tarih', 'Sayaç', 'Mesafe', 'Tüketim', 'Maliyet', 'Yakıt']],
+                body: tableData,
+                theme: 'striped',
+                headStyles: { fillColor: [59, 130, 246] },
+                styles: { fontSize: 8, cellPadding: 2 },
+                columnStyles: {
+                    0: { cellWidth: 25 },
+                    1: { cellWidth: 30, halign: 'right' },
+                    2: { cellWidth: 20, halign: 'right' },
+                    3: { cellWidth: 22, halign: 'right' },
+                    4: { cellWidth: 25, halign: 'right' },
+                    5: { cellWidth: 18, halign: 'center' }
+                }
+            });
+
+            // Footer
+            const pageCount = doc.getNumberOfPages();
+            for (let i = 1; i <= pageCount; i++) {
+                doc.setPage(i);
+                doc.setFontSize(8);
+                doc.setTextColor(150);
+                doc.text(`Sayfa ${i} / ${pageCount}`, doc.internal.pageSize.width / 2, doc.internal.pageSize.height - 10, { align: 'center' });
+            }
+
+            const fileName = `yakit_rapor_${new Date().toISOString().split('T')[0]}.pdf`;
+            doc.save(fileName);
+        } catch (error) {
+            console.error("PDF export error:", error);
+            alert("PDF dosyası oluşturulurken bir hata oluştu.");
         }
     };
 
@@ -259,20 +340,27 @@ export const DataManagement: React.FC<DataManagementProps> = ({ logs, onImport, 
                 </p>
 
                 {/* Export Buttons */}
-                <div className="grid grid-cols-2 gap-3 mb-4">
+                <div className="grid grid-cols-3 gap-3 mb-4">
                     <button
                         onClick={handleExportJSON}
                         className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/10 rounded-xl hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all"
                     >
                         <Download className="w-6 h-6 text-blue-500 mb-2" />
-                        <span className="font-bold text-sm text-gray-700 dark:text-gray-200">JSON İndir</span>
+                        <span className="font-bold text-sm text-gray-700 dark:text-gray-200">JSON</span>
                     </button>
                     <button
                         onClick={handleExportExcel}
                         className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/10 rounded-xl hover:bg-green-100 dark:hover:bg-green-900/30 transition-all"
                     >
                         <FileSpreadsheet className="w-6 h-6 text-green-500 mb-2" />
-                        <span className="font-bold text-sm text-gray-700 dark:text-gray-200">Excel İndir</span>
+                        <span className="font-bold text-sm text-gray-700 dark:text-gray-200">Excel</span>
+                    </button>
+                    <button
+                        onClick={handleExportPDF}
+                        className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/10 rounded-xl hover:bg-red-100 dark:hover:bg-red-900/30 transition-all"
+                    >
+                        <FileText className="w-6 h-6 text-red-500 mb-2" />
+                        <span className="font-bold text-sm text-gray-700 dark:text-gray-200">PDF</span>
                     </button>
                 </div>
 

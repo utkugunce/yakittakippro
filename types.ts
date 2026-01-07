@@ -1,5 +1,6 @@
 export interface DailyLog {
   id: string;
+  vehicleId?: string;        // Araç ID (çoklu araç desteği)
   date: string;
   currentOdometer: number; // Güncel KM
   dailyDistance: number;   // O gün yapılan KM
@@ -12,6 +13,16 @@ export interface DailyLog {
   dailyFuelConsumed: number; // Günlük Yakıt (L)
   dailyCost: number;         // Günlük Yakıt Harcaması (TL)
   costPerKm: number;         // KM Başına Maliyet (TL/km)
+}
+
+export interface Vehicle {
+  id: string;
+  name: string;              // Araç adı (örn: "Aile Arabası")
+  plate?: string;            // Plaka
+  fuelType: 'benzin' | 'dizel' | 'lpg' | 'elektrik' | 'hibrit';
+  color?: string;            // Renk (UI için)
+  icon?: string;             // İkon (car, truck, motorcycle vb.)
+  createdAt: string;
 }
 
 export interface DashboardStats {
