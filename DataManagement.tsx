@@ -262,8 +262,15 @@ export const DataManagement: React.FC<DataManagementProps> = ({ logs, onImport, 
                 if (rawDate instanceof Date) {
                     dateStr = rawDate.toISOString().split('T')[0];
                 } else if (typeof rawDate === 'string') {
-                    const d = new Date(rawDate);
-                    if (!isNaN(d.getTime())) dateStr = d.toISOString().split('T')[0];
+                    // Try parsing DD.MM.YYYY format common in Turkey
+                    if (rawDate.match(/^\d{1,2}\.\d{1,2}\.\d{4}$/)) {
+                        const [day, month, year] = rawDate.split('.').map(Number);
+                        const d = new Date(year, month - 1, day);
+                        if (!isNaN(d.getTime())) dateStr = d.toISOString().split('T')[0];
+                    } else {
+                        const d = new Date(rawDate);
+                        if (!isNaN(d.getTime())) dateStr = d.toISOString().split('T')[0];
+                    }
                 }
             }
 
