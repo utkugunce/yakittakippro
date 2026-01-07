@@ -23,6 +23,7 @@ const THEME_STORAGE_KEY = 'yakit_takip_theme_v1';
 export default function App() {
   const [logs, setLogs] = useState<DailyLog[]>([]);
   const [maintenanceItems, setMaintenanceItems] = useState<MaintenanceItem[]>([]);
+  const [vehicleParts, setVehicleParts] = useState<VehiclePart[]>([]);
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'dashboard' | 'history' | 'reports' | 'maintenance' | 'settings'>('dashboard');
@@ -75,6 +76,15 @@ export default function App() {
       setSelectedVehicleId('default');
     }
 
+    const savedParts = localStorage.getItem('yakit_takip_parts_v1');
+    if (savedParts) {
+      try {
+        setVehicleParts(JSON.parse(savedParts));
+      } catch (e) {
+        console.error("Failed to parse parts", e);
+      }
+    }
+
     const savedTheme = localStorage.getItem(THEME_STORAGE_KEY);
     if (savedTheme === 'dark') {
       setIsDarkMode(true);
@@ -91,6 +101,11 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem(MAINTENANCE_STORAGE_KEY, JSON.stringify(maintenanceItems));
   }, [maintenanceItems]);
+
+  // Save parts
+  useEffect(() => {
+    localStorage.setItem('yakit_takip_parts_v1', JSON.stringify(vehicleParts));
+  }, [vehicleParts]);
 
   // Save vehicles
   useEffect(() => {
@@ -402,10 +417,14 @@ export default function App() {
           <div className="animate-in fade-in duration-500">
             <Maintenance
               items={maintenanceItems}
+              parts={vehicleParts}
               currentOdometer={lastOdometer}
               onAdd={handleAddMaintenance}
               onDelete={handleDeleteMaintenance}
               onUpdate={handleUpdateMaintenance}
+              onAddPart={(part) => setVehicleParts(prev => [...prev, part])}
+              onDeletePart={(id) => setVehicleParts(prev => prev.filter(p => p.id !== id))}
+              onTogglePart={(id) => setVehicleParts(prev => prev.map(p => p.id === id ? { ...p, isActive: !p.isActive } : p))}
             />
           </div>
         )}

@@ -1,299 +1,306 @@
-import React, { useState, useEffect } from 'react';
-import { MaintenanceItem } from './types';
-import { Wrench, Plus, Trash2, AlertTriangle, CheckCircle, AlertCircle } from 'lucide-react';
+import React, { useState } from 'react';
+import { MaintenanceItem, VehiclePart, PartType } from './types';
+import { Wrench, Plus, Trash2, AlertTriangle, CheckCircle, AlertCircle, Circle, Archive, Disc, Zap, Fan } from 'lucide-react';
 
 interface MaintenanceProps {
     items: MaintenanceItem[];
+    parts: VehiclePart[];
     currentOdometer: number;
     onAdd: (item: MaintenanceItem) => void;
     onDelete: (id: string) => void;
     onUpdate: (id: string, lastKm: number) => void;
+    onAddPart: (part: VehiclePart) => void;
+    onDeletePart: (id: string) => void;
+    onTogglePart: (id: string) => void;
 }
 
-export const Maintenance: React.FC<MaintenanceProps> = ({ items, currentOdometer, onAdd, onDelete, onUpdate }) => {
+export const Maintenance: React.FC<MaintenanceProps> = ({
+    items, parts, currentOdometer, onAdd, onDelete, onUpdate, onAddPart, onDeletePart, onTogglePart
+}) => {
+    const [subTab, setSubTab] = useState<'scheduled' | 'parts'>('scheduled');
     const [showAddForm, setShowAddForm] = useState(false);
 
-    // Form State
+    // --- Scheduled Maintenance Form State ---
     const [title, setTitle] = useState('');
     const [maintenanceType, setMaintenanceType] = useState<'km' | 'date'>('km');
     const [intervalKm, setIntervalKm] = useState('');
     const [lastKm, setLastKm] = useState('');
     const [dueDate, setDueDate] = useState('');
 
-    const handleSubmit = (e: React.FormEvent) => {
+    // --- Part Form State ---
+    const [partType, setPartType] = useState<PartType>('tire');
+    const [partName, setPartName] = useState('');
+    const [installKm, setInstallKm] = useState('');
+    const [installDate, setInstallDate] = useState(new Date().toISOString().split('T')[0]);
+    const [lifespanKm, setLifespanKm] = useState('');
+
+
+    const handleDetailsSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!title) return;
 
-        if (maintenanceType === 'km') {
-            if (!intervalKm || !lastKm) return;
-            const interval = parseInt(intervalKm);
-            const last = parseInt(lastKm);
-            const nextDue = last + interval;
+        if (subTab === 'scheduled') {
+            if (!title) return;
+            if (maintenanceType === 'km') {
+                if (!intervalKm || !lastKm) return;
+                const interval = parseInt(intervalKm);
+                const last = parseInt(lastKm);
+                const nextDue = last + interval;
 
-            const newItem: MaintenanceItem = {
-                id: crypto.randomUUID(),
-                title,
-                type: 'km',
-                intervalKm: interval,
-                lastMaintenanceKm: last,
-                notifyBeforeKm: 1000,
-                nextDueKm: nextDue,
-                status: 'ok'
-            };
-            onAdd(newItem);
+                const newItem: MaintenanceItem = {
+                    id: crypto.randomUUID(),
+                    title,
+                    type: 'km',
+                    intervalKm: interval,
+                    lastMaintenanceKm: last,
+                    notifyBeforeKm: 1000,
+                    nextDueKm: nextDue,
+                    status: 'ok'
+                };
+                onAdd(newItem);
+            } else {
+                if (!dueDate) return;
+                const newItem: MaintenanceItem = {
+                    id: crypto.randomUUID(),
+                    title,
+                    type: 'date',
+                    dueDate,
+                    notifyBeforeDays: 30,
+                    status: 'ok'
+                };
+                onAdd(newItem);
+            }
+            setTitle(''); setIntervalKm(''); setLastKm(''); setDueDate('');
         } else {
-            if (!dueDate) return;
-            const newItem: MaintenanceItem = {
-                id: crypto.randomUUID(),
-                title,
-                type: 'date',
-                dueDate,
-                notifyBeforeDays: 30,
-                status: 'ok'
-            };
-            onAdd(newItem);
-        }
+            // Add Part
+            if (!partName || !installKm) return;
 
-        setTitle('');
-        setIntervalKm('');
-        setLastKm('');
-        setDueDate('');
+            const newPart: VehiclePart = {
+                id: crypto.randomUUID(),
+                type: partType,
+                name: partName,
+                installDate,
+                installKm: parseInt(installKm),
+                lifespanKm: lifespanKm ? parseInt(lifespanKm) : undefined,
+                isActive: partType === 'tire' ? true : true, // Default active
+                notes: ''
+            };
+            onAddPart(newPart);
+            setPartName(''); setInstallKm(''); setLifespanKm('');
+        }
         setShowAddForm(false);
     };
 
-    const calculateStatus = (item: MaintenanceItem): { color: string, text: string, icon: React.ReactNode, remaining: number | string } => {
-        // Date-based items (muayene, sigorta)
+    const calculateStatus = (item: MaintenanceItem) => {
         if (item.type === 'date' && item.dueDate) {
-            const dueDate = new Date(item.dueDate);
-            const today = new Date();
-            const diffTime = dueDate.getTime() - today.getTime();
-            const daysRemaining = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-            const notifyDays = item.notifyBeforeDays || 30;
-
-            if (daysRemaining < 0) {
-                return {
-                    color: 'text-red-600 bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800',
-                    text: 'Süresi Dolmuş',
-                    icon: <AlertCircle className="w-5 h-5 text-red-600" />,
-                    remaining: `${Math.abs(daysRemaining)} gün geçti`
-                };
-            } else if (daysRemaining <= notifyDays) {
-                return {
-                    color: 'text-amber-600 bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800',
-                    text: 'Yaklaşıyor',
-                    icon: <AlertTriangle className="w-5 h-5 text-amber-600" />,
-                    remaining: `${daysRemaining} gün kaldı`
-                };
-            } else {
-                return {
-                    color: 'text-green-600 bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800',
-                    text: 'Durum İyi',
-                    icon: <CheckCircle className="w-5 h-5 text-green-600" />,
-                    remaining: `${daysRemaining} gün kaldı`
-                };
-            }
+            const daysRemaining = Math.ceil((new Date(item.dueDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+            if (daysRemaining < 0) return { color: 'text-red-600 border-red-200 bg-red-50 dark:bg-red-900/20 dark:border-red-800', text: 'Süresi Dolmuş', icon: <AlertCircle className="w-5 h-5 text-red-600" />, remaining: `${Math.abs(daysRemaining)} gün geçti` };
+            if (daysRemaining <= (item.notifyBeforeDays || 30)) return { color: 'text-amber-600 border-amber-200 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-800', text: 'Yaklaşıyor', icon: <AlertTriangle className="w-5 h-5 text-amber-600" />, remaining: `${daysRemaining} gün kaldı` };
+            return { color: 'text-green-600 border-green-200 bg-green-50 dark:bg-green-900/20 dark:border-green-800', text: 'Durum İyi', icon: <CheckCircle className="w-5 h-5 text-green-600" />, remaining: `${daysRemaining} gün kaldı` };
         }
-
-        // KM-based items (default)
         const remaining = (item.nextDueKm || 0) - currentOdometer;
-        const notifyKm = item.notifyBeforeKm || 1000;
+        if (remaining < 0) return { color: 'text-red-600 border-red-200 bg-red-50 dark:bg-red-900/20 dark:border-red-800', text: 'Acil Bakım', icon: <AlertCircle className="w-5 h-5 text-red-600" />, remaining };
+        if (remaining <= (item.notifyBeforeKm || 1000)) return { color: 'text-amber-600 border-amber-200 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-800', text: 'Yaklaşıyor', icon: <AlertTriangle className="w-5 h-5 text-amber-600" />, remaining };
+        return { color: 'text-green-600 border-green-200 bg-green-50 dark:bg-green-900/20 dark:border-green-800', text: 'Durum İyi', icon: <CheckCircle className="w-5 h-5 text-green-600" />, remaining };
+    };
 
-        if (remaining < 0) {
-            return {
-                color: 'text-red-600 bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800',
-                text: 'Acil Bakım Gerekli',
-                icon: <AlertCircle className="w-5 h-5 text-red-600" />,
-                remaining
-            };
-        } else if (remaining <= notifyKm) {
-            return {
-                color: 'text-amber-600 bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800',
-                text: 'Bakım Yaklaşıyor',
-                icon: <AlertTriangle className="w-5 h-5 text-amber-600" />,
-                remaining
-            };
-        } else {
-            return {
-                color: 'text-green-600 bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800',
-                text: 'Durum İyi',
-                icon: <CheckCircle className="w-5 h-5 text-green-600" />,
-                remaining
-            };
+    const getPartIcon = (type: PartType) => {
+        switch (type) {
+            case 'tire': return <Disc className="w-5 h-5" />;
+            case 'battery': return <Zap className="w-5 h-5" />;
+            case 'wiper': return <Fan className="w-5 h-5" />; // Approx icon
+            case 'pad': return <Circle className="w-5 h-5" />;
+            default: return <Archive className="w-5 h-5" />;
         }
+    };
+
+    // Helper: auto-fill install KM with current Odometer
+    const handleAddClick = () => {
+        setLastKm(currentOdometer.toString());
+        setInstallKm(currentOdometer.toString());
+        setShowAddForm(!showAddForm);
     };
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <h3 className="text-lg font-bold text-gray-800 dark:text-white flex items-center">
-                    <Wrench className="w-5 h-5 mr-2 text-blue-600 dark:text-blue-400" />
-                    Bakım Takibi
-                    <div className="ml-3 px-3 py-1 text-xs font-normal bg-gray-100 dark:bg-gray-700 rounded-full text-gray-600 dark:text-gray-300">
-                        Güncel KM: {currentOdometer.toLocaleString()}
+            {/* Header & Tabs */}
+            <div className="flex flex-col space-y-4">
+                <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-bold text-gray-800 dark:text-white flex items-center">
+                        <Wrench className="w-5 h-5 mr-2 text-blue-600 dark:text-blue-400" />
+                        Bakım & Parçalar
+                    </h3>
+                    <div className="px-3 py-1 text-xs font-normal bg-gray-100 dark:bg-gray-700 rounded-full text-gray-600 dark:text-gray-300">
+                        {currentOdometer.toLocaleString()} km
                     </div>
-                </h3>
-                <button
-                    onClick={() => setShowAddForm(!showAddForm)}
-                    className="flex items-center space-x-1 text-sm font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
-                >
-                    <Plus className="w-5 h-5" />
-                    <span>Yeni Ekle</span>
-                </button>
+                </div>
+
+                <div className="flex p-1 bg-gray-100 dark:bg-gray-700 rounded-xl">
+                    <button
+                        onClick={() => setSubTab('scheduled')}
+                        className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${subTab === 'scheduled' ? 'bg-white dark:bg-gray-600 text-blue-600 dark:text-blue-300 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                    >
+                        Periyodik Bakım
+                    </button>
+                    <button
+                        onClick={() => setSubTab('parts')}
+                        className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${subTab === 'parts' ? 'bg-white dark:bg-gray-600 text-blue-600 dark:text-blue-300 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                    >
+                        Parça & Lastik
+                    </button>
+                </div>
             </div>
 
+            {/* Add Button */}
+            <button
+                onClick={handleAddClick}
+                className="w-full py-3 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl text-gray-500 hover:border-blue-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 font-bold transition-all flex items-center justify-center"
+            >
+                <Plus className="w-5 h-5 mr-2" />
+                {subTab === 'scheduled' ? 'Yeni Bakım Hatırlatıcısı' : 'Yeni Parça Ekle'}
+            </button>
+
+            {/* Form */}
             {showAddForm && (
-                <form onSubmit={handleSubmit} className="bg-gray-50 dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 space-y-4 animate-in slide-in-from-top-2">
-                    {/* Type Selector */}
-                    <div className="flex rounded-lg bg-gray-200 dark:bg-gray-700 p-1">
-                        <button
-                            type="button"
-                            onClick={() => setMaintenanceType('km')}
-                            className={`flex-1 py-2 text-sm font-bold rounded-md transition-all ${maintenanceType === 'km' ? 'bg-white dark:bg-gray-600 text-blue-600 dark:text-blue-400 shadow-sm' : 'text-gray-500'}`}
-                        >
-                            KM Bazlı
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => setMaintenanceType('date')}
-                            className={`flex-1 py-2 text-sm font-bold rounded-md transition-all ${maintenanceType === 'date' ? 'bg-white dark:bg-gray-600 text-blue-600 dark:text-blue-400 shadow-sm' : 'text-gray-500'}`}
-                        >
-                            Tarih Bazlı
-                        </button>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div>
-                            <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">
-                                {maintenanceType === 'km' ? 'Bakım Adı' : 'Hatırlatıcı Adı'}
-                            </label>
-                            <input
-                                type="text"
-                                placeholder={maintenanceType === 'km' ? 'Örn: Yağ Değişimi' : 'Örn: Araç Muayenesi'}
-                                value={title}
-                                onChange={e => setTitle(e.target.value)}
-                                className="w-full p-2 rounded-lg bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                                required
-                            />
-                        </div>
-
-                        {maintenanceType === 'km' ? (
-                            <>
-                                <div>
-                                    <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">Periyot (KM)</label>
-                                    <input
-                                        type="number"
-                                        placeholder="10000"
-                                        value={intervalKm}
-                                        onChange={e => setIntervalKm(e.target.value)}
-                                        className="w-full p-2 rounded-lg bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                                        required
-                                    />
-                                </div>
-                                <div>
-                                    <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">En Son Yapılan KM</label>
-                                    <input
-                                        type="number"
-                                        placeholder="125000"
-                                        value={lastKm}
-                                        onChange={e => setLastKm(e.target.value)}
-                                        className="w-full p-2 rounded-lg bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                                        required
-                                    />
-                                </div>
-                            </>
-                        ) : (
-                            <div className="md:col-span-2">
-                                <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">Son Tarih</label>
-                                <input
-                                    type="date"
-                                    value={dueDate}
-                                    onChange={e => setDueDate(e.target.value)}
-                                    className="w-full p-2 rounded-lg bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                                    required
-                                />
+                <form onSubmit={handleDetailsSubmit} className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 space-y-4 animate-in slide-in-from-top-2">
+                    {subTab === 'scheduled' ? (
+                        <>
+                            {/* Existing Scheduled Maintenance Form Logic */}
+                            <div className="flex rounded-lg bg-gray-100 dark:bg-gray-700 p-1 mb-2">
+                                <button type="button" onClick={() => setMaintenanceType('km')} className={`flex-1 py-1.5 text-xs font-bold rounded ${maintenanceType === 'km' ? 'bg-white dark:bg-gray-600 shadow-sm' : ''}`}>KM Bazlı</button>
+                                <button type="button" onClick={() => setMaintenanceType('date')} className={`flex-1 py-1.5 text-xs font-bold rounded ${maintenanceType === 'date' ? 'bg-white dark:bg-gray-600 shadow-sm' : ''}`}>Tarih Bazlı</button>
                             </div>
-                        )}
-                    </div>
-
-                    <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold p-2 rounded-lg text-sm transition-colors">
-                        Kaydet
-                    </button>
+                            <input type="text" placeholder="Bakım Adı (Örn: Yağ Değişimi)" value={title} onChange={e => setTitle(e.target.value)} className="w-full p-2 rounded-lg border dark:bg-gray-700 dark:border-gray-600" required />
+                            {maintenanceType === 'km' ? (
+                                <div className="grid grid-cols-2 gap-2">
+                                    <input type="number" placeholder="Periyot (KM)" value={intervalKm} onChange={e => setIntervalKm(e.target.value)} className="w-full p-2 rounded-lg border dark:bg-gray-700 dark:border-gray-600" required />
+                                    <input type="number" placeholder="Son Yapılan KM" value={lastKm} onChange={e => setLastKm(e.target.value)} className="w-full p-2 rounded-lg border dark:bg-gray-700 dark:border-gray-600" required />
+                                </div>
+                            ) : (
+                                <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} className="w-full p-2 rounded-lg border dark:bg-gray-700 dark:border-gray-600" required />
+                            )}
+                        </>
+                    ) : (
+                        <>
+                            {/* Part Entry Form */}
+                            <label className="block text-xs font-bold text-gray-500 uppercase">Parça Türü</label>
+                            <div className="flex gap-2 overflow-x-auto pb-1">
+                                {(['tire', 'battery', 'pad', 'wiper', 'other'] as const).map(t => (
+                                    <button
+                                        key={t} type="button"
+                                        onClick={() => setPartType(t)}
+                                        className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap border ${partType === t ? 'bg-blue-100 border-blue-200 text-blue-700 dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-300' : 'bg-gray-50 border-gray-200 text-gray-600 dark:bg-gray-700 dark:border-gray-600'}`}
+                                    >
+                                        {t === 'tire' ? 'Lastik' : t === 'battery' ? 'Akü' : t === 'pad' ? 'Balata' : t === 'wiper' ? 'Silecek' : 'Diğer'}
+                                    </button>
+                                ))}
+                            </div>
+                            <input type="text" placeholder="Parça Adı (Örn: Michelin Alpin 6)" value={partName} onChange={e => setPartName(e.target.value)} className="w-full p-2 rounded-lg border dark:bg-gray-700 dark:border-gray-600" required />
+                            <div className="grid grid-cols-2 gap-2">
+                                <div>
+                                    <label className="text-xs text-gray-500">Takılma KM</label>
+                                    <input type="number" value={installKm} onChange={e => setInstallKm(e.target.value)} className="w-full p-2 rounded-lg border dark:bg-gray-700 dark:border-gray-600" required />
+                                </div>
+                                <div>
+                                    <label className="text-xs text-gray-500">Takılma Tarihi</label>
+                                    <input type="date" value={installDate} onChange={e => setInstallDate(e.target.value)} className="w-full p-2 rounded-lg border dark:bg-gray-700 dark:border-gray-600" required />
+                                </div>
+                            </div>
+                            <input type="number" placeholder="Beklenen Ömür (KM) - Opsiyonel" value={lifespanKm} onChange={e => setLifespanKm(e.target.value)} className="w-full p-2 rounded-lg border dark:bg-gray-700 dark:border-gray-600" />
+                        </>
+                    )}
+                    <button type="submit" className="w-full bg-blue-600 text-white font-bold py-2 rounded-lg">Kaydet</button>
                 </form>
             )}
 
-            <div className="grid grid-cols-1 gap-4">
-                {items.length === 0 ? (
-                    <div className="text-center py-8 text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-dashed border-gray-200 dark:border-gray-700">
-                        <Wrench className="w-10 h-10 mx-auto mb-2 opacity-20" />
-                        <p>Henüz bakım kaydı eklenmedi.</p>
-                    </div>
-                ) : (
-                    items.map(item => {
-                        const status = calculateStatus(item);
-                        const isDateBased = item.type === 'date';
-                        const percent = isDateBased ? 0 : Math.min(100, Math.max(0, ((currentOdometer - (item.lastMaintenanceKm || 0)) / (item.intervalKm || 1)) * 100));
-
-                        return (
-                            <div key={item.id} className={`p-4 rounded-xl border ${status.color} transition-all`}>
-                                <div className="flex items-start justify-between mb-3">
-                                    <div className="flex items-center space-x-3">
-                                        {status.icon}
-                                        <div>
-                                            <h4 className="font-bold text-gray-800 dark:text-white">{item.title}</h4>
-                                            <p className="text-xs opacity-70">
-                                                {isDateBased
-                                                    ? `Son Tarih: ${new Date(item.dueDate!).toLocaleDateString('tr-TR')}`
-                                                    : `Periyot: ${(item.intervalKm || 0).toLocaleString()} km`}
-                                            </p>
+            {/* Content List */}
+            <div className="space-y-3">
+                {subTab === 'scheduled' ? (
+                    items.length === 0 ? <p className="text-center text-gray-400 py-4">Kayıt yok.</p> :
+                        items.map(item => {
+                            const status = calculateStatus(item);
+                            const isDate = item.type === 'date';
+                            return (
+                                <div key={item.id} className={`p-4 rounded-xl border ${status.color} bg-white dark:bg-gray-800`}>
+                                    <div className="flex justify-between items-start mb-2">
+                                        <div className="flex items-center gap-3">
+                                            {status.icon}
+                                            <div>
+                                                <h4 className="font-bold text-gray-800 dark:text-white">{item.title}</h4>
+                                                <p className="text-xs opacity-70">{isDate ? `Son: ${item.dueDate}` : `Periyot: ${item.intervalKm} km`}</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex gap-2">
+                                            {!isDate && <button onClick={() => { if (confirm('Bakım yapıldı mı?')) onUpdate(item.id, currentOdometer) }} className="px-2 py-1 text-xs bg-white/50 rounded font-bold">Yapıldı</button>}
+                                            <button onClick={() => onDelete(item.id)} className="text-red-500"><Trash2 className="w-4 h-4" /></button>
                                         </div>
                                     </div>
-                                    <div className="flex items-center space-x-2">
-                                        {!isDateBased && (
-                                            <button
-                                                onClick={() => {
-                                                    if (window.confirm(`${item.title} bakımını şimdi yaptığınızı onaylıyor musunuz? (Yeni KM: ${currentOdometer})`)) {
-                                                        onUpdate(item.id, currentOdometer);
-                                                    }
-                                                }}
-                                                className="px-3 py-1.5 text-xs font-bold bg-white/50 hover:bg-white/80 dark:bg-black/20 dark:hover:bg-black/40 rounded-lg transition-colors"
-                                            >
-                                                Bakım Yapıldı
+                                    <div className="flex justify-between text-xs font-bold opacity-80">
+                                        <span>{status.text}</span>
+                                        <span>{typeof status.remaining === 'number' ? `${status.remaining.toLocaleString()} km kaldı` : status.remaining}</span>
+                                    </div>
+                                </div>
+                            );
+                        })
+                ) : (
+                    parts.length === 0 ? <p className="text-center text-gray-400 py-4">Parça kaydı yok.</p> :
+                        parts.map(part => {
+                            const usage = currentOdometer - part.installKm;
+                            const lifePercent = part.lifespanKm ? Math.min(100, (usage / part.lifespanKm) * 100) : 0;
+
+                            return (
+                                <div key={part.id} className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 relative overflow-hidden">
+                                    {part.type === 'tire' && (
+                                        <div className={`absolute top-0 right-0 px-2 py-1 text-[10px] font-bold rounded-bl-lg ${part.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                                            {part.isActive ? 'TAKILI' : 'DEPO'}
+                                        </div>
+                                    )}
+
+                                    <div className="flex items-start gap-3 relative z-10">
+                                        <div className={`p-2 rounded-lg ${part.isActive ? 'bg-blue-50 text-blue-600' : 'bg-gray-100 text-gray-400'}`}>
+                                            {getPartIcon(part.type)}
+                                        </div>
+                                        <div className="flex-1">
+                                            <h4 className="font-bold text-gray-800 dark:text-white text-sm">{part.name}</h4>
+                                            <div className="text-xs text-gray-500 mt-1 space-y-0.5">
+                                                <p>Takılma: {part.installKm.toLocaleString()} km ({new Date(part.installDate).toLocaleDateString('tr-TR')})</p>
+                                                <p className="font-bold text-blue-600 dark:text-blue-400">Kullanım: {usage.toLocaleString()} km</p>
+                                            </div>
+
+                                            {/* Lifespan Bar */}
+                                            {part.lifespanKm && (
+                                                <div className="mt-3">
+                                                    <div className="flex justify-between text-[10px] text-gray-400 mb-1">
+                                                        <span>Ömür</span>
+                                                        <span>%{lifePercent.toFixed(0)}</span>
+                                                    </div>
+                                                    <div className="h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+                                                        <div className={`h-full rounded-full ${lifePercent > 90 ? 'bg-red-500' : 'bg-blue-500'}`} style={{ width: `${lifePercent}%` }}></div>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700 flex justify-end gap-3 relative z-10">
+                                        {part.type === 'tire' && !part.isActive && (
+                                            <button onClick={() => onTogglePart(part.id)} className="text-xs font-bold text-green-600 hover:bg-green-50 px-2 py-1 rounded">
+                                                Tak
                                             </button>
                                         )}
-                                        <button
-                                            onClick={() => onDelete(item.id)}
-                                            className="p-1.5 text-red-500 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors"
-                                        >
+                                        {part.type === 'tire' && part.isActive && (
+                                            <button onClick={() => onTogglePart(part.id)} className="text-xs font-bold text-amber-600 hover:bg-amber-50 px-2 py-1 rounded">
+                                                Sök (Depoya Kaldır)
+                                            </button>
+                                        )}
+                                        <button onClick={() => onDeletePart(part.id)} className="text-gray-400 hover:text-red-500 transition-colors">
                                             <Trash2 className="w-4 h-4" />
                                         </button>
                                     </div>
                                 </div>
-
-                                <div className="space-y-2">
-                                    <div className="flex justify-between text-xs font-medium opacity-80">
-                                        <span>{status.text}</span>
-                                        <span>{typeof status.remaining === 'string' ? status.remaining : `${status.remaining.toLocaleString()} km kaldı`}</span>
-                                    </div>
-                                    {!isDateBased && (
-                                        <>
-                                            <div className="w-full bg-black/10 dark:bg-white/10 rounded-full h-2">
-                                                <div
-                                                    className={`h-2 rounded-full transition-all duration-500 ${typeof status.remaining === 'number' && status.remaining < 0 ? 'bg-red-500' : typeof status.remaining === 'number' && status.remaining <= (item.notifyBeforeKm || 1000) ? 'bg-amber-500' : 'bg-green-500'}`}
-                                                    style={{ width: `${percent}%` }}
-                                                ></div>
-                                            </div>
-                                            <div className="flex justify-between text-[10px] opacity-60">
-                                                <span>Son: {(item.lastMaintenanceKm || 0).toLocaleString()}</span>
-                                                <span>Hedef: {(item.nextDueKm || 0).toLocaleString()}</span>
-                                            </div>
-                                        </>
-                                    )}
-                                </div>
-                            </div>
-                        );
-                    })
+                            );
+                        })
                 )}
             </div>
-        </div >
+        </div>
     );
 };
