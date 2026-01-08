@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { DailyLog, MaintenanceItem, DashboardStats, Vehicle } from './types';
+import { DailyLog, MaintenanceItem, DashboardStats, Vehicle, VehiclePart } from './types';
 import { EntryForm } from './EntryForm';
 import { DashboardStatsCard } from './DashboardStatsCard';
 import { LogHistory } from './LogHistory';
@@ -207,6 +207,15 @@ export default function App() {
     }));
   };
 
+  // Optimization: Memoize last log calculation to avoid O(N) scan on every render
+  // and prevent stack overflow from spread operator on large arrays.
+  const lastLog = useMemo(() => {
+    if (logs.length === 0) return null;
+    return logs.reduce((prev, current) => (prev.currentOdometer > current.currentOdometer) ? prev : current);
+  }, [logs]);
+
+  const lastOdometer = lastLog ? lastLog.currentOdometer : 0;
+
   // Calculate stats based on year filter
   const stats: DashboardStats = useMemo(() => {
     const filteredLogs = yearFilter === 'all'
@@ -225,9 +234,7 @@ export default function App() {
       : 0;
 
     // Last fuel price (from all logs, not filtered)
-    const lastLog = logs.length > 0
-      ? logs.reduce((prev, current) => (prev.currentOdometer > current.currentOdometer) ? prev : current)
-      : null;
+    // Optimization: Reuse pre-calculated lastLog
     const lastFuelPrice = lastLog?.fuelPrice || 0;
 
     return {
@@ -237,9 +244,7 @@ export default function App() {
       avgConsumption,
       lastFuelPrice
     };
-  }, [logs, yearFilter]);
-
-  const lastOdometer = logs.length > 0 ? Math.max(...logs.map(l => l.currentOdometer)) : 0;
+  }, [logs, yearFilter, lastLog]);
 
   const activeAlerts = useMemo(() => {
     const maintAlerts = maintenanceItems.filter(item => {
