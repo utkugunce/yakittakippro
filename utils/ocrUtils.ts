@@ -8,6 +8,92 @@ export interface ScanResult {
     text: string;
 }
 
+export interface DashboardScanResult {
+    odometer?: number;
+    consumption?: number;
+    distance?: number;
+    text: string;
+}
+
+export const scanDashboard = async (file: File): Promise<DashboardScanResult> => {
+    try {
+        const result = await Tesseract.recognize(
+            file,
+            'eng+tur',
+            {
+                logger: m => console.log(m)
+            }
+        );
+
+        const text = result.data.text;
+        console.log("Dashboard OCR Text:", text);
+
+        return parseDashboardText(text);
+    } catch (error) {
+        console.error("OCR Error:", error);
+        throw error;
+    }
+};
+
+const parseDashboardText = (text: string): DashboardScanResult => {
+    const result: DashboardScanResult = {
+        text: text
+    };
+
+    // Clean text
+    const cleanedText = text.replace(/,/g, '.').replace(/o/gi, '0').replace(/O/g, '0');
+    const lines = cleanedText.split('\n');
+
+    // Look for odometer (usually a large number like 12345 or 123456)
+    // Pattern: 5-6 digit numbers that represent total kilometers
+    const odometerMatch = cleanedText.match(/\b(\d{4,6})\s*(?:km|KM)?\b/);
+    if (odometerMatch) {
+        const value = parseInt(odometerMatch[1]);
+        if (value > 1000 && value < 1000000) { // Reasonable odometer range
+            result.odometer = value;
+        }
+    }
+
+    // Look for consumption (L/100km) - usually 3-15 range with decimal
+    // Patterns: "6.5 L/100km", "AVG 7.2", "ORT 6.8"
+    const consumptionPatterns = [
+        /(\d{1,2}[.,]\d)\s*(?:L\/100|lt\/100|l\/100)/i,
+        /(?:AVG|ORT|ORTALAMA|AVERAGE).*?(\d{1,2}[.,]\d)/i,
+        /(\d{1,2}[.,]\d)\s*(?:L|lt)/i
+    ];
+
+    for (const pattern of consumptionPatterns) {
+        const match = cleanedText.match(pattern);
+        if (match) {
+            const value = parseFloat(match[1].replace(',', '.'));
+            if (value >= 3 && value <= 25) { // Reasonable consumption range
+                result.consumption = value;
+                break;
+            }
+        }
+    }
+
+    // Look for trip distance (usually smaller number with km)
+    // Patterns: "TRIP 45.2", "YOLCULUK 120", "MESAFE 85"
+    const distancePatterns = [
+        /(?:TRIP|YOLCULUK|MESAFE|GÜNLÜK).*?(\d{1,4}[.,]?\d?)\s*(?:km)?/i,
+        /(\d{1,3}[.,]\d)\s*km/i
+    ];
+
+    for (const pattern of distancePatterns) {
+        const match = cleanedText.match(pattern);
+        if (match) {
+            const value = parseFloat(match[1].replace(',', '.'));
+            if (value > 0 && value < 2000) { // Reasonable daily distance
+                result.distance = value;
+                break;
+            }
+        }
+    }
+
+    return result;
+};
+
 export const scanReceipt = async (file: File): Promise<ScanResult> => {
     try {
         const result = await Tesseract.recognize(
