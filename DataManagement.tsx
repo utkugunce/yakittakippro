@@ -333,6 +333,30 @@ export const DataManagement: React.FC<DataManagementProps> = ({ logs, onImport, 
         }
     };
 
+    // Fix refuel dates - specific to user's data
+    const handleFixRefuelDates = () => {
+        const refuelDates = [
+            '2025-08-12', '2025-08-27', '2025-08-29',
+            '2025-09-01', '2025-09-07', '2025-09-09', '2025-09-23',
+            '2025-10-11',
+            '2025-11-06', '2025-11-20', '2025-11-26',
+            '2025-12-12', '2025-12-14', '2025-12-18',
+            '2026-01-01'
+        ];
+
+        const updatedLogs = logs.map(log => ({
+            ...log,
+            isRefuelDay: refuelDates.includes(log.date)
+        }));
+
+        const fixedCount = updatedLogs.filter(l => l.isRefuelDay).length;
+        onImport(updatedLogs);
+        setImportStatus({
+            success: true,
+            message: `${fixedCount} kayıt "Yakıt Alındı" olarak işaretlendi.`
+        });
+    };
+
     return (
         <div className="space-y-6">
             {/* Hidden file input */}
@@ -406,6 +430,24 @@ export const DataManagement: React.FC<DataManagementProps> = ({ logs, onImport, 
                         <p className="text-sm">{importStatus.message}</p>
                     </div>
                 )}
+            </div>
+
+            {/* Fix Refuel Dates - Temporary utility */}
+            <div className="bg-amber-50 dark:bg-amber-900/10 rounded-xl shadow-sm border border-amber-100 dark:border-amber-900/30 p-6">
+                <h3 className="text-lg font-bold text-amber-800 dark:text-amber-400 mb-4 flex items-center">
+                    ⛽ Yakıt Tarihleri Düzeltme
+                </h3>
+                <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                    <p className="text-gray-600 dark:text-gray-400 text-sm">
+                        Excel'den yüklenen verilerdeki yakıt alım tarihlerini düzeltir.
+                    </p>
+                    <button
+                        onClick={handleFixRefuelDates}
+                        className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-lg shadow-sm whitespace-nowrap"
+                    >
+                        Yakıt Tarihlerini Düzelt
+                    </button>
+                </div>
             </div>
 
             {/* Danger Zone */}
