@@ -9,7 +9,7 @@ import { DataManagement } from './DataManagement';
 import { Maintenance } from './Maintenance';
 import { WeeklySummary } from './WeeklySummary';
 import { NotificationSettings } from './NotificationSettings';
-import { BudgetGoal } from './BudgetGoal';
+
 import { CloudSync } from './CloudSync';
 import { FuelMap } from './FuelMap';
 import { AIPredictions } from './AIPredictions';
@@ -402,9 +402,8 @@ export default function App() {
             <DashboardStatsCard stats={stats} alerts={activeAlerts} currentOdometer={lastOdometer} />
 
             {/* Weekly/Monthly Summary & Budget */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4">
               <WeeklySummary logs={logs} />
-              <BudgetGoal logs={logs} />
             </div>
 
             {/* Year Filter Tabs */}
