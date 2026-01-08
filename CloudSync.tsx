@@ -34,6 +34,8 @@ export const CloudSync: React.FC<CloudSyncProps> = ({
     const [loading, setLoading] = useState(true);
     const [syncing, setSyncing] = useState(false);
     const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+    const [autoSync, setAutoSync] = useState(() => localStorage.getItem('auto_sync') === 'true');
+    const [lastSyncTime, setLastSyncTime] = useState<string | null>(() => localStorage.getItem('last_sync_time'));
 
     // Email auth states
     const [email, setEmail] = useState('');
@@ -112,6 +114,9 @@ export const CloudSync: React.FC<CloudSyncProps> = ({
         });
 
         if (result.success) {
+            const now = new Date().toLocaleString('tr-TR');
+            setLastSyncTime(now);
+            localStorage.setItem('last_sync_time', now);
             setMessage({ type: 'success', text: 'Veriler buluta yüklendi!' });
         } else {
             setMessage({ type: 'error', text: result.error || 'Yükleme başarısız' });
@@ -273,6 +278,29 @@ export const CloudSync: React.FC<CloudSyncProps> = ({
                 >
                     {syncing ? <Loader2 className="w-6 h-6 text-green-500 animate-spin mb-2" /> : <Download className="w-6 h-6 text-green-500 mb-2" />}
                     <span className="text-sm font-bold text-gray-700 dark:text-gray-200">İndir</span>
+                </button>
+            </div>
+
+            {/* Auto-sync toggle and last sync info */}
+            <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg mb-4">
+                <div>
+                    <span className="text-sm text-gray-700 dark:text-gray-300">Otomatik Senkronizasyon</span>
+                    {lastSyncTime && (
+                        <p className="text-xs text-gray-400">Son: {lastSyncTime}</p>
+                    )}
+                </div>
+                <button
+                    onClick={() => {
+                        const newState = !autoSync;
+                        setAutoSync(newState);
+                        localStorage.setItem('auto_sync', newState.toString());
+                        if (newState && user) {
+                            handleSaveToCloud();
+                        }
+                    }}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${autoSync ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'}`}
+                >
+                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${autoSync ? 'translate-x-6' : 'translate-x-1'}`} />
                 </button>
             </div>
 

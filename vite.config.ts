@@ -42,10 +42,38 @@ export default defineConfig(({ mode }) => {
               type: 'image/png',
               purpose: 'any maskable'
             }
-          ]
+          ],
+          shortcuts: [
+            {
+              name: 'Yeni Kayıt Ekle',
+              short_name: 'Kayıt',
+              description: 'Hızlıca yeni yakıt kaydı ekle',
+              url: '/?action=add',
+              icons: [{ src: 'pwa-192x192.png', sizes: '192x192' }]
+            },
+            {
+              name: 'Raporları Gör',
+              short_name: 'Raporlar',
+              description: 'Yakıt raporlarını görüntüle',
+              url: '/?tab=reports',
+              icons: [{ src: 'pwa-192x192.png', sizes: '192x192' }]
+            },
+            {
+              name: 'Bakım Kontrol',
+              short_name: 'Bakım',
+              description: 'Bakım hatırlatmalarını kontrol et',
+              url: '/?tab=maintenance',
+              icons: [{ src: 'pwa-192x192.png', sizes: '192x192' }]
+            }
+          ],
+          categories: ['utilities', 'finance', 'lifestyle']
         },
         workbox: {
-          globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
+          // Cache all static assets
+          globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2,json}'],
+          // Precache all routes for offline access
+          navigateFallback: 'index.html',
+          navigateFallbackDenylist: [/^\/api/],
           runtimeCaching: [
             {
               urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
@@ -73,6 +101,34 @@ export default defineConfig(({ mode }) => {
                 cacheableResponse: {
                   statuses: [0, 200]
                 }
+              }
+            },
+            {
+              // Cache map tiles for offline use
+              urlPattern: /^https:\/\/[a-z]\.tile\.openstreetmap\.org\/.*/i,
+              handler: 'CacheFirst',
+              options: {
+                cacheName: 'map-tiles-cache',
+                expiration: {
+                  maxEntries: 500,
+                  maxAgeSeconds: 60 * 60 * 24 * 30 // 30 days
+                },
+                cacheableResponse: {
+                  statuses: [0, 200]
+                }
+              }
+            },
+            {
+              // Cache API calls with network-first strategy
+              urlPattern: /^https:\/\/.*\.supabase\.co\/.*/i,
+              handler: 'NetworkFirst',
+              options: {
+                cacheName: 'api-cache',
+                expiration: {
+                  maxEntries: 50,
+                  maxAgeSeconds: 60 * 60 // 1 hour
+                },
+                networkTimeoutSeconds: 10
               }
             }
           ]

@@ -32,6 +32,27 @@ export const FuelMap: React.FC<FuelMapProps> = ({ logs }) => {
         ? [pins[0].latitude!, pins[0].longitude!]
         : defaultCenter;
 
+    // Station statistics
+    const stationStats = useMemo(() => {
+        const stats: Record<string, { count: number, totalSpent: number, avgPrice: number }> = {};
+
+        logs.forEach(log => {
+            if (log.fuelStation) {
+                if (!stats[log.fuelStation]) {
+                    stats[log.fuelStation] = { count: 0, totalSpent: 0, avgPrice: 0 };
+                }
+                stats[log.fuelStation].count++;
+                stats[log.fuelStation].totalSpent += log.dailyCost;
+                stats[log.fuelStation].avgPrice = log.fuelPrice;
+            }
+        });
+
+        return Object.entries(stats)
+            .map(([name, data]) => ({ name, ...data }))
+            .sort((a, b) => b.count - a.count)
+            .slice(0, 3); // Top 3 stations
+    }, [logs]);
+
     if (pins.length === 0) {
         return (
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-8 text-center">
@@ -47,52 +68,74 @@ export const FuelMap: React.FC<FuelMapProps> = ({ logs }) => {
     }
 
     return (
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden h-[400px] z-0">
-            <MapContainer
-                center={center}
-                zoom={6}
-                style={{ height: '100%', width: '100%' }}
-                scrollWheelZoom={false}
-            >
-                <TileLayer
-                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                />
-
-                {pins.map(log => (
-                    <Marker
-                        key={log.id}
-                        position={[log.latitude!, log.longitude!]}
-                    >
-                        <Popup>
-                            <div className="p-1">
-                                <div className="flex items-center gap-2 mb-2 font-bold text-gray-800 border-b pb-1">
-                                    <Calendar className="w-4 h-4 text-primary-500" />
-                                    {new Date(log.date).toLocaleDateString('tr-TR')}
-                                </div>
-                                <div className="space-y-1 text-sm text-gray-600">
-                                    <div className="flex items-center justify-between gap-4">
-                                        <span>Tutar:</span>
-                                        <span className="font-bold text-gray-800">₺{log.dailyCost.toFixed(2)}</span>
-                                    </div>
-                                    <div className="flex items-center justify-between gap-4">
-                                        <span>Yakıt:</span>
-                                        <span className="font-bold text-gray-800">{(log.dailyFuelConsumed).toFixed(1)} L</span>
-                                    </div>
-                                    <div className="flex items-center justify-between gap-4">
-                                        <span>Birim:</span>
-                                        <span className="font-bold text-gray-800">₺{log.fuelPrice}</span>
-                                    </div>
-                                    <div className="flex items-center gap-1 mt-2 text-xs text-gray-400">
-                                        <Gauge className="w-3 h-3" />
-                                        {log.currentOdometer} km
-                                    </div>
-                                </div>
+        <div className="space-y-4">
+            {/* Station Statistics Summary */}
+            {stationStats.length > 0 && (
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    {stationStats.map((station, i) => (
+                        <div key={station.name} className={`p-3 rounded-xl border ${i === 0 ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800' : 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700'}`}>
+                            <div className="flex items-center gap-2 mb-1">
+                                <Fuel className={`w-4 h-4 ${i === 0 ? 'text-amber-500' : 'text-gray-400'}`} />
+                                <span className="font-bold text-sm text-gray-800 dark:text-white truncate">{station.name}</span>
+                                {i === 0 && <span className="text-[10px] bg-amber-200 dark:bg-amber-800 text-amber-700 dark:text-amber-200 px-1 rounded">FAVORİ</span>}
                             </div>
-                        </Popup>
-                    </Marker>
-                ))}
-            </MapContainer>
+                            <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
+                                <span>{station.count} ziyaret</span>
+                                <span>₺{station.totalSpent.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}</span>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
+
+            {/* Map */}
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden h-[400px] z-0">
+                <MapContainer
+                    center={center}
+                    zoom={6}
+                    style={{ height: '100%', width: '100%' }}
+                    scrollWheelZoom={false}
+                >
+                    <TileLayer
+                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    />
+
+                    {pins.map(log => (
+                        <Marker
+                            key={log.id}
+                            position={[log.latitude!, log.longitude!]}
+                        >
+                            <Popup>
+                                <div className="p-1">
+                                    <div className="flex items-center gap-2 mb-2 font-bold text-gray-800 border-b pb-1">
+                                        <Calendar className="w-4 h-4 text-primary-500" />
+                                        {new Date(log.date).toLocaleDateString('tr-TR')}
+                                    </div>
+                                    <div className="space-y-1 text-sm text-gray-600">
+                                        <div className="flex items-center justify-between gap-4">
+                                            <span>Tutar:</span>
+                                            <span className="font-bold text-gray-800">₺{log.dailyCost.toFixed(2)}</span>
+                                        </div>
+                                        <div className="flex items-center justify-between gap-4">
+                                            <span>Yakıt:</span>
+                                            <span className="font-bold text-gray-800">{(log.dailyFuelConsumed).toFixed(1)} L</span>
+                                        </div>
+                                        <div className="flex items-center justify-between gap-4">
+                                            <span>Birim:</span>
+                                            <span className="font-bold text-gray-800">₺{log.fuelPrice}</span>
+                                        </div>
+                                        <div className="flex items-center gap-1 mt-2 text-xs text-gray-400">
+                                            <Gauge className="w-3 h-3" />
+                                            {log.currentOdometer} km
+                                        </div>
+                                    </div>
+                                </div>
+                            </Popup>
+                        </Marker>
+                    ))}
+                </MapContainer>
+            </div>
         </div>
     );
 };

@@ -68,8 +68,30 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({ main
 
         if (newState && permission === 'granted') {
             checkMaintenanceAlerts();
+            // Schedule daily check
+            scheduleDailyCheck();
         }
     };
+
+    // Schedule daily notification check
+    const scheduleDailyCheck = () => {
+        // Check if we should run today's check
+        const lastCheck = localStorage.getItem('last_notification_check');
+        const today = new Date().toDateString();
+
+        if (lastCheck !== today) {
+            // Run the check
+            checkMaintenanceAlerts();
+            localStorage.setItem('last_notification_check', today);
+        }
+    };
+
+    // Run scheduled check on mount if enabled
+    useEffect(() => {
+        if (permission === 'granted' && notificationsEnabled) {
+            scheduleDailyCheck();
+        }
+    }, [permission, notificationsEnabled]);
 
     if (!('Notification' in window)) {
         return (
