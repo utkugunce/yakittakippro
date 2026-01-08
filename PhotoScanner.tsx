@@ -18,7 +18,8 @@ interface DashboardResults {
 }
 
 export const PhotoScanner: React.FC<PhotoScannerProps> = ({ onDashboardData, onReceiptData, onClose }) => {
-    const fileInputRef = useRef<HTMLInputElement>(null);
+    const cameraInputRef = useRef<HTMLInputElement>(null);
+    const galleryInputRef = useRef<HTMLInputElement>(null);
 
     // Scan type selection
     const [scanType, setScanType] = useState<ScanType>(null);
@@ -93,8 +94,12 @@ export const PhotoScanner: React.FC<PhotoScannerProps> = ({ onDashboardData, onR
         }
     };
 
-    const triggerFileSelect = () => {
-        fileInputRef.current?.click();
+    const triggerCamera = () => {
+        cameraInputRef.current?.click();
+    };
+
+    const triggerGallery = () => {
+        galleryInputRef.current?.click();
     };
 
     const handleConfirmDashboard = () => {
@@ -142,21 +147,30 @@ export const PhotoScanner: React.FC<PhotoScannerProps> = ({ onDashboardData, onR
         }
     };
 
-    // Hidden file input
-    const FileInput = (
-        <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            capture="environment"
-            onChange={handleFileSelect}
-            className="hidden"
-        />
+    // Hidden file inputs - one for camera, one for gallery
+    const FileInputs = (
+        <>
+            <input
+                ref={cameraInputRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                onChange={handleFileSelect}
+                className="hidden"
+            />
+            <input
+                ref={galleryInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleFileSelect}
+                className="hidden"
+            />
+        </>
     );
 
     return (
         <div className="fixed inset-0 z-[100] bg-black/95 flex flex-col">
-            {FileInput}
+            {FileInputs}
 
             {/* Header */}
             <div className="p-4 flex items-center justify-between bg-gradient-to-b from-black/80 to-transparent absolute top-0 w-full z-10 text-white">
@@ -245,13 +259,13 @@ export const PhotoScanner: React.FC<PhotoScannerProps> = ({ onDashboardData, onR
                         {/* Step Indicator */}
                         <div className="flex items-center justify-center mb-8">
                             <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${dashboardStep === 'consumption' ? 'bg-blue-600 text-white' :
-                                    consumptionImage ? 'bg-green-500 text-white' : 'bg-gray-700 text-gray-400'
+                                consumptionImage ? 'bg-green-500 text-white' : 'bg-gray-700 text-gray-400'
                                 }`}>
                                 {consumptionImage ? <Check className="w-5 h-5" /> : '1'}
                             </div>
                             <div className={`w-16 h-1 mx-2 rounded ${consumptionImage ? 'bg-green-500' : 'bg-gray-700'}`} />
                             <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${dashboardStep === 'distance' ? 'bg-blue-600 text-white' :
-                                    distanceImage ? 'bg-green-500 text-white' : 'bg-gray-700 text-gray-400'
+                                distanceImage ? 'bg-green-500 text-white' : 'bg-gray-700 text-gray-400'
                                 }`}>
                                 {distanceImage ? <Check className="w-5 h-5" /> : '2'}
                             </div>
@@ -268,13 +282,22 @@ export const PhotoScanner: React.FC<PhotoScannerProps> = ({ onDashboardData, onR
                                     Araç göstergesinde <span className="text-blue-400 font-semibold">L/100km</span> gösterilen ekranın fotoğrafını çekin
                                 </p>
 
-                                <button
-                                    onClick={triggerFileSelect}
-                                    className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg shadow-blue-500/30 flex items-center justify-center transition-all"
-                                >
-                                    <Camera className="w-5 h-5 mr-2" />
-                                    Fotoğraf Çek / Yükle
-                                </button>
+                                <div className="flex gap-3">
+                                    <button
+                                        onClick={triggerCamera}
+                                        className="flex-1 py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg shadow-blue-500/30 flex items-center justify-center transition-all"
+                                    >
+                                        <Camera className="w-5 h-5 mr-2" />
+                                        Fotoğraf Çek
+                                    </button>
+                                    <button
+                                        onClick={triggerGallery}
+                                        className="flex-1 py-4 bg-gray-700 hover:bg-gray-600 text-white font-bold rounded-xl flex items-center justify-center transition-all"
+                                    >
+                                        <Upload className="w-5 h-5 mr-2" />
+                                        Yükle
+                                    </button>
+                                </div>
                             </div>
                         )}
 
@@ -300,13 +323,22 @@ export const PhotoScanner: React.FC<PhotoScannerProps> = ({ onDashboardData, onR
                                     Araç göstergesinde <span className="text-purple-400 font-semibold">günlük/trip km</span> gösterilen ekranın fotoğrafını çekin
                                 </p>
 
-                                <button
-                                    onClick={triggerFileSelect}
-                                    className="w-full py-4 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl shadow-lg shadow-purple-500/30 flex items-center justify-center transition-all"
-                                >
-                                    <Camera className="w-5 h-5 mr-2" />
-                                    Fotoğraf Çek / Yükle
-                                </button>
+                                <div className="flex gap-3 mb-3">
+                                    <button
+                                        onClick={triggerCamera}
+                                        className="flex-1 py-4 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl shadow-lg shadow-purple-500/30 flex items-center justify-center transition-all"
+                                    >
+                                        <Camera className="w-5 h-5 mr-2" />
+                                        Fotoğraf Çek
+                                    </button>
+                                    <button
+                                        onClick={triggerGallery}
+                                        className="flex-1 py-4 bg-gray-700 hover:bg-gray-600 text-white font-bold rounded-xl flex items-center justify-center transition-all"
+                                    >
+                                        <Upload className="w-5 h-5 mr-2" />
+                                        Yükle
+                                    </button>
+                                </div>
 
                                 <button
                                     onClick={resetDashboardStep}
@@ -380,13 +412,22 @@ export const PhotoScanner: React.FC<PhotoScannerProps> = ({ onDashboardData, onR
                             Benzin istasyonundan aldığınız fişin fotoğrafını çekin
                         </p>
 
-                        <button
-                            onClick={triggerFileSelect}
-                            className="w-full py-4 bg-orange-600 hover:bg-orange-700 text-white font-bold rounded-xl shadow-lg shadow-orange-500/30 flex items-center justify-center transition-all"
-                        >
-                            <Camera className="w-5 h-5 mr-2" />
-                            Fotoğraf Çek / Yükle
-                        </button>
+                        <div className="flex gap-3">
+                            <button
+                                onClick={triggerCamera}
+                                className="flex-1 py-4 bg-orange-600 hover:bg-orange-700 text-white font-bold rounded-xl shadow-lg shadow-orange-500/30 flex items-center justify-center transition-all"
+                            >
+                                <Camera className="w-5 h-5 mr-2" />
+                                Fotoğraf Çek
+                            </button>
+                            <button
+                                onClick={triggerGallery}
+                                className="flex-1 py-4 bg-gray-700 hover:bg-gray-600 text-white font-bold rounded-xl flex items-center justify-center transition-all"
+                            >
+                                <Upload className="w-5 h-5 mr-2" />
+                                Yükle
+                            </button>
+                        </div>
                     </div>
                 )}
 
