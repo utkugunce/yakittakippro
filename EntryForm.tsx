@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { DailyLog } from './types';
-import { PlusCircle, Fuel, Gauge, Calculator, Calendar, AlertCircle, Coins, Eraser, StickyNote, Camera, MapPin } from 'lucide-react';
+import { PlusCircle, Fuel, Gauge, Calculator, Calendar, AlertCircle, Coins, Eraser, StickyNote, Camera, MapPin, Mic } from 'lucide-react';
 import { ExcelImport } from './ExcelImport';
 import { PhotoScanner } from './PhotoScanner';
+import { VoiceEntry } from './VoiceEntry';
 
 interface EntryFormProps {
   logs: DailyLog[];
@@ -36,6 +37,7 @@ export const EntryForm: React.FC<EntryFormProps> = ({ logs, onAdd, onUpdate, onI
   // Local error state for immediate feedback
   const [odoError, setOdoError] = useState<string | null>(null);
   const [showPhotoScanner, setShowPhotoScanner] = useState(false);
+  const [showVoiceEntry, setShowVoiceEntry] = useState(false);
 
   // Location State
   const [addLocation, setAddLocation] = useState(false);
@@ -236,6 +238,14 @@ export const EntryForm: React.FC<EntryFormProps> = ({ logs, onAdd, onUpdate, onI
         <div className="flex items-center space-x-2">
           <button
             type="button"
+            onClick={() => setShowVoiceEntry(true)}
+            className="flex items-center px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg shadow-sm transition-all"
+            title="Sesle Giriş"
+          >
+            <Mic className="w-4 h-4" />
+          </button>
+          <button
+            type="button"
             onClick={() => setShowPhotoScanner(true)}
             className="flex items-center px-3 py-2 bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white text-sm font-medium rounded-lg shadow-sm transition-all"
           >
@@ -258,6 +268,18 @@ export const EntryForm: React.FC<EntryFormProps> = ({ logs, onAdd, onUpdate, onI
             if (data.fuelPrice) setFuelPrice(data.fuelPrice.toString());
           }}
           onClose={() => setShowPhotoScanner(false)}
+        />
+      )}
+
+      {/* Voice Entry Modal */}
+      {showVoiceEntry && (
+        <VoiceEntry
+          onData={(data) => {
+            if (data.distance) setDailyDistance(data.distance.toString());
+            if (data.consumption) setAvgConsumption(data.consumption.toString());
+            if (data.fuelPrice) setFuelPrice(data.fuelPrice.toString());
+          }}
+          onClose={() => setShowVoiceEntry(false)}
         />
       )}
 

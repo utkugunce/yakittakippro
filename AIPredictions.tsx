@@ -84,13 +84,72 @@ export const AIPredictions: React.FC<AIPredictionsProps> = ({ logs, maintenanceI
         // Simple extrapolation
         const estimatedMonthlyCost = currentDay > 0 ? (thisMonthCost / currentDay) * daysInMonth : 0;
 
+        // 5. ANOMALY DETECTION - using standard deviation
+        const consumptionValues = logs.filter(l => l.avgConsumption > 0).map(l => l.avgConsumption);
+        const avgConsumption = consumptionValues.reduce((a, b) => a + b, 0) / consumptionValues.length;
+        const variance = consumptionValues.reduce((sum, val) => sum + Math.pow(val - avgConsumption, 2), 0) / consumptionValues.length;
+        const stdDev = Math.sqrt(variance);
+
+        // Check last 7 days for anomalies
+        const last7Days = sortedLogs.slice(0, 7);
+        const last7Consumption = last7Days.filter(l => l.avgConsumption > 0).map(l => l.avgConsumption);
+        const last7Avg = last7Consumption.length > 0 ? last7Consumption.reduce((a, b) => a + b, 0) / last7Consumption.length : 0;
+
+        let anomaly: { type: 'high' | 'low' | null, percentage: number, message: string } = { type: null, percentage: 0, message: '' };
+
+        if (last7Avg > avgConsumption + stdDev * 1.5) {
+            const percentIncrease = ((last7Avg - avgConsumption) / avgConsumption) * 100;
+            anomaly = {
+                type: 'high',
+                percentage: percentIncrease,
+                message: `Son 7 günde tüketim normalden %${percentIncrease.toFixed(0)} fazla!`
+            };
+        } else if (last7Avg < avgConsumption - stdDev * 1.5 && last7Avg > 0) {
+            const percentDecrease = ((avgConsumption - last7Avg) / avgConsumption) * 100;
+            anomaly = {
+                type: 'low',
+                percentage: percentDecrease,
+                message: `Tebrikler! Son 7 günde %${percentDecrease.toFixed(0)} tasarruf ettiniz.`
+            };
+        }
+
+        // 6. FUEL SAVING TIPS based on data
+        const savingsTips: string[] = [];
+
+        if (avgConsumption > 8) {
+            savingsTips.push("🚗 Lastik basınçlarını kontrol edin - düşük basınç tüketimi artırır");
+        }
+        if (avgDailyKm > 100) {
+            savingsTips.push("🛣️ Uzun yolda sabit hız kullanın - cruise control tasarruf sağlar");
+        }
+        if (logs.some(l => l.avgConsumption > avgConsumption * 1.3)) {
+            savingsTips.push("⚡ Ani hızlanma ve frenlerden kaçının");
+        }
+        const priceVariance = logs.filter(l => l.fuelPrice > 0).map(l => l.fuelPrice);
+        if (priceVariance.length > 2) {
+            const maxPrice = Math.max(...priceVariance);
+            const minPrice = Math.min(...priceVariance);
+            if ((maxPrice - minPrice) / minPrice > 0.1) {
+                savingsTips.push("⛽ Fiyat farkı yüksek - en ucuz istasyonu tercih edin");
+            }
+        }
+
+        // Weekly change calculation
+        const prev7Days = sortedLogs.slice(7, 14);
+        const prev7Cost = prev7Days.reduce((sum, l) => sum + l.dailyCost, 0);
+        const last7Cost = last7Days.reduce((sum, l) => sum + l.dailyCost, 0);
+        const weeklyChange = prev7Cost > 0 ? ((last7Cost - prev7Cost) / prev7Cost) * 100 : 0;
 
         return {
             avgDailyKm,
             nextRefuelDate,
             nextService,
             estimatedMonthlyCost,
-            thisMonthCost
+            thisMonthCost,
+            anomaly,
+            savingsTips,
+            weeklyChange,
+            avgConsumption
         };
     }, [logs, maintenanceItems, vehicleParts, currentOdometer]);
 
@@ -162,6 +221,48 @@ export const AIPredictions: React.FC<AIPredictionsProps> = ({ logs, maintenanceI
                     <p className="text-[10px] text-gray-400 mt-1">Son verilerine göre</p>
                 </div>
             </div>
+
+            {/* Anomaly Alert Banner */}
+            {predictions.anomaly.type && (
+                <div className={`mt-4 p-3 rounded-xl flex items-center gap-3 ${predictions.anomaly.type === 'high'
+                        ? 'bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800'
+                        : 'bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800'
+                    }`}>
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${predictions.anomaly.type === 'high' ? 'bg-red-100 dark:bg-red-800' : 'bg-green-100 dark:bg-green-800'
+                        }`}>
+                        {predictions.anomaly.type === 'high' ? (
+                            <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400" />
+                        ) : (
+                            <TrendingUp className="w-5 h-5 text-green-600 dark:text-green-400" />
+                        )}
+                    </div>
+                    <div>
+                        <p className={`text-sm font-semibold ${predictions.anomaly.type === 'high' ? 'text-red-700 dark:text-red-300' : 'text-green-700 dark:text-green-300'
+                            }`}>
+                            {predictions.anomaly.message}
+                        </p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                            Ortalama tüketim: {predictions.avgConsumption.toFixed(1)} L/100km
+                        </p>
+                    </div>
+                </div>
+            )}
+
+            {/* Savings Tips */}
+            {predictions.savingsTips.length > 0 && (
+                <div className="mt-4 p-3 bg-amber-50 dark:bg-amber-900/20 rounded-xl border border-amber-200 dark:border-amber-800">
+                    <div className="flex items-center gap-2 mb-2">
+                        <span className="text-amber-600 dark:text-amber-400 text-sm font-bold">💡 Tasarruf Önerileri</span>
+                    </div>
+                    <div className="space-y-1.5">
+                        {predictions.savingsTips.slice(0, 3).map((tip, i) => (
+                            <p key={i} className="text-xs text-amber-800 dark:text-amber-200">
+                                {tip}
+                            </p>
+                        ))}
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

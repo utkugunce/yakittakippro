@@ -1,8 +1,9 @@
 import React, { useMemo } from 'react';
 import { DailyLog, MaintenanceItem, VehiclePart } from './types';
-import { FileText, TrendingUp, TrendingDown, Calendar, Award, BarChart3, Fuel, Route, Coins, ArrowUpRight, ArrowDownRight, Download } from 'lucide-react';
+import { FileText, TrendingUp, TrendingDown, Calendar, Award, BarChart3, Fuel, Route, Coins, ArrowUpRight, ArrowDownRight, Download, FileSpreadsheet, Table } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import * as XLSX from 'xlsx';
 
 interface ReportsProps {
   logs: DailyLog[];
@@ -135,6 +136,71 @@ export const Reports: React.FC<ReportsProps> = ({ logs, maintenanceItems = [], v
     }
 
     doc.save('arac-satis-raporu.pdf');
+  };
+
+  // Excel Export
+  const exportToExcel = () => {
+    const data = logs.map(log => ({
+      'Tarih': log.date,
+      'Kilometre': log.currentOdometer,
+      'Yapılan KM': log.dailyDistance,
+      'Tüketim (L/100km)': log.avgConsumption,
+      'Yakıt Fiyatı (TL)': log.fuelPrice,
+      'Günlük Yakıt (L)': log.dailyFuelConsumed.toFixed(2),
+      'Günlük Maliyet (TL)': log.dailyCost.toFixed(2),
+      'KM Başı Maliyet (TL)': log.costPerKm.toFixed(3),
+      'İstasyon': log.fuelStation || '',
+      'Yakıt Alındı': log.isRefuelDay ? 'Evet' : 'Hayır',
+      'Notlar': log.notes || ''
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Yakıt Kayıtları');
+
+    // Add summary sheet
+    const totalDist = logs.reduce((acc, l) => acc + l.dailyDistance, 0);
+    const totalCost = logs.reduce((acc, l) => acc + l.dailyCost, 0);
+    const totalFuel = logs.reduce((acc, l) => acc + l.dailyFuelConsumed, 0);
+
+    const summaryData = [
+      { 'Özet': 'Toplam Kayıt', 'Değer': logs.length },
+      { 'Özet': 'Toplam Mesafe (km)', 'Değer': totalDist.toFixed(1) },
+      { 'Özet': 'Toplam Harcama (TL)', 'Değer': totalCost.toFixed(2) },
+      { 'Özet': 'Toplam Yakıt (L)', 'Değer': totalFuel.toFixed(2) },
+      { 'Özet': 'Ortalama Tüketim (L/100km)', 'Değer': totalDist > 0 ? ((totalFuel / totalDist) * 100).toFixed(2) : '0' }
+    ];
+    const summaryWs = XLSX.utils.json_to_sheet(summaryData);
+    XLSX.utils.book_append_sheet(wb, summaryWs, 'Özet');
+
+    XLSX.writeFile(wb, `yakit-kayitlari-${new Date().toISOString().split('T')[0]}.xlsx`);
+  };
+
+  // CSV Export  
+  const exportToCSV = () => {
+    const headers = ['Tarih', 'Kilometre', 'Yapılan KM', 'Tüketim (L/100km)', 'Yakıt Fiyatı (TL)', 'Günlük Yakıt (L)', 'Günlük Maliyet (TL)', 'KM Başı Maliyet (TL)', 'İstasyon', 'Yakıt Alındı', 'Notlar'];
+    const rows = logs.map(log => [
+      log.date,
+      log.currentOdometer,
+      log.dailyDistance,
+      log.avgConsumption,
+      log.fuelPrice,
+      log.dailyFuelConsumed.toFixed(2),
+      log.dailyCost.toFixed(2),
+      log.costPerKm.toFixed(3),
+      log.fuelStation || '',
+      log.isRefuelDay ? 'Evet' : 'Hayır',
+      (log.notes || '').replace(/,/g, ';')
+    ]);
+
+    const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+    const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `yakit-kayitlari-${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
   };
 
   const stats = useMemo(() => {
@@ -514,18 +580,34 @@ export const Reports: React.FC<ReportsProps> = ({ logs, maintenanceItems = [], v
 
       {/* Monthly Breakdown */}
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
-        <div className="p-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
+        <div className="p-4 border-b border-gray-100 dark:border-gray-700 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <h3 className="font-bold text-gray-800 dark:text-white flex items-center">
             <Calendar className="w-5 h-5 mr-2 text-primary-600 dark:text-primary-400" />
             Aylık Özet
           </h3>
-          <button
-            onClick={generateSalesReport}
-            className="flex items-center space-x-2 bg-gray-900 dark:bg-gray-700 hover:bg-gray-800 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-all"
-          >
-            <Download className="w-3 h-3" />
-            <span>Satış Raporu (PDF)</span>
-          </button>
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={exportToExcel}
+              className="flex items-center space-x-1.5 bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-all"
+            >
+              <FileSpreadsheet className="w-3 h-3" />
+              <span>Excel</span>
+            </button>
+            <button
+              onClick={exportToCSV}
+              className="flex items-center space-x-1.5 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-all"
+            >
+              <Table className="w-3 h-3" />
+              <span>CSV</span>
+            </button>
+            <button
+              onClick={generateSalesReport}
+              className="flex items-center space-x-1.5 bg-gray-900 dark:bg-gray-700 hover:bg-gray-800 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-all"
+            >
+              <Download className="w-3 h-3" />
+              <span>PDF Rapor</span>
+            </button>
+          </div>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left">
