@@ -44,7 +44,8 @@ export const AIPredictions: React.FC<AIPredictionsProps> = ({ logs, maintenanceI
 
         // Check Maintenance Items
         maintenanceItems.forEach(item => {
-            if (item.type === 'km' && item.nextDueKm) {
+            // KM-based maintenance
+            if ((item.type === 'km' || item.type === 'both') && item.nextDueKm) {
                 const remainingKm = item.nextDueKm - currentOdometer;
                 if (remainingKm > 0 && avgDailyKm > 0) {
                     const daysToMaintenance = remainingKm / avgDailyKm;
@@ -53,6 +54,19 @@ export const AIPredictions: React.FC<AIPredictionsProps> = ({ logs, maintenanceI
 
                     if (!nextService || date < nextService.date) {
                         nextService = { title: item.title, date, type: 'maintenance' };
+                    }
+                }
+            }
+
+            // Date-based maintenance (kasko, sigorta, muayene)
+            if ((item.type === 'date' || item.type === 'both') && item.dueDate) {
+                const dueDate = new Date(item.dueDate);
+                const now = new Date();
+
+                // Only show if due date is in the future
+                if (dueDate > now) {
+                    if (!nextService || dueDate < nextService.date) {
+                        nextService = { title: item.title, date: dueDate, type: 'maintenance' };
                     }
                 }
             }
@@ -225,8 +239,8 @@ export const AIPredictions: React.FC<AIPredictionsProps> = ({ logs, maintenanceI
             {/* Anomaly Alert Banner */}
             {predictions.anomaly.type && (
                 <div className={`mt-4 p-3 rounded-xl flex items-center gap-3 ${predictions.anomaly.type === 'high'
-                        ? 'bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800'
-                        : 'bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800'
+                    ? 'bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800'
+                    : 'bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800'
                     }`}>
                     <div className={`w-10 h-10 rounded-full flex items-center justify-center ${predictions.anomaly.type === 'high' ? 'bg-red-100 dark:bg-red-800' : 'bg-green-100 dark:bg-green-800'
                         }`}>
