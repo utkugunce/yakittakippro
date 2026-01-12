@@ -1,7 +1,7 @@
 import React from 'react';
 import { Moon, Sun, Monitor, Check } from 'lucide-react';
 
-export type AccentColor = 'blue' | 'green' | 'purple' | 'orange' | 'red';
+export type AccentColor = 'blue' | 'green' | 'purple' | 'orange' | 'red' | 'violet';
 
 interface ThemeSettingsProps {
     isDarkMode: boolean;
@@ -18,6 +18,7 @@ export const ThemeSettings: React.FC<ThemeSettingsProps> = ({
         { id: 'blue', name: 'Mavi', class: 'bg-blue-500' },
         { id: 'green', name: 'Yeşil', class: 'bg-green-500' },
         { id: 'purple', name: 'Mor', class: 'bg-purple-500' },
+        { id: 'violet', name: 'Violet (2627C)', class: 'bg-violet-700' },
         { id: 'orange', name: 'Turuncu', class: 'bg-orange-500' },
         { id: 'red', name: 'Kırmızı', class: 'bg-red-500' },
     ];
