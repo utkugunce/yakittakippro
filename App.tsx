@@ -23,6 +23,12 @@ import { PwaReloadPrompt } from './PwaReloadPrompt';
 import { GamificationDisplay, StreakWidget, BadgeList } from '@/src/features/gamification';
 import { useGamificationStore } from '@/src/stores/gamificationStore';
 
+// New feature imports
+import { BudgetTracker } from '@/src/features/budget';
+import { WeeklyChallenges } from '@/src/features/challenges';
+import { StationAnalysis, CarbonFootprint } from '@/src/features/analytics';
+import { ShareableStatsCard } from '@/src/features/sharing';
+
 const LOCAL_STORAGE_KEY = 'yakit_takip_logs_v1';
 const MAINTENANCE_STORAGE_KEY = 'yakit_takip_maintenance_v1';
 const VEHICLES_STORAGE_KEY = 'yakit_takip_vehicles_v1';
@@ -480,6 +486,12 @@ export default function App() {
               <StreakWidget />
             </div>
 
+            {/* Budget & Challenges */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <BudgetTracker fuelPurchases={fuelPurchases} />
+              <WeeklyChallenges />
+            </div>
+
             {/* Weekly/Monthly Summary & Budget */}
             <div className="grid grid-cols-1 gap-4">
               <WeeklySummary logs={logs} />
@@ -549,6 +561,25 @@ export default function App() {
                     )}
                   </div>
                 </div>
+
+                {/* Analytics Section */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <StationAnalysis fuelPurchases={fuelPurchases} />
+                  <CarbonFootprint fuelPurchases={fuelPurchases} logs={logs} />
+                </div>
+
+                {/* Shareable Stats Card */}
+                <ShareableStatsCard
+                  stats={{
+                    totalDistance: stats.totalDistance,
+                    totalCost: stats.totalCost,
+                    avgConsumption: stats.avgConsumption,
+                    totalFuelPurchases: fuelPurchases.length,
+                    currentStreak: useGamificationStore.getState().currentStreak,
+                    totalXP: useGamificationStore.getState().totalXP,
+                    badgeCount: useGamificationStore.getState().badges.length
+                  }}
+                />
               </div>
             </div>
           </div>
