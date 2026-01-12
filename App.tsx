@@ -489,7 +489,7 @@ export default function App() {
             {/* Budget & Challenges */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <BudgetTracker fuelPurchases={fuelPurchases} />
-              <WeeklyChallenges />
+              <WeeklyChallenges logs={logs} fuelPurchases={fuelPurchases} />
             </div>
 
             {/* Weekly/Monthly Summary & Budget */}

@@ -3,14 +3,26 @@ import { Target, Trophy, Clock, Star, CheckCircle, Zap } from 'lucide-react';
 import { useChallengeStore, Challenge } from '../../stores/challengeStore';
 import { useGamificationStore } from '../../stores/gamificationStore';
 
-export const WeeklyChallenges: React.FC = () => {
-    const { activeChallenges, refreshChallenges } = useChallengeStore();
-    const { addXP } = useGamificationStore();
+interface WeeklyChallengesProps {
+    logs?: { date: string }[];
+    fuelPurchases?: { date: string; totalAmount: number }[];
+}
+
+export const WeeklyChallenges: React.FC<WeeklyChallengesProps> = ({ logs = [], fuelPurchases = [] }) => {
+    const { activeChallenges, refreshChallenges, initializeWithHistoricalData } = useChallengeStore();
+    const { addXP, currentStreak } = useGamificationStore();
 
     // Refresh challenges on mount
     useEffect(() => {
         refreshChallenges();
     }, [refreshChallenges]);
+
+    // Initialize with historical data after challenges are loaded
+    useEffect(() => {
+        if (activeChallenges.length > 0 && (logs.length > 0 || fuelPurchases.length > 0)) {
+            initializeWithHistoricalData({ logs, fuelPurchases, currentStreak });
+        }
+    }, [activeChallenges.length, logs.length, fuelPurchases.length, currentStreak, initializeWithHistoricalData]);
 
     // Award XP when challenge completes
     useEffect(() => {
@@ -108,8 +120,8 @@ const ChallengeItem: React.FC<{ challenge: Challenge }> = ({ challenge }) => {
                 <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-1">
                         <h4 className={`font-semibold text-sm ${challenge.isCompleted
-                                ? 'text-green-700 dark:text-green-400'
-                                : 'text-gray-800 dark:text-white'
+                            ? 'text-green-700 dark:text-green-400'
+                            : 'text-gray-800 dark:text-white'
                             }`}>
                             {challenge.title}
                             {challenge.isCompleted && (
@@ -131,8 +143,8 @@ const ChallengeItem: React.FC<{ challenge: Challenge }> = ({ challenge }) => {
                     <div className="h-2 bg-gray-200 dark:bg-gray-600 rounded-full overflow-hidden">
                         <div
                             className={`h-full rounded-full transition-all duration-500 ${challenge.isCompleted
-                                    ? 'bg-gradient-to-r from-green-500 to-emerald-500'
-                                    : 'bg-gradient-to-r from-purple-500 to-indigo-500'
+                                ? 'bg-gradient-to-r from-green-500 to-emerald-500'
+                                : 'bg-gradient-to-r from-purple-500 to-indigo-500'
                                 }`}
                             style={{ width: `${progress}%` }}
                         />

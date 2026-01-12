@@ -24,6 +24,7 @@ interface ChallengeState {
     refreshChallenges: () => void;
     updateProgress: (type: Challenge['type'], value: number) => void;
     completeChallenge: (id: string) => void;
+    initializeWithHistoricalData: (data: { logs: { date: string }[], fuelPurchases: { date: string, totalAmount: number }[], currentStreak: number }) => void;
 }
 
 // Generate weekly challenges
@@ -142,6 +143,55 @@ export const useChallengeStore = create<ChallengeState>()(
                     activeChallenges: state.activeChallenges.map(c =>
                         c.id === id ? { ...c, isCompleted: true, completedAt: new Date().toISOString() } : c
                     )
+                }));
+            },
+
+            initializeWithHistoricalData: (data) => {
+                const { logs, fuelPurchases, currentStreak } = data;
+                const { activeChallenges } = get();
+
+                // Get start of current week (Sunday)
+                const now = new Date();
+                const startOfWeek = new Date(now);
+                startOfWeek.setDate(now.getDate() - now.getDay());
+                startOfWeek.setHours(0, 0, 0, 0);
+
+                // Count this week's entries
+                const thisWeekLogs = logs.filter(log => new Date(log.date) >= startOfWeek).length;
+                const thisWeekFuelPurchases = fuelPurchases.filter(fp => new Date(fp.date) >= startOfWeek);
+                const thisWeekEntries = thisWeekLogs + thisWeekFuelPurchases.length;
+
+                // Calculate this week's spending
+                const thisWeekSpending = thisWeekFuelPurchases.reduce((sum, fp) => sum + fp.totalAmount, 0);
+
+                // Update challenges with historical data
+                set((state) => ({
+                    activeChallenges: state.activeChallenges.map(challenge => {
+                        let newCurrent = challenge.current;
+                        let isNowCompleted = challenge.isCompleted;
+
+                        switch (challenge.type) {
+                            case 'entries':
+                                newCurrent = Math.max(challenge.current, thisWeekEntries);
+                                isNowCompleted = newCurrent >= challenge.target;
+                                break;
+                            case 'streak':
+                                newCurrent = Math.max(challenge.current, currentStreak);
+                                isNowCompleted = newCurrent >= challenge.target;
+                                break;
+                            case 'savings':
+                                newCurrent = thisWeekSpending;
+                                isNowCompleted = newCurrent <= challenge.target;
+                                break;
+                        }
+
+                        return {
+                            ...challenge,
+                            current: newCurrent,
+                            isCompleted: isNowCompleted,
+                            completedAt: isNowCompleted && !challenge.isCompleted ? new Date().toISOString() : challenge.completedAt
+                        };
+                    })
                 }));
             }
         }),
