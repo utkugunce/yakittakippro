@@ -17,13 +17,15 @@ export interface FuelPurchase {
 
 interface FuelPurchaseFormProps {
     onAdd: (purchase: FuelPurchase) => void;
+    onUpdate?: (purchase: FuelPurchase) => void;
+    editingPurchase?: FuelPurchase | null;
     lastOdometer?: number;
     lastFuelPrice?: number;
 }
 
 const FUEL_STATIONS = ['Shell', 'Opet', 'BP', 'Petrol Ofisi', 'Total', 'Aytemiz', 'TP', 'Alpet', 'Lukoil', 'Starpet', 'Moil', 'Kadoil', 'Diğer'];
 
-export const FuelPurchaseForm: React.FC<FuelPurchaseFormProps> = ({ onAdd, lastOdometer = 0, lastFuelPrice = 0 }) => {
+export const FuelPurchaseForm: React.FC<FuelPurchaseFormProps> = ({ onAdd, onUpdate, editingPurchase, lastOdometer = 0, lastFuelPrice = 0 }) => {
     const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
     const [liters, setLiters] = useState<string>('');
     const [pricePerLiter, setPricePerLiter] = useState<string>('');
@@ -54,10 +56,27 @@ export const FuelPurchaseForm: React.FC<FuelPurchaseFormProps> = ({ onAdd, lastO
 
     // Pre-fill last fuel price
     useEffect(() => {
-        if (lastFuelPrice > 0 && !pricePerLiter) {
+        if (lastFuelPrice > 0 && !pricePerLiter && !editingPurchase) {
             setPricePerLiter(lastFuelPrice.toFixed(2));
         }
     }, [lastFuelPrice]);
+
+    // Populate form when editing
+    useEffect(() => {
+        if (editingPurchase) {
+            setDate(editingPurchase.date);
+            setLiters(editingPurchase.liters.toString());
+            setPricePerLiter(editingPurchase.pricePerLiter.toString());
+            setTotalAmount(editingPurchase.totalAmount.toString());
+            setStation(editingPurchase.station || '');
+            setOdometer(editingPurchase.odometer?.toString() || '');
+            setNotes(editingPurchase.notes || '');
+            if (editingPurchase.latitude && editingPurchase.longitude) {
+                setAddLocation(true);
+                setLocation({ latitude: editingPurchase.latitude, longitude: editingPurchase.longitude });
+            }
+        }
+    }, [editingPurchase]);
 
     // Get GPS location when enabled in GPS mode
     useEffect(() => {
@@ -174,7 +193,7 @@ export const FuelPurchaseForm: React.FC<FuelPurchaseFormProps> = ({ onAdd, lastO
         }
 
         const purchase: FuelPurchase = {
-            id: crypto.randomUUID(),
+            id: editingPurchase?.id || crypto.randomUUID(),
             date,
             liters: l,
             pricePerLiter: p,
@@ -186,7 +205,11 @@ export const FuelPurchaseForm: React.FC<FuelPurchaseFormProps> = ({ onAdd, lastO
             notes: notes.trim() || undefined
         };
 
-        onAdd(purchase);
+        if (editingPurchase && onUpdate) {
+            onUpdate(purchase);
+        } else {
+            onAdd(purchase);
+        }
         handleClear();
     };
 

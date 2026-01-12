@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { DailyLog, MaintenanceItem, DashboardStats, Vehicle } from './types';
+import { DailyLog, MaintenanceItem, DashboardStats, Vehicle, VehiclePart } from './types';
 import { EntryForm } from './EntryForm';
 import { DashboardStatsCard } from './DashboardStatsCard';
 import { LogHistory } from './LogHistory';
@@ -39,6 +39,8 @@ export default function App() {
   const [editingLog, setEditingLog] = useState<DailyLog | null>(null);
   const [showFuelPurchaseModal, setShowFuelPurchaseModal] = useState(false);
   const [fuelPurchases, setFuelPurchases] = useState<FuelPurchase[]>([]);
+  const [historySubTab, setHistorySubTab] = useState<'logs' | 'fuel'>('logs');
+  const [editingFuelPurchase, setEditingFuelPurchase] = useState<FuelPurchase | null>(null);
 
   // Default vehicle for backwards compatibility
   const defaultVehicle: Vehicle = {
@@ -233,9 +235,14 @@ export default function App() {
   };
 
   const handleEditFuelPurchase = (purchase: FuelPurchase) => {
-    // For now, delete and re-add via modal (simple approach)
-    // TODO: Implement proper edit modal
-    alert('Düzenleme özelliği yakında eklenecek. Şimdilik kaydı silin ve yeniden girin.');
+    setEditingFuelPurchase(purchase);
+    setShowFuelPurchaseModal(true);
+  };
+
+  const handleUpdateFuelPurchase = (updatedPurchase: FuelPurchase) => {
+    setFuelPurchases(prev => prev.map(p => p.id === updatedPurchase.id ? updatedPurchase : p));
+    setEditingFuelPurchase(null);
+    setShowFuelPurchaseModal(false);
   };
 
   // Calculate stats based on year filter
@@ -504,13 +511,46 @@ export default function App() {
         )}
 
         {activeTab === 'history' && (
-          <div className="animate-in fade-in duration-500 space-y-6">
-            <LogHistory logs={logs} onDelete={handleDeleteLog} onEdit={handleEditLog} />
-            <FuelPurchaseHistory
-              purchases={fuelPurchases}
-              onDelete={handleDeleteFuelPurchase}
-              onEdit={handleEditFuelPurchase}
-            />
+          <div className="animate-in fade-in duration-500 space-y-4">
+            {/* History Sub-Tab Switcher */}
+            <div className="flex justify-center">
+              <div className="inline-flex rounded-lg bg-gray-100 dark:bg-gray-800 p-1">
+                <button
+                  onClick={() => setHistorySubTab('logs')}
+                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-all flex items-center space-x-2 ${historySubTab === 'logs'
+                    ? 'bg-white dark:bg-gray-700 text-primary-600 dark:text-primary-400 shadow-sm'
+                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                    }`}
+                >
+                  <History className="w-4 h-4" />
+                  <span>Günlük Kayıtlar</span>
+                  <span className="bg-gray-200 dark:bg-gray-600 text-xs px-1.5 py-0.5 rounded-full">{logs.length}</span>
+                </button>
+                <button
+                  onClick={() => setHistorySubTab('fuel')}
+                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-all flex items-center space-x-2 ${historySubTab === 'fuel'
+                    ? 'bg-white dark:bg-gray-700 text-emerald-600 dark:text-emerald-400 shadow-sm'
+                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                    }`}
+                >
+                  <Fuel className="w-4 h-4" />
+                  <span>Yakıt Alımları</span>
+                  <span className="bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 text-xs px-1.5 py-0.5 rounded-full">{fuelPurchases.length}</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Tab Content */}
+            {historySubTab === 'logs' && (
+              <LogHistory logs={logs} onDelete={handleDeleteLog} onEdit={handleEditLog} />
+            )}
+            {historySubTab === 'fuel' && (
+              <FuelPurchaseHistory
+                purchases={fuelPurchases}
+                onDelete={handleDeleteFuelPurchase}
+                onEdit={handleEditFuelPurchase}
+              />
+            )}
           </div>
         )}
 
@@ -671,9 +711,11 @@ export default function App() {
             <div className="sticky top-0 bg-white dark:bg-gray-800 p-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between z-10">
               <div className="flex items-center space-x-2">
                 <Fuel className="w-5 h-5 text-emerald-500" />
-                <h2 className="text-lg font-bold text-gray-800 dark:text-white">Yakıt Alımı</h2>
+                <h2 className="text-lg font-bold text-gray-800 dark:text-white">
+                  {editingFuelPurchase ? 'Yakıt Alımını Düzenle' : 'Yakıt Alımı'}
+                </h2>
               </div>
-              <button onClick={() => setShowFuelPurchaseModal(false)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-1">
+              <button onClick={() => { setShowFuelPurchaseModal(false); setEditingFuelPurchase(null); }} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-1">
                 <X className="w-6 h-6" />
               </button>
             </div>
@@ -682,7 +724,10 @@ export default function App() {
                 onAdd={(purchase) => {
                   setFuelPurchases(prev => [purchase, ...prev]);
                   setShowFuelPurchaseModal(false);
+                  setEditingFuelPurchase(null);
                 }}
+                onUpdate={handleUpdateFuelPurchase}
+                editingPurchase={editingFuelPurchase}
                 lastOdometer={lastOdometer}
                 lastFuelPrice={stats.lastFuelPrice}
               />
