@@ -63,8 +63,6 @@ export const Reports: React.FC<ReportsProps> = ({ logs, purchases = [], maintena
     doc.setTextColor(100, 100, 100);
     doc.text(`Oluşturulma Tarihi: ${new Date().toLocaleDateString('tr-TR')}`, 14, 28);
 
-    // Summary Section
-    // Summary Section
     const totalDist = logs.reduce((acc, l) => acc + l.dailyDistance, 0);
     const totalCostLogs = logs.reduce((acc, l) => acc + l.dailyCost, 0);
     const totalFuelLogs = logs.reduce((acc, l) => acc + l.dailyFuelConsumed, 0);
@@ -75,7 +73,6 @@ export const Reports: React.FC<ReportsProps> = ({ logs, purchases = [], maintena
     const totalCost = totalCostLogs + totalCostPurchases;
     const totalFuel = totalFuelLogs + totalFuelPurchases;
 
-    const realAvg = totalDist > 0 ? (totalFuel / totalDist) * 100 : 0;
     const realAvg = totalDist > 0 ? (totalFuel / totalDist) * 100 : 0;
 
     autoTable(doc, {
