@@ -126,7 +126,12 @@ export default function App() {
   const { migrateExistingData, hasMigrated } = useGamificationStore();
   useEffect(() => {
     if (!hasMigrated && (logs.length > 0 || fuelPurchases.length > 0)) {
-      migrateExistingData(fuelPurchases.length, logs.length);
+      // Collect all activity dates from logs and fuel purchases
+      const activityDates: string[] = [
+        ...logs.map(log => log.date),
+        ...fuelPurchases.map(fp => fp.date)
+      ];
+      migrateExistingData(fuelPurchases.length, logs.length, activityDates);
     }
   }, [hasMigrated, logs.length, fuelPurchases.length, migrateExistingData]);
 

@@ -30,7 +30,7 @@ interface GamificationState {
     updateStreak: () => void;
     checkAndUnlockBadges: () => void;
     resetStreak: () => void;
-    migrateExistingData: (fuelPurchaseCount: number, logCount: number) => void;
+    migrateExistingData: (fuelPurchaseCount: number, logCount: number, activityDates: string[]) => void;
 }
 
 // Predefined badges
@@ -234,7 +234,7 @@ export const useGamificationStore = create<GamificationState>()(
             resetStreak: () => set({ currentStreak: 0 }),
 
             // Migration function for existing data
-            migrateExistingData: (fuelPurchaseCount: number, logCount: number) => {
+            migrateExistingData: (fuelPurchaseCount: number, logCount: number, activityDates: string[]) => {
                 const { hasMigrated } = get();
                 if (hasMigrated) return; // Already migrated
 
@@ -246,37 +246,85 @@ export const useGamificationStore = create<GamificationState>()(
 
                 const totalMigrationXP = fuelXP + logXP;
 
-                if (totalMigrationXP > 0) {
-                    // Create migration events
-                    const events: XPEvent[] = [];
+                // Calculate streak from activity dates
+                let longestStreak = 0;
+                let currentStreak = 0;
+                let lastActivityDate: string | null = null;
 
-                    if (fuelPurchaseCount > 0) {
-                        events.push({
-                            amount: fuelXP,
-                            reason: `Geçmiş ${fuelPurchaseCount} yakıt alımı`,
-                            timestamp: new Date().toISOString()
-                        });
+                if (activityDates.length > 0) {
+                    // Get unique dates and sort them
+                    const uniqueDates = [...new Set(activityDates.map(d => new Date(d).toDateString()))]
+                        .map(d => new Date(d))
+                        .sort((a, b) => a.getTime() - b.getTime());
+
+                    let tempStreak = 1;
+                    for (let i = 1; i < uniqueDates.length; i++) {
+                        const prevDate = uniqueDates[i - 1];
+                        const currDate = uniqueDates[i];
+                        const diffDays = Math.round((currDate.getTime() - prevDate.getTime()) / (1000 * 60 * 60 * 24));
+
+                        if (diffDays === 1) {
+                            tempStreak++;
+                        } else {
+                            longestStreak = Math.max(longestStreak, tempStreak);
+                            tempStreak = 1;
+                        }
                     }
+                    longestStreak = Math.max(longestStreak, tempStreak);
 
-                    if (logCount > 0) {
-                        events.push({
-                            amount: logXP,
-                            reason: `Geçmiş ${logCount} günlük kayıt`,
-                            timestamp: new Date().toISOString()
-                        });
+                    // Check if current streak is active (last activity was today or yesterday)
+                    const lastDate = uniqueDates[uniqueDates.length - 1];
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    const diffFromToday = Math.round((today.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
+
+                    if (diffFromToday <= 1) {
+                        // Count backwards to find current active streak
+                        currentStreak = 1;
+                        for (let i = uniqueDates.length - 2; i >= 0; i--) {
+                            const prevDate = uniqueDates[i];
+                            const currDate = uniqueDates[i + 1];
+                            const diff = Math.round((currDate.getTime() - prevDate.getTime()) / (1000 * 60 * 60 * 24));
+                            if (diff === 1) {
+                                currentStreak++;
+                            } else {
+                                break;
+                            }
+                        }
+                        lastActivityDate = lastDate.toISOString();
                     }
-
-                    set((state) => ({
-                        totalXP: state.totalXP + totalMigrationXP,
-                        xpHistory: [...events, ...state.xpHistory].slice(0, 50),
-                        hasMigrated: true
-                    }));
-
-                    // Check badges after migration
-                    get().checkAndUnlockBadges();
-                } else {
-                    set({ hasMigrated: true });
                 }
+
+                // Create migration events
+                const events: XPEvent[] = [];
+
+                if (fuelPurchaseCount > 0) {
+                    events.push({
+                        amount: fuelXP,
+                        reason: `Geçmiş ${fuelPurchaseCount} yakıt alımı`,
+                        timestamp: new Date().toISOString()
+                    });
+                }
+
+                if (logCount > 0) {
+                    events.push({
+                        amount: logXP,
+                        reason: `Geçmiş ${logCount} günlük kayıt`,
+                        timestamp: new Date().toISOString()
+                    });
+                }
+
+                set((state) => ({
+                    totalXP: state.totalXP + totalMigrationXP,
+                    xpHistory: [...events, ...state.xpHistory].slice(0, 50),
+                    currentStreak: Math.max(state.currentStreak, currentStreak),
+                    longestStreak: Math.max(state.longestStreak, longestStreak),
+                    lastActivityDate: lastActivityDate || state.lastActivityDate,
+                    hasMigrated: true
+                }));
+
+                // Check badges after migration
+                get().checkAndUnlockBadges();
             }
         }),
         {
