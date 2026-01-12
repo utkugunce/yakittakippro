@@ -15,6 +15,7 @@ import { FuelMap } from './FuelMap';
 import { AIPredictions } from './AIPredictions';
 import { ThemeSettings, AccentColor } from './ThemeSettings';
 import { FuelPurchaseForm, FuelPurchase } from './FuelPurchaseForm';
+import { FuelPurchaseHistory } from './FuelPurchaseHistory';
 import { Car, LayoutDashboard, History, FileText, Moon, Sun, Settings, Wrench, Plus, X, Fuel } from 'lucide-react';
 import { PwaReloadPrompt } from './PwaReloadPrompt';
 
@@ -224,6 +225,17 @@ export default function App() {
       }
       return item;
     }));
+  };
+
+  // Fuel Purchase Handlers
+  const handleDeleteFuelPurchase = (id: string) => {
+    setFuelPurchases(prev => prev.filter(p => p.id !== id));
+  };
+
+  const handleEditFuelPurchase = (purchase: FuelPurchase) => {
+    // For now, delete and re-add via modal (simple approach)
+    // TODO: Implement proper edit modal
+    alert('Düzenleme özelliği yakında eklenecek. Şimdilik kaydı silin ve yeniden girin.');
   };
 
   // Calculate stats based on year filter
@@ -492,8 +504,13 @@ export default function App() {
         )}
 
         {activeTab === 'history' && (
-          <div className="animate-in fade-in duration-500">
+          <div className="animate-in fade-in duration-500 space-y-6">
             <LogHistory logs={logs} onDelete={handleDeleteLog} onEdit={handleEditLog} />
+            <FuelPurchaseHistory
+              purchases={fuelPurchases}
+              onDelete={handleDeleteFuelPurchase}
+              onEdit={handleEditFuelPurchase}
+            />
           </div>
         )}
 
