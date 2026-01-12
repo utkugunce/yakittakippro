@@ -11,16 +11,21 @@ import {
   Line,
   Legend,
   BarChart,
-  Bar
+  Bar,
+  PieChart,
+  Pie,
+  Cell
 } from 'recharts';
-import { Activity, Eye, EyeOff } from 'lucide-react';
+import { Activity, Eye, EyeOff, PieChart as PieChartIcon } from 'lucide-react';
 import { DailyLog } from './types';
+import { FuelPurchase } from './FuelPurchaseForm';
 
 interface ChartsProps {
   logs: DailyLog[];
+  purchases?: FuelPurchase[];
 }
 
-export const Charts: React.FC<ChartsProps> = ({ logs }) => {
+export const Charts: React.FC<ChartsProps> = ({ logs, purchases = [] }) => {
   const [visibleSeries, setVisibleSeries] = useState({
     daily: true,
     weekly: true,
@@ -31,7 +36,33 @@ export const Charts: React.FC<ChartsProps> = ({ logs }) => {
     setVisibleSeries(prev => ({ ...prev, [key]: !prev[key] }));
   };
 
-  if (logs.length < 2) {
+  // Station Distribution Data
+  const stationData = useMemo(() => {
+    const stats: Record<string, number> = {};
+
+    // From Logs
+    logs.forEach(log => {
+      if (log.fuelStation) {
+        stats[log.fuelStation] = (stats[log.fuelStation] || 0) + 1;
+      }
+    });
+
+    // From Purchases
+    purchases.forEach(p => {
+      if (p.station) {
+        stats[p.station] = (stats[p.station] || 0) + 1;
+      }
+    });
+
+    return Object.entries(stats)
+      .map(([name, value]) => ({ name, value }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 5); // Top 5
+  }, [logs, purchases]);
+
+  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
+
+  if (logs.length < 2 && purchases.length < 2) {
     return (
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-12 flex flex-col items-center justify-center text-center h-full min-h-[400px] transition-colors">
         <div className="bg-primary-50 dark:bg-gray-800 p-4 rounded-full mb-4">
@@ -46,15 +77,16 @@ export const Charts: React.FC<ChartsProps> = ({ logs }) => {
   }
 
   // Sort by date and take last 15 days chronologically
-  const sortedLogs = [...logs].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()); // Oldest first
+  const sortedLogs = [...logs].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
   const data = sortedLogs.map((log, index, array) => {
-    // Calculate simple moving average for last 7 entries including current
     const startIdx = Math.max(0, index - 6);
     const subset = array.slice(startIdx, index + 1);
     const sum = subset.reduce((acc, curr) => acc + curr.avgConsumption, 0);
     const movingAvg = sum / subset.length;
 
+    // Find closest purchase price if log price is 0 or updating logic?
+    // For now keeping log price as primary source for timeline consistency with Logs
     return {
       name: new Date(log.date).toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit' }),
       maliyet: log.dailyCost,
@@ -64,10 +96,10 @@ export const Charts: React.FC<ChartsProps> = ({ logs }) => {
       benzinFiyati: log.fuelPrice,
       kmMaliyeti: log.costPerKm
     };
-  }).slice(-15); // Show last 15 days (most recent)
+  }).slice(-15);
 
-  // Calculate monthly data for trend chart
   const monthlyData = useMemo(() => {
+    // ... (existing monthly logic for logs, could enhance with purchases but logs usually cover costs)
     const monthlyGroups: Record<string, { month: string; monthLabel: string; totalCost: number; totalDistance: number; totalFuel: number; avgConsumption: number; count: number }> = {};
 
     logs.forEach(log => {
@@ -94,11 +126,66 @@ export const Charts: React.FC<ChartsProps> = ({ logs }) => {
         ortTuketim: m.count > 0 ? Math.round((m.avgConsumption / m.count) * 10) / 10 : 0
       }))
       .sort((a, b) => a.name.localeCompare(b.name))
-      .slice(-6); // Last 6 months
+      .slice(-6);
   }, [logs]);
 
   return (
     <div className="space-y-6">
+      {/* Station Distribution Chart */}
+      {stationData.length > 0 && (
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 transition-colors">
+          <div className="flex items-center space-x-2 mb-6">
+            <div className="p-2 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
+              <PieChartIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-gray-800 dark:text-white">İstasyon Tercihleri</h3>
+              <p className="text-xs text-gray-500 dark:text-gray-400">En sık ziyaret edilen istasyonlar</p>
+            </div>
+          </div>
+          <div className="flex flex-col md:flex-row items-center justify-center">
+            <div className="h-[250px] w-full md:w-1/2">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={stationData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={80}
+                    fill="#8884d8"
+                    paddingAngle={5}
+                    dataKey="value"
+                  >
+                    {stationData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    contentStyle={{ backgroundColor: '#1f2937', color: '#fff', borderRadius: '8px', border: 'none' }}
+                    formatter={(value: number) => [`${value} Ziyaret`, 'Ziyaret Sayısı']}
+                  />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="w-full md:w-1/2 mt-4 md:mt-0 md:pl-8">
+              <div className="space-y-3">
+                {stationData.map((station, index) => (
+                  <div key={station.name} className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }}></div>
+                      <span className="font-medium text-gray-700 dark:text-gray-300">{station.name}</span>
+                    </div>
+                    <span className="font-bold text-gray-900 dark:text-white">{station.value} Ziyaret</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Cost Chart */}
       <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 transition-colors">
         <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-6">Son 15 Günlük Maliyet (TL)</h3>
@@ -312,15 +399,16 @@ export const Charts: React.FC<ChartsProps> = ({ logs }) => {
       )}
 
       {/* Brand Analysis Charts */}
-      <BrandCharts logs={logs} />
+      <BrandCharts logs={logs} purchases={purchases} />
     </div>
   );
 };
 
-const BrandCharts: React.FC<{ logs: DailyLog[] }> = ({ logs }) => {
+const BrandCharts: React.FC<{ logs: DailyLog[], purchases: FuelPurchase[] }> = ({ logs, purchases }) => {
   const brandData = useMemo(() => {
     const stats: Record<string, { totalCost: number, totalDist: number, totalFuel: number, count: number }> = {};
 
+    // Process Logs
     logs.forEach(log => {
       // Skip logs with no distance to avoid skewing efficiency
       if (!log.fuelStation || log.dailyDistance <= 0) return;
@@ -334,6 +422,19 @@ const BrandCharts: React.FC<{ logs: DailyLog[] }> = ({ logs }) => {
       stats[brand].count++;
     });
 
+    // Process Purchases (mainly for Cost analysis, efficiency requires distance which purchases might lack)
+    purchases.forEach(p => {
+      if (!p.station) return;
+      const brand = p.station;
+      if (!stats[brand]) stats[brand] = { totalCost: 0, totalDist: 0, totalFuel: 0, count: 0 };
+
+      stats[brand].totalCost += p.totalAmount;
+      stats[brand].totalFuel += p.liters;
+      stats[brand].count++;
+      // Note: Not adding distance here as purchases might not have distance interval data readily available
+      // This mostly enriches the "Spend" chart
+    });
+
     return Object.entries(stats)
       .map(([name, data]) => ({
         name,
@@ -341,16 +442,16 @@ const BrandCharts: React.FC<{ logs: DailyLog[] }> = ({ logs }) => {
         efficiency: data.totalDist > 0 ? (data.totalFuel / data.totalDist) * 100 : 0,
         count: data.count
       }))
-      .filter(d => d.count >= 1) // Show even if just 1 log, or maybe require more?
+      .filter(d => d.count >= 1)
       .sort((a, b) => b.spend - a.spend);
-  }, [logs]);
+  }, [logs, purchases]);
 
   if (brandData.length === 0) return null;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* Spend by Brand */}
-      <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+      <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 transition-colors">
         <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-6">Marka Bazlı Harcama</h3>
         <div className="h-[250px] w-full">
           <ResponsiveContainer width="100%" height="100%">
@@ -369,11 +470,14 @@ const BrandCharts: React.FC<{ logs: DailyLog[] }> = ({ logs }) => {
         </div>
       </div>
 
-      {/* Efficiency by Brand (Lower is better) */}
-      <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+      {/* Efficiency by Brand (Lower is better) - Mostly from Logs */}
+      <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 transition-colors">
         <div className="flex justify-between items-center mb-6">
           <h3 className="text-lg font-bold text-gray-800 dark:text-white">Marka Verimliliği (L/100km)</h3>
-          <span className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded">Düşük daha iyi</span>
+          <div className="flex flex-col items-end">
+            <span className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded">Düşük daha iyi</span>
+            <span className="text-[10px] text-gray-400 mt-1">*Sadece günlük kayıtlardan</span>
+          </div>
         </div>
         <div className="h-[250px] w-full">
           <ResponsiveContainer width="100%" height="100%">

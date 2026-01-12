@@ -251,22 +251,40 @@ export default function App() {
       ? logs
       : logs.filter(l => new Date(l.date).getFullYear().toString() === yearFilter);
 
-    if (filteredLogs.length === 0) return { totalDistance: 0, totalCost: 0, avgCostPerKm: 0, avgConsumption: 0, lastFuelPrice: 0 };
+    // Filter purchases by year if needed
+    const filteredPurchases = yearFilter === 'all'
+      ? fuelPurchases
+      : fuelPurchases.filter(p => new Date(p.date).getFullYear().toString() === yearFilter);
+
+    if (filteredLogs.length === 0 && filteredPurchases.length === 0) return { totalDistance: 0, totalCost: 0, avgCostPerKm: 0, avgConsumption: 0, lastFuelPrice: 0 };
 
     const totalDistance = filteredLogs.reduce((sum, log) => sum + log.dailyDistance, 0);
-    const totalCost = filteredLogs.reduce((sum, log) => sum + log.dailyCost, 0);
+    const totalCost = filteredLogs.reduce((sum, log) => sum + log.dailyCost, 0) + filteredPurchases.reduce((sum, p) => sum + p.totalAmount, 0);
 
-    // Calculate average consumption
+    // Calculate average consumption (Logs only as they have distance)
     const validConsumptionLogs = filteredLogs.filter(l => l.avgConsumption > 0);
     const avgConsumption = validConsumptionLogs.length > 0
       ? validConsumptionLogs.reduce((sum, log) => sum + log.avgConsumption, 0) / validConsumptionLogs.length
       : 0;
 
-    // Last fuel price (from all logs, not filtered)
+    // Last fuel price (latest of Logs or Purchases)
+    let lastFuelPrice = 0;
+
     const lastLog = logs.length > 0
       ? logs.reduce((prev, current) => (prev.currentOdometer > current.currentOdometer) ? prev : current)
       : null;
-    const lastFuelPrice = lastLog?.fuelPrice || 0;
+
+    const lastPurchase = fuelPurchases.length > 0
+      ? fuelPurchases.reduce((prev, current) => new Date(prev.date) > new Date(current.date) ? prev : current)
+      : null;
+
+    if (lastLog && lastPurchase) {
+      lastFuelPrice = new Date(lastPurchase.date) > new Date(lastLog.date) ? lastPurchase.pricePerLiter : lastLog.fuelPrice;
+    } else if (lastLog) {
+      lastFuelPrice = lastLog.fuelPrice;
+    } else if (lastPurchase) {
+      lastFuelPrice = lastPurchase.pricePerLiter;
+    }
 
     return {
       totalDistance,
@@ -275,7 +293,7 @@ export default function App() {
       avgConsumption,
       lastFuelPrice
     };
-  }, [logs, yearFilter]);
+  }, [logs, fuelPurchases, yearFilter]);
 
   const lastOdometer = logs.length > 0 ? Math.max(...logs.map(l => l.currentOdometer)) : 0;
 
@@ -470,7 +488,7 @@ export default function App() {
                   vehicleParts={vehicleParts}
                   currentOdometer={lastOdometer}
                 />
-                {logs.length > 0 && <Charts logs={yearFilter === 'all' ? logs : logs.filter(l => new Date(l.date).getFullYear().toString() === yearFilter)} />}
+                {logs.length > 0 && <Charts logs={yearFilter === 'all' ? logs : logs.filter(l => new Date(l.date).getFullYear().toString() === yearFilter)} purchases={fuelPurchases} />}
 
                 {/* Recent 5 entries (no filter, simplified) */}
                 <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
@@ -559,6 +577,7 @@ export default function App() {
             <FuelMap logs={logs} purchases={fuelPurchases} />
             <Reports
               logs={logs}
+              purchases={fuelPurchases}
               maintenanceItems={maintenanceItems}
               vehicleParts={vehicleParts}
             />

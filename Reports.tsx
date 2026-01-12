@@ -5,8 +5,11 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 
+import { FuelPurchase } from './FuelPurchaseForm';
+
 interface ReportsProps {
   logs: DailyLog[];
+  purchases?: FuelPurchase[];
   maintenanceItems?: MaintenanceItem[];
   vehicleParts?: VehiclePart[];
 }
@@ -47,7 +50,7 @@ const StatCard: React.FC<{ title: string; icon: React.ReactNode; stat: StatSumma
 
 
 
-export const Reports: React.FC<ReportsProps> = ({ logs, maintenanceItems = [], vehicleParts = [] }) => {
+export const Reports: React.FC<ReportsProps> = ({ logs, purchases = [], maintenanceItems = [], vehicleParts = [] }) => {
   const generateSalesReport = () => {
     const doc = new jsPDF();
 
@@ -61,11 +64,18 @@ export const Reports: React.FC<ReportsProps> = ({ logs, maintenanceItems = [], v
     doc.text(`Oluşturulma Tarihi: ${new Date().toLocaleDateString('tr-TR')}`, 14, 28);
 
     // Summary Section
+    // Summary Section
     const totalDist = logs.reduce((acc, l) => acc + l.dailyDistance, 0);
-    const totalCost = logs.reduce((acc, l) => acc + l.dailyCost, 0);
-    const avgCons = logs.length > 0 ? (logs.reduce((acc, l) => logs.reduce((acc, l) => acc + l.dailyFuelConsumed, 0) / logs.reduce((acc, l) => acc + l.dailyDistance, 0)) * 100) : 0;
-    // Fix avg calculation logic which was complex in single line, defaulting to easier math below
-    const totalFuel = logs.reduce((acc, l) => acc + l.dailyFuelConsumed, 0);
+    const totalCostLogs = logs.reduce((acc, l) => acc + l.dailyCost, 0);
+    const totalFuelLogs = logs.reduce((acc, l) => acc + l.dailyFuelConsumed, 0);
+
+    const totalCostPurchases = purchases.reduce((acc, p) => acc + p.totalAmount, 0);
+    const totalFuelPurchases = purchases.reduce((acc, p) => acc + p.liters, 0);
+
+    const totalCost = totalCostLogs + totalCostPurchases;
+    const totalFuel = totalFuelLogs + totalFuelPurchases;
+
+    const realAvg = totalDist > 0 ? (totalFuel / totalDist) * 100 : 0;
     const realAvg = totalDist > 0 ? (totalFuel / totalDist) * 100 : 0;
 
     autoTable(doc, {
@@ -160,8 +170,8 @@ export const Reports: React.FC<ReportsProps> = ({ logs, maintenanceItems = [], v
 
     // Add summary sheet
     const totalDist = logs.reduce((acc, l) => acc + l.dailyDistance, 0);
-    const totalCost = logs.reduce((acc, l) => acc + l.dailyCost, 0);
-    const totalFuel = logs.reduce((acc, l) => acc + l.dailyFuelConsumed, 0);
+    const totalCost = logs.reduce((acc, l) => acc + l.dailyCost, 0) + purchases.reduce((acc, p) => acc + p.totalAmount, 0);
+    const totalFuel = logs.reduce((acc, l) => acc + l.dailyFuelConsumed, 0) + purchases.reduce((acc, p) => acc + p.liters, 0);
 
     const summaryData = [
       { 'Özet': 'Toplam Kayıt', 'Değer': logs.length },
@@ -257,6 +267,24 @@ export const Reports: React.FC<ReportsProps> = ({ logs, maintenanceItems = [], v
       return acc;
     }, {} as Record<string, { month: string, totalDistance: number, totalCost: number, totalFuel: number, logCount: number }>);
 
+    // Merge Purchases into Monthly Data
+    purchases.forEach(p => {
+      const date = new Date(p.date);
+      const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      if (!monthlyGroups[key]) {
+        monthlyGroups[key] = {
+          month: key,
+          totalDistance: 0,
+          totalCost: 0,
+          totalFuel: 0,
+          logCount: 0
+        };
+      }
+      monthlyGroups[key].totalCost += p.totalAmount;
+      monthlyGroups[key].totalFuel += p.liters;
+      // Note: Not adding 'logCount' or 'distance' from purchases to avoid skewing distance/consumption logic
+    });
+
     type MonthData = { month: string, totalDistance: number, totalCost: number, totalFuel: number, logCount: number };
     const monthlyData = Object.values(monthlyGroups) as MonthData[];
     monthlyData.sort((a, b) => b.month.localeCompare(a.month));
@@ -284,18 +312,29 @@ export const Reports: React.FC<ReportsProps> = ({ logs, maintenanceItems = [], v
       });
     };
 
+    // Filter Purchases
+    const getPurchasesInPeriod = (start: Date, end: Date) => {
+      return purchases.filter(p => {
+        const d = new Date(p.date);
+        return d >= start && d <= end;
+      });
+    };
+
     const thisMonthLogs = getLogsInPeriod(thisMonthStart, thisMonthEnd);
     const lastMonthLogs = getLogsInPeriod(lastMonthStart, lastMonthSameDay);
 
-    const sumStats = (arr: DailyLog[]) => ({
-      totalCost: arr.reduce((sum, l) => sum + l.dailyCost, 0),
-      totalDistance: arr.reduce((sum, l) => sum + l.dailyDistance, 0),
-      totalFuel: arr.reduce((sum, l) => sum + l.dailyFuelConsumed, 0),
-      logCount: arr.length
+    const thisMonthPurchases = getPurchasesInPeriod(thisMonthStart, thisMonthEnd);
+    const lastMonthPurchases = getPurchasesInPeriod(lastMonthStart, lastMonthSameDay);
+
+    const sumStats = (arrLog: DailyLog[], arrPurch: FuelPurchase[]) => ({
+      totalCost: arrLog.reduce((sum, l) => sum + l.dailyCost, 0) + arrPurch.reduce((sum, p) => sum + p.totalAmount, 0),
+      totalDistance: arrLog.reduce((sum, l) => sum + l.dailyDistance, 0), // Only logs track distance
+      totalFuel: arrLog.reduce((sum, l) => sum + l.dailyFuelConsumed, 0) + arrPurch.reduce((sum, p) => sum + p.liters, 0),
+      logCount: arrLog.length + arrPurch.length
     });
 
-    const thisMonthData = sumStats(thisMonthLogs);
-    const lastMonthData = sumStats(lastMonthLogs);
+    const thisMonthData = sumStats(thisMonthLogs, thisMonthPurchases);
+    const lastMonthData = sumStats(lastMonthLogs, lastMonthPurchases);
 
     // Calculate changes
     const comparison = {
@@ -322,7 +361,7 @@ export const Reports: React.FC<ReportsProps> = ({ logs, maintenanceItems = [], v
     };
   }, [logs]);
 
-  if (logs.length === 0) {
+  if (logs.length === 0 && purchases.length === 0) {
     return (
       <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
         <FileText className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
