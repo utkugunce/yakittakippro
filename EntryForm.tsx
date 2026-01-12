@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, Suspense, lazy } from 'react';
 import { DailyLog } from './types';
 import { PlusCircle, Fuel, Gauge, Calculator, Calendar, AlertCircle, Coins, Eraser, StickyNote, Camera, MapPin, Mic } from 'lucide-react';
 import { ExcelImport } from './ExcelImport';
-import { PhotoScanner } from './PhotoScanner';
 import { VoiceEntry } from './VoiceEntry';
+
+const PhotoScanner = lazy(() => import('./PhotoScanner').then(module => ({ default: module.PhotoScanner })));
 
 interface EntryFormProps {
   logs: DailyLog[];
@@ -258,17 +259,19 @@ export const EntryForm: React.FC<EntryFormProps> = ({ logs, onAdd, onUpdate, onI
 
       {/* Photo Scanner Modal */}
       {showPhotoScanner && (
-        <PhotoScanner
-          onDashboardData={(data) => {
-            if (data.odometer) setCurrentOdometer(data.odometer.toString());
-            if (data.consumption) setAvgConsumption(data.consumption.toString());
-            if (data.distance) setDailyDistance(data.distance.toString());
-          }}
-          onReceiptData={(data) => {
-            if (data.fuelPrice) setFuelPrice(data.fuelPrice.toString());
-          }}
-          onClose={() => setShowPhotoScanner(false)}
-        />
+        <Suspense fallback={<div className="fixed inset-0 z-[110] bg-black/50 flex items-center justify-center"><div className="bg-white p-4 rounded-lg">Tarayıcı Yükleniyor...</div></div>}>
+          <PhotoScanner
+            onDashboardData={(data) => {
+              if (data.odometer) setCurrentOdometer(data.odometer.toString());
+              if (data.consumption) setAvgConsumption(data.consumption.toString());
+              if (data.distance) setDailyDistance(data.distance.toString());
+            }}
+            onReceiptData={(data) => {
+              if (data.fuelPrice) setFuelPrice(data.fuelPrice.toString());
+            }}
+            onClose={() => setShowPhotoScanner(false)}
+          />
+        </Suspense>
       )}
 
       {/* Voice Entry Modal */}

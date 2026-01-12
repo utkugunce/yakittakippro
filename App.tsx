@@ -1,22 +1,24 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, Suspense, lazy } from 'react';
 import { DailyLog, MaintenanceItem, DashboardStats, Vehicle } from './types';
 import { EntryForm } from './EntryForm';
 import { DashboardStatsCard } from './DashboardStatsCard';
 import { LogHistory } from './LogHistory';
 import { Charts } from './Charts';
-import { Reports } from './Reports';
 import { DataManagement } from './DataManagement';
 import { Maintenance } from './Maintenance';
 import { WeeklySummary } from './WeeklySummary';
 import { NotificationSettings } from './NotificationSettings';
 
 import { CloudSync } from './CloudSync';
-import { FuelMap } from './FuelMap';
 import { AIPredictions } from './AIPredictions';
 import { ThemeSettings, AccentColor } from './ThemeSettings';
+
 import { FuelPurchaseForm, FuelPurchase } from './FuelPurchaseForm';
 import { Car, LayoutDashboard, History, FileText, Moon, Sun, Settings, Wrench, Plus, X, Fuel } from 'lucide-react';
 import { PwaReloadPrompt } from './PwaReloadPrompt';
+
+const FuelMap = lazy(() => import('./FuelMap').then(module => ({ default: module.FuelMap })));
+const Reports = lazy(() => import('./Reports').then(module => ({ default: module.Reports })));
 
 const LOCAL_STORAGE_KEY = 'yakit_takip_logs_v1';
 const MAINTENANCE_STORAGE_KEY = 'yakit_takip_maintenance_v1';
@@ -499,12 +501,16 @@ export default function App() {
 
         {activeTab === 'reports' && (
           <div className="animate-in fade-in duration-500 space-y-6">
-            <FuelMap logs={logs} />
-            <Reports
-              logs={logs}
-              maintenanceItems={maintenanceItems}
-              vehicleParts={vehicleParts}
-            />
+            <Suspense fallback={<div className="p-8 text-center text-gray-500">Harita Yükleniyor...</div>}>
+              <FuelMap logs={logs} />
+            </Suspense>
+            <Suspense fallback={<div className="p-8 text-center text-gray-500">Raporlar Yükleniyor...</div>}>
+              <Reports
+                logs={logs}
+                maintenanceItems={maintenanceItems}
+                vehicleParts={vehicleParts}
+              />
+            </Suspense>
           </div>
         )}
 
