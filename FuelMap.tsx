@@ -1,10 +1,10 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { DailyLog } from './types';
 import { FuelPurchase } from './FuelPurchaseForm';
-import { Fuel, Calendar, Gauge, Droplets, Coins } from 'lucide-react';
+import { Fuel, Calendar, Gauge, Droplets, Coins, Map } from 'lucide-react';
 
 // Fix Leaflet Default Icon Issue in React
 import icon from 'leaflet/dist/images/marker-icon.png';
@@ -35,6 +35,8 @@ interface MapItem {
 }
 
 export const FuelMap: React.FC<FuelMapProps> = ({ logs, purchases = [] }) => {
+    const [showMap, setShowMap] = useState(false);
+
     // Merge logs and purchases into map items
     const items: MapItem[] = useMemo(() => {
         const mapItems: MapItem[] = [];
@@ -151,44 +153,97 @@ export const FuelMap: React.FC<FuelMapProps> = ({ logs, purchases = [] }) => {
                 <p className="text-gray-500 dark:text-gray-400">
                     Yakıt girişi yaparken "Konum Ekle" seçeneğini işaretleyerek harita üzerinde yakıt aldığınız yerleri görebilirsiniz.
                 </p>
+
+                {/* Station Stats Cards */}
+                {stationStats.length > 0 && (
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+                        {stationStats.map((stat, index) => (
+                            <div key={stat.name} className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 text-left">
+                                <div className="flex items-center justify-between mb-2">
+                                    <div className="flex items-center space-x-2">
+                                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${index === 0 ? 'bg-amber-100 text-amber-600' :
+                                                index === 1 ? 'bg-gray-100 text-gray-600' :
+                                                    'bg-orange-100 text-orange-600'
+                                            }`}>
+                                            <span className="font-bold">{index + 1}</span>
+                                        </div>
+                                        <span className="font-bold text-gray-800 dark:text-white">{stat.name}</span>
+                                    </div>
+                                    <span className="text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-1 rounded-full">
+                                        {stat.count} Ziyaret
+                                    </span>
+                                </div>
+                                <div className="flex justify-between items-end mt-3">
+                                    <div>
+                                        <div className="text-xs text-gray-500 dark:text-gray-400">Ort. Fiyat</div>
+                                        <div className="font-bold text-gray-800 dark:text-white">₺{stat.avgPrice.toFixed(2)}</div>
+                                    </div>
+                                    <div className="text-right">
+                                        <div className="text-xs text-gray-500 dark:text-gray-400">Toplam</div>
+                                        <div className="font-bold text-emerald-600 dark:text-emerald-400">₺{stat.totalSpent.toFixed(0)}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
             </div>
         );
     }
 
     return (
         <div className="space-y-6">
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden border border-gray-100 dark:border-gray-700">
-                <div className="h-[400px] w-full z-0 relative">
-                    <MapContainer center={center} zoom={6} style={{ height: '100%', width: '100%' }}>
-                        <TileLayer
-                            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                        />
-                        {items.map(item => (
-                            <Marker key={item.id} position={[item.lat, item.lng]}>
-                                <Popup>
-                                    <div className="p-1">
-                                        <div className="flex items-center space-x-2 mb-2 border-b border-gray-100 pb-2">
-                                            {item.type === 'purchase' ? (
-                                                <Fuel className={`w-4 h-4 ${item.title !== 'Yakıt Alımı' ? 'text-emerald-500' : 'text-blue-500'}`} />
-                                            ) : (
-                                                <Calendar className="w-4 h-4 text-gray-400" />
-                                            )}
-                                            <span className="font-bold text-gray-800">{item.title}</span>
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden border border-gray-100 dark:border-gray-700 transition-all duration-300">
+                {!showMap ? (
+                    <div
+                        className="h-32 bg-gray-50 dark:bg-gray-800/50 flex flex-col items-center justify-center space-y-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors group p-6"
+                        onClick={() => setShowMap(true)}
+                    >
+                        <div className="w-12 h-12 bg-white dark:bg-gray-700 rounded-full shadow-sm flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                            <Map className="w-6 h-6 text-primary-500" />
+                        </div>
+                        <span className="font-medium text-gray-600 dark:text-gray-300">Haritayı Görüntüle</span>
+                    </div>
+                ) : (
+                    <div className="h-[400px] w-full z-0 relative animate-in fade-in duration-500">
+                        <MapContainer center={center} zoom={6} style={{ height: '100%', width: '100%' }}>
+                            <TileLayer
+                                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                            />
+                            {items.map(item => (
+                                <Marker key={item.id} position={[item.lat, item.lng]}>
+                                    <Popup>
+                                        <div className="p-1">
+                                            <div className="flex items-center space-x-2 mb-2 border-b border-gray-100 pb-2">
+                                                {item.type === 'purchase' ? (
+                                                    <Fuel className={`w-4 h-4 ${item.title !== 'Yakıt Alımı' ? 'text-emerald-500' : 'text-blue-500'}`} />
+                                                ) : (
+                                                    <Calendar className="w-4 h-4 text-gray-400" />
+                                                )}
+                                                <span className="font-bold text-gray-800">{item.title}</span>
+                                            </div>
+                                            <div className="text-xs text-gray-500 mb-2">
+                                                {new Date(item.date).toLocaleDateString('tr-TR')}
+                                            </div>
+                                            {item.details}
                                         </div>
-                                        <div className="text-xs text-gray-500 mb-2">
-                                            {new Date(item.date).toLocaleDateString('tr-TR')}
-                                        </div>
-                                        {item.details}
-                                    </div>
-                                </Popup>
-                            </Marker>
-                        ))}
-                    </MapContainer>
-                </div>
+                                    </Popup>
+                                </Marker>
+                            ))}
+                        </MapContainer>
+                        <button
+                            onClick={(e) => { e.stopPropagation(); setShowMap(false); }}
+                            className="absolute top-4 right-4 z-[400] bg-white dark:bg-gray-800 p-2 rounded-lg shadow-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-gray-500 dark:text-gray-300"
+                            title="Haritayı Gizle"
+                        >
+                            <Map className="w-5 h-5 opacity-50" />
+                        </button>
+                    </div>
+                )}
             </div>
 
-            {/* Station Stats Cards */}
+            {/* Station Stats Cards (Always Visible) */}
             {stationStats.length > 0 && (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {stationStats.map((stat, index) => (
