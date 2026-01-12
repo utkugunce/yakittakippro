@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Fuel, Calendar, Coins, Droplets, MapPin, Calculator, PlusCircle, Eraser, AlertCircle, GaugeCircle } from 'lucide-react';
+import { Fuel, Calendar, Coins, Droplets, MapPin, Calculator, PlusCircle, Eraser, AlertCircle, GaugeCircle, Map } from 'lucide-react';
+import { LocationPicker } from './LocationPicker';
 
 export interface FuelPurchase {
     id: string;
@@ -37,11 +38,12 @@ export const FuelPurchaseForm: React.FC<FuelPurchaseFormProps> = ({ onAdd, lastO
 
     // Location
     const [addLocation, setAddLocation] = useState(false);
-    const [locationMode, setLocationMode] = useState<'gps' | 'manual'>('gps');
+    const [locationMode, setLocationMode] = useState<'gps' | 'manual' | 'map'>('gps');
     const [location, setLocation] = useState<{ latitude: number; longitude: number } | null>(null);
     const [manualLat, setManualLat] = useState<string>('');
     const [manualLng, setManualLng] = useState<string>('');
     const [gpsLoading, setGpsLoading] = useState(false);
+    const [showMapPicker, setShowMapPicker] = useState(false);
 
     // Pre-fill last fuel price
     useEffect(() => {
@@ -396,18 +398,31 @@ export const FuelPurchaseForm: React.FC<FuelPurchaseFormProps> = ({ onAdd, lastO
 
                     {addLocation && (
                         <div className="space-y-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                            {/* GPS / Manuel Toggle */}
+                            {/* GPS / Harita / Manuel Toggle */}
                             <div className="flex justify-center">
-                                <div className="inline-flex rounded-lg bg-gray-200 dark:bg-gray-600 p-1">
+                                <div className="inline-flex rounded-lg bg-gray-200 dark:bg-gray-600 p-1 flex-wrap gap-1">
                                     <button
                                         type="button"
                                         onClick={() => setLocationMode('gps')}
-                                        className={`px-4 py-2 text-sm font-medium rounded-md transition-all ${locationMode === 'gps'
-                                                ? 'bg-white dark:bg-gray-500 text-green-600 dark:text-green-400 shadow-sm'
-                                                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                                        className={`px-3 py-2 text-xs font-medium rounded-md transition-all ${locationMode === 'gps'
+                                            ? 'bg-white dark:bg-gray-500 text-green-600 dark:text-green-400 shadow-sm'
+                                            : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
                                             }`}
                                     >
-                                        📍 Şu Anki Konum
+                                        📍 GPS
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setLocationMode('map');
+                                            setShowMapPicker(true);
+                                        }}
+                                        className={`px-3 py-2 text-xs font-medium rounded-md transition-all ${locationMode === 'map'
+                                            ? 'bg-white dark:bg-gray-500 text-green-600 dark:text-green-400 shadow-sm'
+                                            : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                                            }`}
+                                    >
+                                        🗺️ Haritadan Seç
                                     </button>
                                     <button
                                         type="button"
@@ -415,12 +430,12 @@ export const FuelPurchaseForm: React.FC<FuelPurchaseFormProps> = ({ onAdd, lastO
                                             setLocationMode('manual');
                                             setLocation(null);
                                         }}
-                                        className={`px-4 py-2 text-sm font-medium rounded-md transition-all ${locationMode === 'manual'
-                                                ? 'bg-white dark:bg-gray-500 text-green-600 dark:text-green-400 shadow-sm'
-                                                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                                        className={`px-3 py-2 text-xs font-medium rounded-md transition-all ${locationMode === 'manual'
+                                            ? 'bg-white dark:bg-gray-500 text-green-600 dark:text-green-400 shadow-sm'
+                                            : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
                                             }`}
                                     >
-                                        ✏️ Manuel Giriş
+                                        ✏️ Manuel
                                     </button>
                                 </div>
                             </div>
@@ -445,6 +460,29 @@ export const FuelPurchaseForm: React.FC<FuelPurchaseFormProps> = ({ onAdd, lastO
                                             Konumu yeniden al
                                         </button>
                                     )}
+                                </div>
+                            )}
+
+                            {/* Map Mode Content */}
+                            {locationMode === 'map' && (
+                                <div className="text-center space-y-2">
+                                    {location ? (
+                                        <p className="text-sm text-green-600 dark:text-green-400 font-medium">
+                                            ✅ {location.latitude.toFixed(5)}, {location.longitude.toFixed(5)}
+                                        </p>
+                                    ) : (
+                                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                                            Haritadan konum seçilmedi
+                                        </p>
+                                    )}
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowMapPicker(true)}
+                                        className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg transition-all flex items-center space-x-2 mx-auto"
+                                    >
+                                        <Map className="w-4 h-4" />
+                                        <span>{location ? 'Konumu Değiştir' : 'Haritayı Aç'}</span>
+                                    </button>
                                 </div>
                             )}
 
@@ -511,6 +549,18 @@ export const FuelPurchaseForm: React.FC<FuelPurchaseFormProps> = ({ onAdd, lastO
                     </button>
                 </div>
             </form>
+
+            {/* Location Picker Modal */}
+            {showMapPicker && (
+                <LocationPicker
+                    onSelect={(lat, lng) => {
+                        setLocation({ latitude: lat, longitude: lng });
+                        setShowMapPicker(false);
+                    }}
+                    onClose={() => setShowMapPicker(false)}
+                    initialPosition={location ? { lat: location.latitude, lng: location.longitude } : null}
+                />
+            )}
         </div>
     );
 };
