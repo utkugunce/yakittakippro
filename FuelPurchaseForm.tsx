@@ -163,8 +163,13 @@ export const FuelPurchaseForm: React.FC<FuelPurchaseFormProps> = ({ onAdd, lastO
             setError('Lütfen geçerli bir toplam tutar girin.');
             return;
         }
-        if (odo !== undefined && lastOdometer > 0 && odo < lastOdometer) {
-            setError(`Kilometre sayacı son kayıttan (${lastOdometer.toLocaleString('tr-TR')} km) düşük olamaz.`);
+
+        // Check date for historical entry
+        const today = new Date().toISOString().split('T')[0];
+        const isHistorical = date < today;
+
+        if (odo !== undefined && lastOdometer > 0 && odo < lastOdometer && !isHistorical) {
+            setError(`Kilometre sayacı son kayıttan (${lastOdometer.toLocaleString('tr-TR')} km) düşük olamaz. Geçmiş tarihli giriş yapıyorsanız tarihi kontrol edin.`);
             return;
         }
 
