@@ -14,13 +14,15 @@ import { CloudSync } from './CloudSync';
 import { FuelMap } from './FuelMap';
 import { AIPredictions } from './AIPredictions';
 import { ThemeSettings, AccentColor } from './ThemeSettings';
-import { Car, LayoutDashboard, History, FileText, Moon, Sun, Settings, Wrench, Plus, X } from 'lucide-react';
+import { FuelPurchaseForm, FuelPurchase } from './FuelPurchaseForm';
+import { Car, LayoutDashboard, History, FileText, Moon, Sun, Settings, Wrench, Plus, X, Fuel } from 'lucide-react';
 import { PwaReloadPrompt } from './PwaReloadPrompt';
 
 const LOCAL_STORAGE_KEY = 'yakit_takip_logs_v1';
 const MAINTENANCE_STORAGE_KEY = 'yakit_takip_maintenance_v1';
 const VEHICLES_STORAGE_KEY = 'yakit_takip_vehicles_v1';
 const THEME_STORAGE_KEY = 'yakit_takip_theme_v1';
+const FUEL_PURCHASES_STORAGE_KEY = 'yakit_takip_fuel_purchases_v1';
 
 export default function App() {
   const [logs, setLogs] = useState<DailyLog[]>([]);
@@ -34,6 +36,8 @@ export default function App() {
   const [yearFilter, setYearFilter] = useState<'2026' | '2025' | 'all'>('all');
   const [showEntryModal, setShowEntryModal] = useState(false);
   const [editingLog, setEditingLog] = useState<DailyLog | null>(null);
+  const [showFuelPurchaseModal, setShowFuelPurchaseModal] = useState(false);
+  const [fuelPurchases, setFuelPurchases] = useState<FuelPurchase[]>([]);
 
   // Default vehicle for backwards compatibility
   const defaultVehicle: Vehicle = {
@@ -99,6 +103,16 @@ export default function App() {
       setAccentColor(savedAccent);
       document.documentElement.setAttribute('data-theme', savedAccent);
     }
+
+    // Load fuel purchases
+    const savedFuelPurchases = localStorage.getItem(FUEL_PURCHASES_STORAGE_KEY);
+    if (savedFuelPurchases) {
+      try {
+        setFuelPurchases(JSON.parse(savedFuelPurchases));
+      } catch (e) {
+        console.error("Failed to parse fuel purchases", e);
+      }
+    }
   }, []);
 
   // Save logs
@@ -117,6 +131,11 @@ export default function App() {
   }, [vehicleParts]);
 
   // Save vehicles
+  // Save fuel purchases
+  useEffect(() => {
+    localStorage.setItem(FUEL_PURCHASES_STORAGE_KEY, JSON.stringify(fuelPurchases));
+  }, [fuelPurchases]);
+
   useEffect(() => {
     if (vehicles.length > 0) {
       localStorage.setItem(VEHICLES_STORAGE_KEY, JSON.stringify(vehicles));
@@ -575,14 +594,25 @@ export default function App() {
         </div>
       </div>
 
-      {/* Floating Action Button */}
-      <button
-        onClick={() => setShowEntryModal(true)}
-        className="fixed bottom-24 md:bottom-8 right-6 w-14 h-14 bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center z-40"
-        title="Yeni Kayıt Ekle"
-      >
-        <Plus className="w-7 h-7" />
-      </button>
+      {/* Floating Action Buttons */}
+      <div className="fixed bottom-24 md:bottom-8 right-6 flex flex-col space-y-3 z-40">
+        {/* Fuel Purchase Button */}
+        <button
+          onClick={() => setShowFuelPurchaseModal(true)}
+          className="w-14 h-14 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center"
+          title="Yakıt Alımı"
+        >
+          <Fuel className="w-7 h-7" />
+        </button>
+        {/* Daily Entry Button */}
+        <button
+          onClick={() => setShowEntryModal(true)}
+          className="w-14 h-14 bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center"
+          title="Yeni Kayıt Ekle"
+        >
+          <Plus className="w-7 h-7" />
+        </button>
+      </div>
 
       {/* Entry Form Modal */}
       {showEntryModal && (
@@ -611,6 +641,33 @@ export default function App() {
                 lastOdometer={lastOdometer}
                 lastFuelPrice={stats.lastFuelPrice}
                 editingLog={editingLog}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Fuel Purchase Modal */}
+      {showFuelPurchaseModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white dark:bg-gray-800 p-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between z-10">
+              <div className="flex items-center space-x-2">
+                <Fuel className="w-5 h-5 text-emerald-500" />
+                <h2 className="text-lg font-bold text-gray-800 dark:text-white">Yakıt Alımı</h2>
+              </div>
+              <button onClick={() => setShowFuelPurchaseModal(false)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-1">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            <div className="p-4">
+              <FuelPurchaseForm
+                onAdd={(purchase) => {
+                  setFuelPurchases(prev => [purchase, ...prev]);
+                  setShowFuelPurchaseModal(false);
+                }}
+                lastOdometer={lastOdometer}
+                lastFuelPrice={stats.lastFuelPrice}
               />
             </div>
           </div>
