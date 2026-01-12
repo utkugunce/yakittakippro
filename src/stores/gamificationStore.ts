@@ -23,12 +23,14 @@ interface GamificationState {
     lastActivityDate: string | null;
     badges: Badge[];
     xpHistory: XPEvent[];
+    hasMigrated: boolean;
 
     // Actions
     addXP: (amount: number, reason: string) => void;
     updateStreak: () => void;
     checkAndUnlockBadges: () => void;
     resetStreak: () => void;
+    migrateExistingData: (fuelPurchaseCount: number, logCount: number) => void;
 }
 
 // Predefined badges
@@ -114,6 +116,7 @@ export const useGamificationStore = create<GamificationState>()(
             lastActivityDate: null,
             badges: [],
             xpHistory: [],
+            hasMigrated: false,
 
             addXP: (amount, reason) => {
                 const event: XPEvent = {
@@ -176,7 +179,10 @@ export const useGamificationStore = create<GamificationState>()(
                     let shouldUnlock = false;
                     switch (badge.requirement) {
                         case 'firstFuel':
-                            shouldUnlock = xpHistory.some(e => e.reason.includes('Yakıt'));
+                            // Check if any fuel-related XP exists
+                            shouldUnlock = xpHistory.some(e =>
+                                e.reason.includes('Yakıt') || e.reason.includes('yakıt')
+                            );
                             break;
                         case 'streak3':
                             shouldUnlock = currentStreak >= 3;
@@ -197,7 +203,18 @@ export const useGamificationStore = create<GamificationState>()(
                             shouldUnlock = totalXP >= 5000;
                             break;
                         case 'fuel10':
-                            shouldUnlock = xpHistory.filter(e => e.reason.includes('Yakıt')).length >= 10;
+                            // Count individual fuel purchases from XP history
+                            // Migrated entries say "Geçmiş X yakıt alımı" so extract number
+                            let fuelCount = 0;
+                            xpHistory.forEach(e => {
+                                if (e.reason.includes('Yakıt alımı kaydedildi')) {
+                                    fuelCount += 1;
+                                } else if (e.reason.includes('Geçmiş') && e.reason.includes('yakıt alımı')) {
+                                    const match = e.reason.match(/Geçmiş (\d+) yakıt alımı/);
+                                    if (match) fuelCount += parseInt(match[1]);
+                                }
+                            });
+                            shouldUnlock = fuelCount >= 10;
                             break;
                     }
 
@@ -214,7 +231,53 @@ export const useGamificationStore = create<GamificationState>()(
                 }
             },
 
-            resetStreak: () => set({ currentStreak: 0 })
+            resetStreak: () => set({ currentStreak: 0 }),
+
+            // Migration function for existing data
+            migrateExistingData: (fuelPurchaseCount: number, logCount: number) => {
+                const { hasMigrated } = get();
+                if (hasMigrated) return; // Already migrated
+
+                // Award XP for existing fuel purchases (150 XP each)
+                const fuelXP = fuelPurchaseCount * 150;
+
+                // Award XP for existing daily logs (50 XP each)
+                const logXP = logCount * 50;
+
+                const totalMigrationXP = fuelXP + logXP;
+
+                if (totalMigrationXP > 0) {
+                    // Create migration events
+                    const events: XPEvent[] = [];
+
+                    if (fuelPurchaseCount > 0) {
+                        events.push({
+                            amount: fuelXP,
+                            reason: `Geçmiş ${fuelPurchaseCount} yakıt alımı`,
+                            timestamp: new Date().toISOString()
+                        });
+                    }
+
+                    if (logCount > 0) {
+                        events.push({
+                            amount: logXP,
+                            reason: `Geçmiş ${logCount} günlük kayıt`,
+                            timestamp: new Date().toISOString()
+                        });
+                    }
+
+                    set((state) => ({
+                        totalXP: state.totalXP + totalMigrationXP,
+                        xpHistory: [...events, ...state.xpHistory].slice(0, 50),
+                        hasMigrated: true
+                    }));
+
+                    // Check badges after migration
+                    get().checkAndUnlockBadges();
+                } else {
+                    set({ hasMigrated: true });
+                }
+            }
         }),
         {
             name: 'yakit-gamification-store'
