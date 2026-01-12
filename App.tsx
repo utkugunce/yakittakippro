@@ -129,10 +129,12 @@ export default function App() {
   }, []);
 
   // Migrate existing data to gamification system
-  const { migrateExistingData, hasMigrated } = useGamificationStore();
+  // Migrate existing data to gamification system
+  const { migrateExistingData, hasMigrated, syncStreaksWithHistory } = useGamificationStore();
+
+  // Initial XP Migration (Once)
   useEffect(() => {
     if (!hasMigrated && (logs.length > 0 || fuelPurchases.length > 0)) {
-      // Collect all activity dates from logs and fuel purchases
       const activityDates: string[] = [
         ...logs.map(log => log.date),
         ...fuelPurchases.map(fp => fp.date)
@@ -140,6 +142,17 @@ export default function App() {
       migrateExistingData(fuelPurchases.length, logs.length, activityDates);
     }
   }, [hasMigrated, logs.length, fuelPurchases.length, migrateExistingData]);
+
+  // Continuous Streak Sync (Always recalculate based on history)
+  useEffect(() => {
+    if (logs.length > 0 || fuelPurchases.length > 0) {
+      const allDates = [
+        ...logs.map(l => l.date),
+        ...fuelPurchases.map(fp => fp.date)
+      ];
+      syncStreaksWithHistory(allDates);
+    }
+  }, [logs, fuelPurchases, syncStreaksWithHistory]);
 
   // Save logs
   useEffect(() => {

@@ -31,6 +31,7 @@ interface GamificationState {
     checkAndUnlockBadges: () => void;
     resetStreak: () => void;
     migrateExistingData: (fuelPurchaseCount: number, logCount: number, activityDates: string[]) => void;
+    syncStreaksWithHistory: (dates: string[]) => void;
 }
 
 // Predefined badges
@@ -246,55 +247,6 @@ export const useGamificationStore = create<GamificationState>()(
 
                 const totalMigrationXP = fuelXP + logXP;
 
-                // Calculate streak from activity dates
-                let longestStreak = 0;
-                let currentStreak = 0;
-                let lastActivityDate: string | null = null;
-
-                if (activityDates.length > 0) {
-                    // Get unique dates and sort them
-                    const uniqueDates = [...new Set(activityDates.map(d => new Date(d).toDateString()))]
-                        .map(d => new Date(d))
-                        .sort((a, b) => a.getTime() - b.getTime());
-
-                    let tempStreak = 1;
-                    for (let i = 1; i < uniqueDates.length; i++) {
-                        const prevDate = uniqueDates[i - 1];
-                        const currDate = uniqueDates[i];
-                        const diffDays = Math.round((currDate.getTime() - prevDate.getTime()) / (1000 * 60 * 60 * 24));
-
-                        if (diffDays === 1) {
-                            tempStreak++;
-                        } else {
-                            longestStreak = Math.max(longestStreak, tempStreak);
-                            tempStreak = 1;
-                        }
-                    }
-                    longestStreak = Math.max(longestStreak, tempStreak);
-
-                    // Check if current streak is active (last activity was today or yesterday)
-                    const lastDate = uniqueDates[uniqueDates.length - 1];
-                    const today = new Date();
-                    today.setHours(0, 0, 0, 0);
-                    const diffFromToday = Math.round((today.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
-
-                    if (diffFromToday <= 1) {
-                        // Count backwards to find current active streak
-                        currentStreak = 1;
-                        for (let i = uniqueDates.length - 2; i >= 0; i--) {
-                            const prevDate = uniqueDates[i];
-                            const currDate = uniqueDates[i + 1];
-                            const diff = Math.round((currDate.getTime() - prevDate.getTime()) / (1000 * 60 * 60 * 24));
-                            if (diff === 1) {
-                                currentStreak++;
-                            } else {
-                                break;
-                            }
-                        }
-                        lastActivityDate = lastDate.toISOString();
-                    }
-                }
-
                 // Create migration events
                 const events: XPEvent[] = [];
 
@@ -317,13 +269,84 @@ export const useGamificationStore = create<GamificationState>()(
                 set((state) => ({
                     totalXP: state.totalXP + totalMigrationXP,
                     xpHistory: [...events, ...state.xpHistory].slice(0, 50),
-                    currentStreak: Math.max(state.currentStreak, currentStreak),
-                    longestStreak: Math.max(state.longestStreak, longestStreak),
-                    lastActivityDate: lastActivityDate || state.lastActivityDate,
                     hasMigrated: true
                 }));
 
-                // Check badges after migration
+                // Also sync streaks
+                get().syncStreaksWithHistory(activityDates);
+            },
+
+            // Recalculate streaks based on all historical activity
+            syncStreaksWithHistory: (dates: string[]) => {
+                if (dates.length === 0) {
+                    set({ currentStreak: 0, longestStreak: 0 });
+                    return;
+                }
+
+                // 1. Unique and Sort Dates
+                const uniqueDates = Array.from(new Set(dates.map(d => d.split('T')[0]))).sort();
+
+                if (uniqueDates.length === 0) return;
+
+                const today = new Date().toISOString().split('T')[0];
+                const yesterdayDate = new Date();
+                yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+                const yesterday = yesterdayDate.toISOString().split('T')[0];
+
+                let currentStreak = 0;
+                let longestStreak = 0;
+                let tempStreak = 0;
+
+                // 2. Calculate Longest Streak
+                for (let i = 0; i < uniqueDates.length; i++) {
+                    if (i === 0) {
+                        tempStreak = 1;
+                    } else {
+                        const date1 = new Date(uniqueDates[i - 1]);
+                        const date2 = new Date(uniqueDates[i]);
+                        const diffTime = Math.abs(date2.getTime() - date1.getTime());
+                        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+                        if (diffDays === 1) {
+                            tempStreak++;
+                        } else {
+                            // Streak broken
+                            tempStreak = 1;
+                        }
+                    }
+                    if (tempStreak > longestStreak) longestStreak = tempStreak;
+                }
+
+                // 3. Calculate Current Streak
+                // Check if last activity was today or yesterday
+                const lastActivity = uniqueDates[uniqueDates.length - 1];
+
+                if (lastActivity === today || lastActivity === yesterday) {
+                    currentStreak = 1;
+                    // Go backwards from the last date
+                    for (let i = uniqueDates.length - 1; i > 0; i--) {
+                        const dateCurrent = new Date(uniqueDates[i]);
+                        const datePrev = new Date(uniqueDates[i - 1]);
+                        const diffTime = Math.abs(dateCurrent.getTime() - datePrev.getTime());
+                        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+                        if (diffDays === 1) {
+                            currentStreak++;
+                        } else {
+                            break;
+                        }
+                    }
+                } else {
+                    currentStreak = 0;
+                }
+
+                set({
+                    currentStreak,
+                    longestStreak,
+                    lastActivityDate: lastActivity
+                });
+
+                // Re-check badges with new streaks
                 get().checkAndUnlockBadges();
             }
         }),
