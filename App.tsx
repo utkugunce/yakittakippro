@@ -19,6 +19,10 @@ import { FuelPurchaseHistory } from './FuelPurchaseHistory';
 import { Car, LayoutDashboard, History, FileText, Moon, Sun, Settings, Wrench, Plus, X, Fuel } from 'lucide-react';
 import { PwaReloadPrompt } from './PwaReloadPrompt';
 
+// Gamification imports
+import { GamificationDisplay, StreakWidget, BadgeList } from '@/src/features/gamification';
+import { useGamificationStore } from '@/src/stores/gamificationStore';
+
 const LOCAL_STORAGE_KEY = 'yakit_takip_logs_v1';
 const MAINTENANCE_STORAGE_KEY = 'yakit_takip_maintenance_v1';
 const VEHICLES_STORAGE_KEY = 'yakit_takip_vehicles_v1';
@@ -457,10 +461,19 @@ export default function App() {
           <div className="space-y-6 animate-in fade-in duration-500">
             <DashboardStatsCard stats={stats} alerts={activeAlerts} currentOdometer={lastOdometer} />
 
+            {/* Gamification Section */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <GamificationDisplay />
+              <StreakWidget />
+            </div>
+
             {/* Weekly/Monthly Summary & Budget */}
             <div className="grid grid-cols-1 gap-4">
               <WeeklySummary logs={logs} />
             </div>
+
+            {/* Badges */}
+            <BadgeList />
 
             {/* Year Filter Tabs */}
             <div className="flex justify-center">
