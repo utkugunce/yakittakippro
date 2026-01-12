@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Fuel, Calendar, Coins, Droplets, MapPin, Calculator, PlusCircle, Eraser, AlertCircle, GaugeCircle, Map } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Fuel, Calendar, Coins, Droplets, MapPin, Calculator, PlusCircle, Eraser, AlertCircle, GaugeCircle, Map, Search } from 'lucide-react';
 import { LocationPicker } from './LocationPicker';
 
 export interface FuelPurchase {
@@ -21,7 +21,7 @@ interface FuelPurchaseFormProps {
     lastFuelPrice?: number;
 }
 
-const FUEL_STATIONS = ['Shell', 'Opet', 'BP', 'Petrol Ofisi', 'Total', 'Aytemiz', 'TP', 'Alpet', 'Diğer'];
+const FUEL_STATIONS = ['Shell', 'Opet', 'BP', 'Petrol Ofisi', 'Total', 'Aytemiz', 'TP', 'Alpet', 'Lukoil', 'Starpet', 'Moil', 'Kadoil', 'Diğer'];
 
 export const FuelPurchaseForm: React.FC<FuelPurchaseFormProps> = ({ onAdd, lastOdometer = 0, lastFuelPrice = 0 }) => {
     const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
@@ -29,9 +29,16 @@ export const FuelPurchaseForm: React.FC<FuelPurchaseFormProps> = ({ onAdd, lastO
     const [pricePerLiter, setPricePerLiter] = useState<string>('');
     const [totalAmount, setTotalAmount] = useState<string>('');
     const [station, setStation] = useState<string>('');
+    const [stationSearch, setStationSearch] = useState<string>('');
     const [odometer, setOdometer] = useState<string>('');
     const [notes, setNotes] = useState<string>('');
     const [error, setError] = useState<string | null>(null);
+
+    // Filter stations based on search
+    const filteredStations = useMemo(() => {
+        if (!stationSearch) return FUEL_STATIONS;
+        return FUEL_STATIONS.filter(s => s.toLowerCase().includes(stationSearch.toLowerCase()));
+    }, [stationSearch]);
 
     // Calculation mode: 'auto' calculates total, 'manual' allows direct input
     const [calcMode, setCalcMode] = useState<'liters' | 'total'>('liters');
@@ -220,23 +227,64 @@ export const FuelPurchaseForm: React.FC<FuelPurchaseFormProps> = ({ onAdd, lastO
                     </div>
                 </div>
 
-                {/* Fuel Station Quick Select */}
+                {/* Fuel Station Search & Select */}
                 <div>
                     <label className={labelClasses}>İstasyon / Marka</label>
-                    <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-                        {FUEL_STATIONS.map((brand) => (
-                            <button
-                                key={brand}
-                                type="button"
-                                onClick={() => setStation(brand)}
-                                className={`px-3 py-2 rounded-lg text-sm font-bold whitespace-nowrap transition-all border ${station === brand
-                                    ? 'bg-emerald-600 text-white border-emerald-600 shadow-md transform scale-105'
-                                    : 'bg-[#333333] dark:bg-gray-700 text-gray-300 border-transparent hover:bg-gray-600'
-                                    }`}
-                            >
-                                {brand}
-                            </button>
-                        ))}
+                    <div className="space-y-3">
+                        <div className="relative">
+                            <Search className="absolute left-3 top-3.5 w-4 h-4 text-gray-400" />
+                            <input
+                                type="text"
+                                placeholder="İstasyon Ara veya Ekle..."
+                                value={stationSearch}
+                                onChange={(e) => setStationSearch(e.target.value)}
+                                className={`${inputBaseClasses} pl-9`}
+                            />
+                        </div>
+
+                        <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto pr-1 custom-scrollbar">
+                            {/* Show 'Add Custom' button if search exists and not in list */}
+                            {stationSearch && !filteredStations.some(s => s.toLowerCase() === stationSearch.toLowerCase()) && (
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setStation(stationSearch);
+                                        setStationSearch('');
+                                    }}
+                                    className="px-3 py-2 rounded-lg text-xs font-bold transition-all border bg-emerald-100 text-emerald-800 border-emerald-200 hover:bg-emerald-200"
+                                >
+                                    + Ekle: "{stationSearch}"
+                                </button>
+                            )}
+
+                            {/* Selected Station (if not in filtered list) */}
+                            {station && !filteredStations.includes(station) && !stationSearch && (
+                                <button
+                                    type="button"
+                                    onClick={() => setStation('')} // Click to deselect
+                                    className="px-3 py-2 rounded-lg text-xs font-bold transition-all border bg-emerald-600 text-white border-emerald-600 shadow-md transform scale-105"
+                                >
+                                    {station} (Seçili)
+                                </button>
+                            )}
+
+                            {filteredStations.map((brand) => (
+                                <button
+                                    key={brand}
+                                    type="button"
+                                    onClick={() => {
+                                        setStation(brand === station ? '' : brand);
+                                        setStationSearch('');
+                                    }}
+                                    className={`px-3 py-2 rounded-lg text-xs font-bold transition-all border ${station === brand
+                                        ? 'bg-emerald-600 text-white border-emerald-600 shadow-md transform scale-105'
+                                        : 'bg-[#333333] dark:bg-gray-700 text-gray-300 border-transparent hover:bg-gray-600'
+                                        }`}
+                                >
+                                    {brand}
+                                </button>
+                            ))}
+                        </div>
                     </div>
                 </div>
 
@@ -399,8 +447,8 @@ export const FuelPurchaseForm: React.FC<FuelPurchaseFormProps> = ({ onAdd, lastO
                     {addLocation && (
                         <div className="space-y-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
                             {/* GPS / Harita / Manuel Toggle */}
-                            <div className="flex justify-center">
-                                <div className="inline-flex rounded-lg bg-gray-200 dark:bg-gray-600 p-1 flex-wrap gap-1">
+                            <div className="flex justify-center w-full">
+                                <div className="grid grid-cols-3 gap-2 bg-gray-200 dark:bg-gray-600 p-1 rounded-lg w-full">
                                     <button
                                         type="button"
                                         onClick={() => setLocationMode('gps')}
