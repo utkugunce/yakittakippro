@@ -488,7 +488,7 @@ export default function App() {
                   vehicleParts={vehicleParts}
                   currentOdometer={lastOdometer}
                 />
-                {logs.length > 0 && <Charts logs={yearFilter === 'all' ? logs : logs.filter(l => new Date(l.date).getFullYear().toString() === yearFilter)} purchases={fuelPurchases} />}
+                {(logs.length > 0 || fuelPurchases.length > 0) && <Charts logs={yearFilter === 'all' ? logs : logs.filter(l => new Date(l.date).getFullYear().toString() === yearFilter)} purchases={fuelPurchases} />}
 
                 {/* Recent 5 entries (no filter, simplified) */}
                 <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
