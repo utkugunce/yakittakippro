@@ -19,7 +19,7 @@ export const CarbonFootprint: React.FC<CarbonFootprintProps> = ({ fuelPurchases,
         const thisYear = now.getFullYear();
 
         // Total liters
-        const totalLiters = fuelPurchases.reduce((sum, fp) => sum + fp.liters, 0);
+        const totalLiters = fuelPurchases.reduce((sum, fp) => sum + Number(fp.liters), 0);
 
         // This month's liters
         const monthlyLiters = fuelPurchases
@@ -27,15 +27,15 @@ export const CarbonFootprint: React.FC<CarbonFootprintProps> = ({ fuelPurchases,
                 const d = new Date(fp.date);
                 return d.getMonth() === thisMonth && d.getFullYear() === thisYear;
             })
-            .reduce((sum, fp) => sum + fp.liters, 0);
+            .reduce((sum, fp) => sum + Number(fp.liters), 0);
 
         // This year's liters
         const yearlyLiters = fuelPurchases
             .filter(fp => new Date(fp.date).getFullYear() === thisYear)
-            .reduce((sum, fp) => sum + fp.liters, 0);
+            .reduce((sum, fp) => sum + Number(fp.liters), 0);
 
         // Total km from logs
-        const totalKm = logs.reduce((sum, log) => sum + log.km, 0);
+        const totalKm = logs.reduce((sum, log) => sum + Number(log.dailyDistance || log.km || 0), 0); // Handle varying log structure if any
 
         // CO2 calculations
         const totalCO2 = totalLiters * CO2_PER_LITER;
@@ -60,7 +60,7 @@ export const CarbonFootprint: React.FC<CarbonFootprintProps> = ({ fuelPurchases,
     }, [fuelPurchases, logs]);
 
     const getEmissionLevel = (co2PerKm: number): { label: string; color: string; icon: string } => {
-        if (co2PerKm === 0) return { label: 'Hesaplanamadı', color: 'gray', icon: '❓' };
+        if (co2PerKm === 0) return { label: 'KM Verisi Bekleniyor', color: 'gray', icon: '⏳' };
         if (co2PerKm < 15) return { label: 'Düşük', color: 'green', icon: '🌱' };
         if (co2PerKm < 20) return { label: 'Orta', color: 'yellow', icon: '🌿' };
         if (co2PerKm < 25) return { label: 'Yüksek', color: 'orange', icon: '🍂' };
@@ -115,20 +115,20 @@ export const CarbonFootprint: React.FC<CarbonFootprintProps> = ({ fuelPurchases,
 
                 {/* Emission Level */}
                 <div className={`flex items-center justify-between p-3 rounded-lg ${emissionLevel.color === 'green' ? 'bg-green-50 dark:bg-green-900/20' :
-                        emissionLevel.color === 'yellow' ? 'bg-yellow-50 dark:bg-yellow-900/20' :
-                            emissionLevel.color === 'orange' ? 'bg-orange-50 dark:bg-orange-900/20' :
-                                emissionLevel.color === 'red' ? 'bg-red-50 dark:bg-red-900/20' :
-                                    'bg-gray-50 dark:bg-gray-700/50'
+                    emissionLevel.color === 'yellow' ? 'bg-yellow-50 dark:bg-yellow-900/20' :
+                        emissionLevel.color === 'orange' ? 'bg-orange-50 dark:bg-orange-900/20' :
+                            emissionLevel.color === 'red' ? 'bg-red-50 dark:bg-red-900/20' :
+                                'bg-gray-50 dark:bg-gray-700/50'
                     }`}>
                     <div className="flex items-center space-x-2">
                         <span className="text-xl">{emissionLevel.icon}</span>
                         <div>
                             <p className="text-sm font-medium text-gray-800 dark:text-white">Emisyon Seviyesi</p>
                             <p className={`text-xs font-bold ${emissionLevel.color === 'green' ? 'text-green-600' :
-                                    emissionLevel.color === 'yellow' ? 'text-yellow-600' :
-                                        emissionLevel.color === 'orange' ? 'text-orange-600' :
-                                            emissionLevel.color === 'red' ? 'text-red-600' :
-                                                'text-gray-600'
+                                emissionLevel.color === 'yellow' ? 'text-yellow-600' :
+                                    emissionLevel.color === 'orange' ? 'text-orange-600' :
+                                        emissionLevel.color === 'red' ? 'text-red-600' :
+                                            'text-gray-600'
                                 }`}>
                                 {emissionLevel.label}
                             </p>

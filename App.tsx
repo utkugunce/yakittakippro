@@ -291,22 +291,23 @@ export default function App() {
       : 0;
 
     // Last fuel price (latest of Logs or Purchases)
+    // Last fuel price (latest of Logs or Purchases - from ALL history)
     let lastFuelPrice = 0;
 
-    const lastLog = logs.length > 0
-      ? logs.reduce((prev, current) => (prev.currentOdometer > current.currentOdometer) ? prev : current)
+    const lastLogAll = logs.length > 0
+      ? logs.reduce((prev, current) => new Date(prev.date) > new Date(current.date) ? prev : current)
       : null;
 
-    const lastPurchase = fuelPurchases.length > 0
+    const lastPurchaseAll = fuelPurchases.length > 0
       ? fuelPurchases.reduce((prev, current) => new Date(prev.date) > new Date(current.date) ? prev : current)
       : null;
 
-    if (lastLog && lastPurchase) {
-      lastFuelPrice = new Date(lastPurchase.date) > new Date(lastLog.date) ? lastPurchase.pricePerLiter : lastLog.fuelPrice;
-    } else if (lastLog) {
-      lastFuelPrice = lastLog.fuelPrice;
-    } else if (lastPurchase) {
-      lastFuelPrice = lastPurchase.pricePerLiter;
+    if (lastLogAll && lastPurchaseAll) {
+      lastFuelPrice = new Date(lastPurchaseAll.date) > new Date(lastLogAll.date) ? lastPurchaseAll.pricePerLiter : lastLogAll.fuelPrice;
+    } else if (lastLogAll) {
+      lastFuelPrice = lastLogAll.fuelPrice;
+    } else if (lastPurchaseAll) {
+      lastFuelPrice = lastPurchaseAll.pricePerLiter;
     }
 
     return {

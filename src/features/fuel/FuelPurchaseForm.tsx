@@ -129,8 +129,8 @@ export const FuelPurchaseForm: React.FC<FuelPurchaseFormProps> = ({ onAdd, onUpd
     // Auto-calculate total amount when liters and price change (in liters mode)
     useEffect(() => {
         if (calcMode === 'liters') {
-            const l = parseFloat(liters);
-            const p = parseFloat(pricePerLiter);
+            const l = parseFloat(liters.replace(',', '.'));
+            const p = parseFloat(pricePerLiter.replace(',', '.'));
             if (!isNaN(l) && !isNaN(p) && l > 0 && p > 0) {
                 setTotalAmount((l * p).toFixed(2));
             }
@@ -140,8 +140,8 @@ export const FuelPurchaseForm: React.FC<FuelPurchaseFormProps> = ({ onAdd, onUpd
     // Auto-calculate liters when total and price change (in total mode)
     useEffect(() => {
         if (calcMode === 'total') {
-            const t = parseFloat(totalAmount);
-            const p = parseFloat(pricePerLiter);
+            const t = parseFloat(totalAmount.replace(',', '.'));
+            const p = parseFloat(pricePerLiter.replace(',', '.'));
             if (!isNaN(t) && !isNaN(p) && t > 0 && p > 0) {
                 setLiters((t / p).toFixed(2));
             }
@@ -168,9 +168,9 @@ export const FuelPurchaseForm: React.FC<FuelPurchaseFormProps> = ({ onAdd, onUpd
         e.preventDefault();
         setError(null);
 
-        const l = parseFloat(liters);
-        const p = parseFloat(pricePerLiter);
-        const t = parseFloat(totalAmount);
+        const l = parseFloat(liters.replace(',', '.'));
+        const p = parseFloat(pricePerLiter.replace(',', '.'));
+        const t = parseFloat(totalAmount.replace(',', '.'));
         const odo = odometer ? parseFloat(odometer) : undefined;
 
         // Validation

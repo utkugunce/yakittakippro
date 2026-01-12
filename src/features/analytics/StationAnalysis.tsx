@@ -35,9 +35,13 @@ export const StationAnalysis: React.FC<StationAnalysisProps> = ({ fuelPurchases 
                     avgPrice: 0
                 };
             }
+            // Ensure numeric values even if legacy data has strings
+            const amount = Number(fp.totalAmount);
+            const liters = Number(fp.liters);
+
+            if (!isNaN(amount)) stats[name].totalSpent += amount;
+            if (!isNaN(liters)) stats[name].totalLiters += liters;
             stats[name].visitCount++;
-            stats[name].totalSpent += fp.totalAmount;
-            stats[name].totalLiters += fp.liters;
         });
 
         // Calculate averages
@@ -129,9 +133,9 @@ export const StationAnalysis: React.FC<StationAnalysisProps> = ({ fuelPurchases 
                     >
                         <div className="flex items-center space-x-3">
                             <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${index === 0 ? 'bg-yellow-100 text-yellow-700' :
-                                    index === 1 ? 'bg-gray-200 text-gray-600' :
-                                        index === 2 ? 'bg-orange-100 text-orange-700' :
-                                            'bg-gray-100 text-gray-500'
+                                index === 1 ? 'bg-gray-200 text-gray-600' :
+                                    index === 2 ? 'bg-orange-100 text-orange-700' :
+                                        'bg-gray-100 text-gray-500'
                                 }`}>
                                 {index + 1}
                             </div>
@@ -142,8 +146,8 @@ export const StationAnalysis: React.FC<StationAnalysisProps> = ({ fuelPurchases 
                         </div>
                         <div className="text-right">
                             <p className={`font-bold text-sm ${station === cheapest ? 'text-green-600' :
-                                    station === mostExpensive ? 'text-red-600' :
-                                        'text-gray-800 dark:text-white'
+                                station === mostExpensive ? 'text-red-600' :
+                                    'text-gray-800 dark:text-white'
                                 }`}>
                                 ₺{station.avgPrice.toFixed(2)}/L
                             </p>
