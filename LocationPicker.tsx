@@ -1,6 +1,6 @@
-import React, { useState, useCallback, useMemo } from 'react';
-import { GoogleMap, useJsApiLoader, Marker } from '@react-google-maps/api';
-import { MapPin, Crosshair, X, Check, Loader2 } from 'lucide-react';
+import React, { useState, useCallback, useRef } from 'react';
+import { GoogleMap, useJsApiLoader, Marker, Autocomplete } from '@react-google-maps/api';
+import { MapPin, Crosshair, X, Check, Loader2, Search } from 'lucide-react';
 
 interface LocationPickerProps {
     onSelect: (lat: number, lng: number) => void;
@@ -18,17 +18,22 @@ const defaultCenter = { lat: 39.9334, lng: 32.8597 };
 
 const GOOGLE_MAPS_API_KEY = (import.meta as any).env?.VITE_GOOGLE_MAPS_API_KEY || '';
 
+// Libraries array must be constant to avoid re-loads
+const libraries: ("places")[] = ["places"];
+
 export const LocationPicker: React.FC<LocationPickerProps> = ({ onSelect, onClose, initialPosition }) => {
     const [selectedPosition, setSelectedPosition] = useState<{ lat: number; lng: number } | null>(
         initialPosition || null
     );
     const [gpsLoading, setGpsLoading] = useState(false);
     const [map, setMap] = useState<google.maps.Map | null>(null);
+    const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
 
     const { isLoaded, loadError } = useJsApiLoader({
         id: 'google-map-script',
         googleMapsApiKey: GOOGLE_MAPS_API_KEY,
-        language: 'tr'
+        language: 'tr',
+        libraries
     });
 
     const onLoad = useCallback((map: google.maps.Map) => {
@@ -47,6 +52,29 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({ onSelect, onClos
             });
         }
     }, []);
+
+    const handleAutocompleteLoad = (autocomplete: google.maps.places.Autocomplete) => {
+        autocompleteRef.current = autocomplete;
+    };
+
+    const handlePlaceChanged = () => {
+        if (autocompleteRef.current) {
+            const place = autocompleteRef.current.getPlace();
+            if (place.geometry && place.geometry.location) {
+                const lat = place.geometry.location.lat();
+                const lng = place.geometry.location.lng();
+
+                setSelectedPosition({ lat, lng });
+
+                if (map) {
+                    map.panTo({ lat, lng });
+                    map.setZoom(17);
+                }
+            } else {
+                console.log("Returned place contains no geometry");
+            }
+        }
+    };
 
     const handleGetCurrentLocation = () => {
         if ('geolocation' in navigator) {
@@ -108,7 +136,7 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({ onSelect, onClos
 
     return (
         <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col h-[500px] md:h-auto">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col h-[600px] md:h-auto max-h-[90vh]">
                 {/* Header */}
                 <div className="p-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between bg-white dark:bg-gray-800 shrink-0">
                     <div className="flex items-center space-x-2">
@@ -150,6 +178,25 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({ onSelect, onClos
                                 fullscreenControl: false,
                             }}
                         >
+                            {/* Search Box */}
+                            <div className="absolute top-4 left-4 right-16 z-10">
+                                <Autocomplete
+                                    onLoad={handleAutocompleteLoad}
+                                    onPlaceChanged={handlePlaceChanged}
+                                >
+                                    <div className="relative">
+                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <Search className="h-4 w-4 text-gray-400" />
+                                        </div>
+                                        <input
+                                            type="text"
+                                            placeholder="İstasyon veya adres ara..."
+                                            className="block w-full pl-10 pr-3 py-3 border border-transparent rounded-xl leading-5 bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:border-white sm:text-sm shadow-lg"
+                                        />
+                                    </div>
+                                </Autocomplete>
+                            </div>
+
                             {selectedPosition && (
                                 <Marker
                                     position={selectedPosition}
@@ -175,8 +222,8 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({ onSelect, onClos
 
                     {/* Instructions overlay */}
                     {!selectedPosition && isLoaded && (
-                        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-10 bg-black/70 text-white px-4 py-2 rounded-full text-sm font-medium shadow-lg backdrop-blur-sm pointer-events-none">
-                            Haritada bir noktaya tıklayın 📍
+                        <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 z-10 bg-black/70 text-white px-4 py-2 rounded-full text-sm font-medium shadow-lg backdrop-blur-sm pointer-events-none whitespace-nowrap">
+                            Haritadan seçin veya arama yapın 📍
                         </div>
                     )}
                 </div>
@@ -209,7 +256,7 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({ onSelect, onClos
                         </div>
                     ) : (
                         <p className="text-center text-gray-500 dark:text-gray-400 text-sm py-2">
-                            Haritada tıklayarak veya GPS butonunu kullanarak konum seçin
+                            Haritada tıklayın, GPS kullanın veya arama yapın
                         </p>
                     )}
                 </div>
