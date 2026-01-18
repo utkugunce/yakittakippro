@@ -21,11 +21,12 @@ interface FuelPurchaseFormProps {
     editingPurchase?: FuelPurchase | null;
     lastOdometer?: number;
     lastFuelPrice?: number;
+    purchaseHistory?: FuelPurchase[];
 }
 
 const FUEL_STATIONS = ['Shell', 'Opet', 'BP', 'Petrol Ofisi', 'Total', 'Aytemiz', 'TP', 'Alpet', 'Lukoil', 'Starpet', 'Moil', 'Kadoil', 'Diğer'];
 
-export const FuelPurchaseForm: React.FC<FuelPurchaseFormProps> = ({ onAdd, onUpdate, editingPurchase, lastOdometer = 0, lastFuelPrice = 0 }) => {
+export const FuelPurchaseForm: React.FC<FuelPurchaseFormProps> = ({ onAdd, onUpdate, editingPurchase, lastOdometer = 0, lastFuelPrice = 0, purchaseHistory = [] }) => {
     const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
     const [liters, setLiters] = useState<string>('');
     const [pricePerLiter, setPricePerLiter] = useState<string>('');
@@ -36,11 +37,37 @@ export const FuelPurchaseForm: React.FC<FuelPurchaseFormProps> = ({ onAdd, onUpd
     const [notes, setNotes] = useState<string>('');
     const [error, setError] = useState<string | null>(null);
 
-    // Filter stations based on search
+    // Filter stations based on search and sort by usage frequency
     const filteredStations = useMemo(() => {
-        if (!stationSearch) return FUEL_STATIONS;
-        return FUEL_STATIONS.filter(s => s.toLowerCase().includes(stationSearch.toLowerCase()));
-    }, [stationSearch]);
+        // Calculate frequency map
+        const frequency: Record<string, number> = {};
+        purchaseHistory.forEach(p => {
+            if (p.station) {
+                frequency[p.station] = (frequency[p.station] || 0) + 1;
+            }
+        });
+
+        // Create a sorted list of all stations (default + custom from history)
+        const allStationsSet = new Set([...FUEL_STATIONS, ...Object.keys(frequency)]);
+        const allStations = Array.from(allStationsSet);
+
+        // Sort: High frequency first
+        const sortedStations = allStations.sort((a, b) => {
+            const freqA = frequency[a] || 0;
+            const freqB = frequency[b] || 0;
+            if (freqA !== freqB) return freqB - freqA; // Higher freq comes first
+            // If frequencies equal (e.g. 0), keep default list order or alphabetically for others
+            const indexA = FUEL_STATIONS.indexOf(a);
+            const indexB = FUEL_STATIONS.indexOf(b);
+            if (indexA !== -1 && indexB !== -1) return indexA - indexB; // Keep default order
+            if (indexA !== -1) return -1; // Default stations prioritized over custom 0-freq
+            if (indexB !== -1) return 1;
+            return a.localeCompare(b);
+        });
+
+        if (!stationSearch) return sortedStations;
+        return sortedStations.filter(s => s.toLowerCase().includes(stationSearch.toLowerCase()));
+    }, [stationSearch, purchaseHistory]);
 
     // Calculation mode: 'auto' calculates total, 'manual' allows direct input
     const [calcMode, setCalcMode] = useState<'liters' | 'total'>('liters');
