@@ -145,7 +145,12 @@ export const SeasonalAnalysis: React.FC<AnalyticsProps> = ({ logs }) => {
     const hasData = data.some(d => d.kayit > 0);
     if (!hasData) return null;
 
-    const COLORS = ['#3b82f6', '#22c55e', '#f59e0b', '#ef4444'];
+    const SEASON_STYLES = [
+        { border: 'border-blue-500/40', bg: 'bg-blue-500/10', text: 'text-blue-500' },
+        { border: 'border-green-500/40', bg: 'bg-green-500/10', text: 'text-green-500' },
+        { border: 'border-amber-500/40', bg: 'bg-amber-500/10', text: 'text-amber-500' },
+        { border: 'border-red-500/40', bg: 'bg-red-500/10', text: 'text-red-500' },
+    ];
 
     return (
         <div className="bg-white dark:bg-gray-800 rounded-xl p-4 sm:p-6 border border-gray-100 dark:border-gray-700">
@@ -163,17 +168,11 @@ export const SeasonalAnalysis: React.FC<AnalyticsProps> = ({ logs }) => {
                 {data.map((season, i) => (
                     <div
                         key={season.name}
-                        className="text-center p-3 rounded-xl border-2 transition-all relative overflow-hidden group"
-                        style={{
-                            '--border-color': COLORS[i] + '40',
-                            '--bg-color': COLORS[i] + '10',
-                            borderColor: 'var(--border-color)',
-                            backgroundColor: 'var(--bg-color)'
-                        } as React.CSSProperties}
+                        className={`text-center p-3 rounded-xl border-2 transition-all relative overflow-hidden group ${SEASON_STYLES[i].border} ${SEASON_STYLES[i].bg}`}
                     >
                         <span className="text-2xl">{season.icon}</span>
                         <p className="font-bold text-gray-800 dark:text-white mt-1">{season.name}</p>
-                        <p className="text-lg font-bold" style={{ '--text-color': COLORS[i], color: 'var(--text-color)' } as React.CSSProperties}>
+                        <p className={`text-lg font-bold ${SEASON_STYLES[i].text}`}>
                             {season.tuketim > 0 ? `${season.tuketim} L` : '-'}
                         </p>
                         <p className="text-[10px] text-gray-500 dark:text-gray-400">/100km</p>

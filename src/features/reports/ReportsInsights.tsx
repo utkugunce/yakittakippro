@@ -193,6 +193,14 @@ export const YearEndProjection: React.FC<InsightsProps> = ({ logs, purchases }) 
 
     if (!projection) return null;
 
+    const progressRef = React.useRef<HTMLDivElement>(null);
+
+    React.useEffect(() => {
+        if (progressRef.current) {
+            progressRef.current.style.width = `${Math.min((projection.dayOfYear / 365) * 100, 100)}%`;
+        }
+    }, [projection.dayOfYear]);
+
     return (
         <div className="bg-gradient-to-r from-violet-50 to-purple-50 dark:from-violet-900/20 dark:to-purple-900/20 rounded-xl p-4 sm:p-6 border border-violet-200 dark:border-violet-800">
             <div className="flex items-center space-x-2 mb-4">
@@ -213,8 +221,8 @@ export const YearEndProjection: React.FC<InsightsProps> = ({ logs, purchases }) 
                 </div>
                 <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                     <div
+                        ref={progressRef}
                         className="h-full bg-gradient-to-r from-violet-500 to-purple-500 rounded-full transition-all"
-                        style={{ width: `${Math.min((projection.dayOfYear / 365) * 100, 100)}%` }}
                     />
                 </div>
             </div>
