@@ -181,6 +181,42 @@ export const AIPredictions: React.FC<AIPredictionsProps> = ({ logs, maintenanceI
             }
         }
 
+        // 8. Best Day to Buy Fuel (Frequency Analysis + Price)
+        // Find which day of week has lowest average price historically
+        const dayStats: Record<number, { total: number, count: number }> = {};
+        logs.filter(l => l.fuelPrice > 0).forEach(l => {
+            const day = new Date(l.date).getDay();
+            if (!dayStats[day]) dayStats[day] = { total: 0, count: 0 };
+            dayStats[day].total += l.fuelPrice;
+            dayStats[day].count += 1;
+        });
+
+        let bestDay = -1;
+        let minAvgPrice = Infinity;
+
+        Object.keys(dayStats).forEach(dayKey => {
+            const d = parseInt(dayKey);
+            const avg = dayStats[d].total / dayStats[d].count;
+            if (avg < minAvgPrice) {
+                minAvgPrice = avg;
+                bestDay = d;
+            }
+        });
+
+        const dayNames = ['Pazar', 'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi'];
+        if (bestDay !== -1 && minAvgPrice < Infinity) {
+            savingsTips.push(`📅 Geçmiş verilerinize göre en uygun yakıt fiyatları ${dayNames[bestDay]} günleri denk geliyor.`);
+        }
+
+        // 9. Seasonal Tips
+        const month = new Date().getMonth(); // 0-11
+        if (month >= 10 || month <= 2) { // Nov-Mar
+            savingsTips.push("❄️ Kış lastikleri yakıt tüketimini etkileyebilir. Basınçları düzenli kontrol edin.");
+            if (avgConsumption > 9) savingsTips.push("🌡️ Motor ısınmadan yüksek devire çıkmak kışın tüketimi çok artırır.");
+        } else if (month >= 5 && month <= 8) { // Jun-Sep
+            savingsTips.push("☀️ Klima kullanımı tüketimi %10-20 artırabilir. Şehir içinde cam açmak daha verimli olabilir.");
+        }
+
         return {
             avgDailyKm,
             nextRefuelDate,
@@ -267,6 +303,22 @@ export const AIPredictions: React.FC<AIPredictionsProps> = ({ logs, maintenanceI
                         {predictions.avgDailyKm.toFixed(1)} km
                     </div>
                     <p className="text-[10px] text-gray-400 mt-1">Son verilerine göre</p>
+                </div>
+
+                {/* Weekly Performance */}
+                <div className={`p-3 rounded-xl border backdrop-blur-sm ${predictions.weeklyChange > 0
+                    ? 'bg-red-50/50 dark:bg-red-900/10 border-red-100 dark:border-red-900/30'
+                    : 'bg-green-50/50 dark:bg-green-900/10 border-green-100 dark:border-green-900/30'}`}>
+                    <div className="flex items-center gap-2 mb-1 text-xs font-bold text-gray-500 uppercase">
+                        {predictions.weeklyChange > 0
+                            ? <TrendingUp className="w-3 h-3 text-red-500" />
+                            : <TrendingUp className="w-3 h-3 text-green-500 transform rotate-180" />}
+                        Haftalık Trend
+                    </div>
+                    <div className={`text-sm font-semibold ${predictions.weeklyChange > 0 ? 'text-red-700 dark:text-red-400' : 'text-green-700 dark:text-green-400'}`}>
+                        {Math.abs(predictions.weeklyChange).toFixed(1)}% {predictions.weeklyChange > 0 ? 'Artış' : 'Düşüş'}
+                    </div>
+                    <p className="text-[10px] text-gray-400 mt-1">Önceki haftaya göre maliyet</p>
                 </div>
             </div>
 
