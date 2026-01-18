@@ -1,1 +1,0 @@
-export { WeeklyChallenges } from './WeeklyChallenges';

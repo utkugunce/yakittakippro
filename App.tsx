@@ -20,13 +20,10 @@ import { Car, LayoutDashboard, History, FileText, Moon, Sun, Settings, Wrench, P
 import { PwaReloadPrompt } from './PwaReloadPrompt';
 import { SuccessPopup } from './SuccessPopup';
 
-// Gamification imports
-import { GamificationDisplay, StreakWidget, BadgeList } from '@/src/features/gamification';
-import { useGamificationStore } from '@/src/stores/gamificationStore';
+
 
 // New feature imports
 import { BudgetTracker } from '@/src/features/budget';
-import { WeeklyChallenges } from '@/src/features/challenges';
 import { StationAnalysis, CarbonFootprint } from '@/src/features/analytics';
 import { ShareableStatsCard } from '@/src/features/sharing';
 
@@ -131,30 +128,7 @@ export default function App() {
   }, []);
 
   // Migrate existing data to gamification system
-  // Migrate existing data to gamification system
-  const { migrateExistingData, hasMigrated, syncStreaksWithHistory } = useGamificationStore();
 
-  // Initial XP Migration (Once)
-  useEffect(() => {
-    if (!hasMigrated && (logs.length > 0 || fuelPurchases.length > 0)) {
-      const activityDates: string[] = [
-        ...logs.map(log => log.date),
-        ...fuelPurchases.map(fp => fp.date)
-      ];
-      migrateExistingData(fuelPurchases.length, logs.length, activityDates);
-    }
-  }, [hasMigrated, logs.length, fuelPurchases.length, migrateExistingData]);
-
-  // Continuous Streak Sync (Always recalculate based on history)
-  useEffect(() => {
-    if (logs.length > 0 || fuelPurchases.length > 0) {
-      const allDates = [
-        ...logs.map(l => l.date),
-        ...fuelPurchases.map(fp => fp.date)
-      ];
-      syncStreaksWithHistory(allDates);
-    }
-  }, [logs, fuelPurchases, syncStreaksWithHistory]);
 
   // Save logs
   useEffect(() => {
@@ -520,88 +494,19 @@ export default function App() {
             {/* Weekly/Monthly Summary */}
             <WeeklySummary logs={logs} fuelPurchases={fuelPurchases} />
 
-            {/* Gamification Section */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <GamificationDisplay />
-              <StreakWidget />
-            </div>
+            {/* Analytics Section */}
+            {/* Budget Tracker */}
+            <BudgetTracker fuelPurchases={fuelPurchases} />
 
-            {/* Budget & Challenges */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <BudgetTracker fuelPurchases={fuelPurchases} />
-              <WeeklyChallenges logs={logs} fuelPurchases={fuelPurchases} />
-            </div>
-
-
-
-            {/* Badges */}
-            <BadgeList />
-
-
-            <div className="space-y-6">
-              <div className="lg:col-span-2 space-y-6">
-                <AIPredictions
-                  logs={logs}
-                  maintenanceItems={maintenanceItems}
-                  vehicleParts={vehicleParts}
-                  currentOdometer={lastOdometer}
-                />
-                {(logs.length > 0 || fuelPurchases.length > 0) && <Charts logs={yearFilter === 'all' ? logs : logs.filter(l => new Date(l.date).getFullYear().toString() === yearFilter)} purchases={fuelPurchases} />}
-
-                {/* Recent 5 entries (no filter, simplified) */}
-                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
-                  <div className="p-4 border-b border-gray-100 dark:border-gray-700">
-                    <h3 className="font-bold text-gray-800 dark:text-white">Son 5 Kayıt</h3>
-                  </div>
-                  <div className="divide-y divide-gray-100 dark:divide-gray-700">
-                    {[...logs].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 5).map(log => (
-                      <div key={log.id} className="p-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center space-x-3">
-                            <span className="text-sm font-medium text-gray-900 dark:text-white">
-                              {new Date(log.date).toLocaleDateString('tr-TR')}
-                            </span>
-                            <span className="text-xs text-gray-500 dark:text-gray-400">
-                              {log.dailyDistance} km
-                            </span>
-                          </div>
-                          <div className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
-                            Tüketim: {log.avgConsumption} L/100km
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <span className="text-sm font-bold text-gray-900 dark:text-white">₺{log.dailyCost.toFixed(2)}</span>
-                        </div>
-                      </div>
-                    ))}
-                    {logs.length === 0 && (
-                      <div className="p-8 text-center text-gray-500 dark:text-gray-400">
-                        Henüz kayıt yok
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Analytics Section */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <StationAnalysis fuelPurchases={fuelPurchases} />
-                  <CarbonFootprint fuelPurchases={fuelPurchases} logs={logs} />
-                </div>
-
-                {/* Shareable Stats Card */}
-                <ShareableStatsCard
-                  stats={{
-                    totalDistance: stats.totalDistance,
-                    totalCost: stats.totalCost,
-                    avgConsumption: stats.avgConsumption,
-                    totalFuelPurchases: fuelPurchases.length,
-                    currentStreak: useGamificationStore.getState().currentStreak,
-                    totalXP: useGamificationStore.getState().totalXP,
-                    badgeCount: useGamificationStore.getState().badges.length
-                  }}
-                />
-              </div>
-            </div>
+            {/* Shareable Stats Card */}
+            <ShareableStatsCard
+              stats={{
+                totalDistance: stats.totalDistance,
+                totalCost: stats.totalCost,
+                avgConsumption: stats.avgConsumption,
+                totalFuelPurchases: fuelPurchases.length
+              }}
+            />
           </div>
         )}
 
@@ -647,82 +552,89 @@ export default function App() {
               />
             )}
           </div>
-        )}
+        )
+        }
 
-        {activeTab === 'reports' && (
-          <div className="animate-in fade-in duration-500 space-y-6">
-            <FuelMap logs={logs} purchases={fuelPurchases} />
-            <Reports
-              logs={logs}
-              purchases={fuelPurchases}
-              maintenanceItems={maintenanceItems}
-              vehicleParts={vehicleParts}
-            />
-          </div>
-        )}
+        {
+          activeTab === 'reports' && (
+            <div className="animate-in fade-in duration-500 space-y-6">
+              <FuelMap logs={logs} purchases={fuelPurchases} />
+              <Reports
+                logs={logs}
+                purchases={fuelPurchases}
+                maintenanceItems={maintenanceItems}
+                vehicleParts={vehicleParts}
+              />
+            </div>
+          )
+        }
 
-        {activeTab === 'maintenance' && (
-          <div className="animate-in fade-in duration-500">
-            <Maintenance
-              items={maintenanceItems}
-              parts={vehicleParts}
-              currentOdometer={lastOdometer}
-              onAdd={handleAddMaintenance}
-              onDelete={handleDeleteMaintenance}
-              onUpdate={handleUpdateMaintenance}
-              onAddPart={(part) => setVehicleParts(prev => [...prev, part])}
-              onDeletePart={(id) => setVehicleParts(prev => prev.filter(p => p.id !== id))}
-              onTogglePart={(id) => setVehicleParts(prev => prev.map(p => p.id === id ? { ...p, isActive: !p.isActive } : p))}
-            />
-          </div>
-        )}
+        {
+          activeTab === 'maintenance' && (
+            <div className="animate-in fade-in duration-500">
+              <Maintenance
+                items={maintenanceItems}
+                parts={vehicleParts}
+                currentOdometer={lastOdometer}
+                onAdd={handleAddMaintenance}
+                onDelete={handleDeleteMaintenance}
+                onUpdate={handleUpdateMaintenance}
+                onAddPart={(part) => setVehicleParts(prev => [...prev, part])}
+                onDeletePart={(id) => setVehicleParts(prev => prev.filter(p => p.id !== id))}
+                onTogglePart={(id) => setVehicleParts(prev => prev.map(p => p.id === id ? { ...p, isActive: !p.isActive } : p))}
+              />
+            </div>
+          )
+        }
 
-        {activeTab === 'settings' && (
-          <div className="animate-in fade-in duration-500 space-y-6">
-            <ThemeSettings
-              isDarkMode={isDarkMode}
-              onToggleTheme={() => {
-                const newMode = !isDarkMode;
-                setIsDarkMode(newMode);
-                if (newMode) {
-                  document.documentElement.classList.add('dark');
-                  localStorage.setItem(THEME_STORAGE_KEY, 'dark');
-                } else {
-                  document.documentElement.classList.remove('dark');
-                  localStorage.setItem(THEME_STORAGE_KEY, 'light');
-                }
-              }}
-              currentAccent={accentColor}
-              onChangeAccent={(color) => {
-                setAccentColor(color);
-                localStorage.setItem('yakit_takip_accent_v1', color);
-                document.documentElement.setAttribute('data-theme', color);
-              }}
-            />
-            <CloudSync
-              logs={logs}
-              maintenanceItems={maintenanceItems}
-              vehicles={vehicles}
-              onImportLogs={(imported) => {
-                setLogs(prev => {
-                  // Merge new logs with existing ones, avoiding duplicates by ID
-                  const existingIds = new Set(prev.map(p => p.id));
-                  const newLogs = imported.filter(l => !existingIds.has(l.id));
-                  return [...prev, ...newLogs];
-                });
-              }}
-              onImportMaintenance={(imported) => setMaintenanceItems(imported)}
-              onImportVehicles={(imported) => setVehicles(imported)}
-            />
-            <NotificationSettings maintenanceItems={maintenanceItems} currentOdometer={lastOdometer} />
-            <DataManagement logs={logs} onImport={handleImportLogs} onClear={handleClearLogs} />
-          </div>
-        )}
+        {
+          activeTab === 'settings' && (
+            <div className="animate-in fade-in duration-500 space-y-6">
+              <ThemeSettings
+                isDarkMode={isDarkMode}
+                onToggleTheme={() => {
+                  const newMode = !isDarkMode;
+                  setIsDarkMode(newMode);
+                  if (newMode) {
+                    document.documentElement.classList.add('dark');
+                    localStorage.setItem(THEME_STORAGE_KEY, 'dark');
+                  } else {
+                    document.documentElement.classList.remove('dark');
+                    localStorage.setItem(THEME_STORAGE_KEY, 'light');
+                  }
+                }}
+                currentAccent={accentColor}
+                onChangeAccent={(color) => {
+                  setAccentColor(color);
+                  localStorage.setItem('yakit_takip_accent_v1', color);
+                  document.documentElement.setAttribute('data-theme', color);
+                }}
+              />
+              <CloudSync
+                logs={logs}
+                maintenanceItems={maintenanceItems}
+                vehicles={vehicles}
+                onImportLogs={(imported) => {
+                  setLogs(prev => {
+                    // Merge new logs with existing ones, avoiding duplicates by ID
+                    const existingIds = new Set(prev.map(p => p.id));
+                    const newLogs = imported.filter(l => !existingIds.has(l.id));
+                    return [...prev, ...newLogs];
+                  });
+                }}
+                onImportMaintenance={(imported) => setMaintenanceItems(imported)}
+                onImportVehicles={(imported) => setVehicles(imported)}
+              />
+              <NotificationSettings maintenanceItems={maintenanceItems} currentOdometer={lastOdometer} />
+              <DataManagement logs={logs} onImport={handleImportLogs} onClear={handleClearLogs} />
+            </div>
+          )
+        }
 
-      </main>
+      </main >
 
       {/* Mobile Bottom Navigation */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 pb-safe pt-2 px-2 z-50">
+      < div className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 pb-safe pt-2 px-2 z-50" >
         <div className="flex items-center justify-around">
           <button onClick={() => setActiveTab('dashboard')} className={`flex flex-col items-center p-2 rounded-xl transition-colors ${activeTab === 'dashboard' ? 'text-primary-600 dark:text-primary-400' : 'text-gray-500 dark:text-gray-400'}`}>
             <LayoutDashboard className="w-6 h-6 mb-1" />
@@ -745,92 +657,96 @@ export default function App() {
             <span className="text-[10px] font-medium">Ayarlar</span>
           </button>
         </div>
-      </div>
+      </div >
 
       {/* Floating Action Buttons */}
-      <div className="fixed bottom-24 md:bottom-8 right-6 flex flex-col space-y-3 z-40">
+      < div className="fixed bottom-24 md:bottom-8 right-6 flex flex-col space-y-3 z-40" >
         {/* Fuel Purchase Button */}
-        <button
+        < button
           onClick={() => setShowFuelPurchaseModal(true)}
           className="w-14 h-14 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center"
           title="Yakıt Alımı"
         >
           <Fuel className="w-7 h-7" />
-        </button>
+        </button >
         {/* Daily Entry Button */}
-        <button
+        < button
           onClick={() => setShowEntryModal(true)}
           className="w-14 h-14 bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center"
           title="Yeni Kayıt Ekle"
         >
           <Plus className="w-7 h-7" />
-        </button>
-      </div>
+        </button >
+      </div >
 
       {/* Entry Form Modal */}
-      {showEntryModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-white dark:bg-gray-800 p-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between z-10">
-              <h2 className="text-lg font-bold text-gray-800 dark:text-white">
-                {editingLog ? 'Kaydı Düzenle' : 'Yeni Kayıt Ekle'}
-              </h2>
-              <button onClick={() => { setShowEntryModal(false); setEditingLog(null); }} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-1" title="Kapat" aria-label="Kapat">
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-            <div className="p-4">
-              <EntryForm
-                logs={logs}
-                onAdd={(log) => {
-                  handleAddLog(log);
-                  setShowEntryModal(false);
-                }}
-                onUpdate={(log) => {
-                  handleUpdateLog(log);
-                  setShowEntryModal(false);
-                }}
-                onImport={handleImportLogs}
-                lastOdometer={lastOdometer}
-                lastFuelPrice={stats.lastFuelPrice}
-                editingLog={editingLog}
-              />
+      {
+        showEntryModal && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+              <div className="sticky top-0 bg-white dark:bg-gray-800 p-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between z-10">
+                <h2 className="text-lg font-bold text-gray-800 dark:text-white">
+                  {editingLog ? 'Kaydı Düzenle' : 'Yeni Kayıt Ekle'}
+                </h2>
+                <button onClick={() => { setShowEntryModal(false); setEditingLog(null); }} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-1" title="Kapat" aria-label="Kapat">
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+              <div className="p-4">
+                <EntryForm
+                  logs={logs}
+                  onAdd={(log) => {
+                    handleAddLog(log);
+                    setShowEntryModal(false);
+                  }}
+                  onUpdate={(log) => {
+                    handleUpdateLog(log);
+                    setShowEntryModal(false);
+                  }}
+                  onImport={handleImportLogs}
+                  lastOdometer={lastOdometer}
+                  lastFuelPrice={stats.lastFuelPrice}
+                  editingLog={editingLog}
+                />
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )
+      }
 
       {/* Fuel Purchase Modal */}
-      {showFuelPurchaseModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-white dark:bg-gray-800 p-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between z-10">
-              <div className="flex items-center space-x-2">
-                <Fuel className="w-5 h-5 text-emerald-500" />
-                <h2 className="text-lg font-bold text-gray-800 dark:text-white">
-                  {editingFuelPurchase ? 'Yakıt Alımını Düzenle' : 'Yakıt Alımı'}
-                </h2>
+      {
+        showFuelPurchaseModal && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+              <div className="sticky top-0 bg-white dark:bg-gray-800 p-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between z-10">
+                <div className="flex items-center space-x-2">
+                  <Fuel className="w-5 h-5 text-emerald-500" />
+                  <h2 className="text-lg font-bold text-gray-800 dark:text-white">
+                    {editingFuelPurchase ? 'Yakıt Alımını Düzenle' : 'Yakıt Alımı'}
+                  </h2>
+                </div>
+                <button onClick={() => { setShowFuelPurchaseModal(false); setEditingFuelPurchase(null); }} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-1" title="Kapat" aria-label="Kapat">
+                  <X className="w-6 h-6" />
+                </button>
               </div>
-              <button onClick={() => { setShowFuelPurchaseModal(false); setEditingFuelPurchase(null); }} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-1" title="Kapat" aria-label="Kapat">
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-            <div className="p-4">
-              <FuelPurchaseForm
-                onAdd={(purchase) => {
-                  setFuelPurchases(prev => [purchase, ...prev]);
-                  setShowFuelPurchaseModal(false);
-                  setEditingFuelPurchase(null);
-                }}
-                onUpdate={handleUpdateFuelPurchase}
-                editingPurchase={editingFuelPurchase}
-                lastOdometer={lastOdometer}
-                lastFuelPrice={stats.lastFuelPrice}
-              />
+              <div className="p-4">
+                <FuelPurchaseForm
+                  onAdd={(purchase) => {
+                    setFuelPurchases(prev => [purchase, ...prev]);
+                    setShowFuelPurchaseModal(false);
+                    setEditingFuelPurchase(null);
+                  }}
+                  onUpdate={handleUpdateFuelPurchase}
+                  editingPurchase={editingFuelPurchase}
+                  lastOdometer={lastOdometer}
+                  lastFuelPrice={stats.lastFuelPrice}
+                />
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )
+      }
 
       {/* Success Popup */}
       <SuccessPopup
@@ -840,6 +756,6 @@ export default function App() {
       />
 
       <PwaReloadPrompt />
-    </div>
+    </div >
   );
 }

@@ -7,9 +7,6 @@ interface StatsCardProps {
         totalCost: number;
         avgConsumption: number;
         totalFuelPurchases: number;
-        currentStreak: number;
-        totalXP: number;
-        badgeCount: number;
     };
     userName?: string;
 }
@@ -45,9 +42,6 @@ export const ShareableStatsCard: React.FC<StatsCardProps> = ({ stats, userName =
             `⛽ ${stats.totalFuelPurchases} yakıt alımı\n` +
             `💰 ₺${stats.totalCost.toLocaleString('tr-TR')} harcama\n` +
             `📊 ${stats.avgConsumption.toFixed(1)} L/100km tüketim\n\n` +
-            `🔥 ${stats.currentStreak} günlük seri\n` +
-            `⭐ ${stats.totalXP} XP\n` +
-            `🏆 ${stats.badgeCount} rozet\n\n` +
             `#YakıtTakipPro`;
 
         if (navigator.share) {
@@ -82,10 +76,6 @@ export const ShareableStatsCard: React.FC<StatsCardProps> = ({ stats, userName =
                             <p className="text-xs text-gray-400">TripBook</p>
                         </div>
                     </div>
-                    <div className="text-right">
-                        <p className="text-xs text-gray-400">Seviye</p>
-                        <p className="text-2xl font-bold">{Math.floor(stats.totalXP / 1000) + 1}</p>
-                    </div>
                 </div>
 
                 {/* Main Stats Grid */}
@@ -110,21 +100,13 @@ export const ShareableStatsCard: React.FC<StatsCardProps> = ({ stats, userName =
 
                 {/* Secondary Stats */}
                 <div className="flex justify-between text-center border-t border-white/10 pt-4">
-                    <div>
-                        <p className="text-xl font-bold text-yellow-400">{stats.totalXP}</p>
-                        <p className="text-xs text-gray-400">XP</p>
-                    </div>
-                    <div>
-                        <p className="text-xl font-bold text-orange-400">{stats.currentStreak}</p>
-                        <p className="text-xs text-gray-400">Gün Seri</p>
-                    </div>
-                    <div>
-                        <p className="text-xl font-bold text-purple-400">{stats.badgeCount}</p>
-                        <p className="text-xs text-gray-400">Rozet</p>
-                    </div>
-                    <div>
+                    <div className="w-full">
                         <p className="text-xl font-bold text-green-400">₺{(stats.totalCost / 1000).toFixed(1)}K</p>
-                        <p className="text-xs text-gray-400">Harcama</p>
+                        <p className="text-xs text-gray-400">Toplam Harcama</p>
+                    </div>
+                    <div className="w-full border-l border-white/10 pl-4">
+                        <p className="text-xl font-bold text-blue-400">{stats.totalFuelPurchases}</p>
+                        <p className="text-xs text-gray-400">Yakıt Alımı</p>
                     </div>
                 </div>
 
