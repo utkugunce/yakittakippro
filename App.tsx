@@ -529,7 +529,7 @@ export default function App() {
             <StationAnalysis fuelPurchases={fuelPurchases} />
 
             {/* AI Predictions */}
-            <AIPredictions logs={logs} purchases={fuelPurchases} maintenanceItems={maintenanceItems} parts={vehicleParts} currentOdometer={lastOdometer} />
+            <AIPredictions logs={logs} purchases={fuelPurchases} maintenanceItems={maintenanceItems} vehicleParts={vehicleParts} currentOdometer={lastOdometer} />
           </div>
         )}
 
