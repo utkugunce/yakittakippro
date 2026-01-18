@@ -18,6 +18,7 @@ import { FuelPurchaseForm, FuelPurchase } from './FuelPurchaseForm';
 import { FuelPurchaseHistory } from './FuelPurchaseHistory';
 import { Car, LayoutDashboard, History, FileText, Moon, Sun, Settings, Wrench, Plus, X, Fuel } from 'lucide-react';
 import { PwaReloadPrompt } from './PwaReloadPrompt';
+import { SuccessPopup } from './SuccessPopup';
 
 // Gamification imports
 import { GamificationDisplay, StreakWidget, BadgeList } from '@/src/features/gamification';
@@ -51,6 +52,7 @@ export default function App() {
   const [fuelPurchases, setFuelPurchases] = useState<FuelPurchase[]>([]);
   const [historySubTab, setHistorySubTab] = useState<'logs' | 'fuel'>('logs');
   const [editingFuelPurchase, setEditingFuelPurchase] = useState<FuelPurchase | null>(null);
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
 
   // Default vehicle for backwards compatibility
   const defaultVehicle: Vehicle = {
@@ -201,7 +203,8 @@ export default function App() {
 
   const handleAddLog = (log: DailyLog) => {
     setLogs(prev => [log, ...prev]);
-    setActiveTab('history');
+    setShowEntryModal(false);
+    setShowSuccessPopup(true);
   };
 
   const handleDeleteLog = (id: string) => {
@@ -295,7 +298,7 @@ export default function App() {
     if (filteredLogs.length === 0 && filteredPurchases.length === 0) return { totalDistance: 0, totalCost: 0, avgCostPerKm: 0, avgConsumption: 0, lastFuelPrice: 0 };
 
     const totalDistance = filteredLogs.reduce((sum, log) => sum + log.dailyDistance, 0);
-    const totalCost = filteredLogs.reduce((sum, log) => sum + log.dailyCost, 0) + filteredPurchases.reduce((sum, p) => sum + p.totalAmount, 0);
+    const totalCost = filteredLogs.reduce((sum, log) => sum + log.dailyCost, 0);
 
     // Calculate average consumption (Logs only as they have distance)
     const validConsumptionLogs = filteredLogs.filter(l => l.avgConsumption > 0);
@@ -492,9 +495,27 @@ export default function App() {
 
         {activeTab === 'dashboard' && (
           <div className="space-y-6 animate-in fade-in duration-500">
+            {/* Year Filter Tabs - En Üst */}
+            <div className="flex justify-center">
+              <div className="inline-flex rounded-lg bg-gray-100 dark:bg-gray-800 p-1">
+                {(['2026', '2025', 'all'] as const).map((year) => (
+                  <button
+                    key={year}
+                    onClick={() => setYearFilter(year)}
+                    className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${yearFilter === year
+                      ? 'bg-white dark:bg-gray-700 text-primary-600 dark:text-primary-400 shadow-sm'
+                      : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                      }`}
+                  >
+                    {year === 'all' ? 'Hepsi' : year}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <DashboardStatsCard stats={stats} alerts={activeAlerts} currentOdometer={lastOdometer} />
 
-            {/* Weekly/Monthly Summary - En Üstte */}
+            {/* Weekly/Monthly Summary */}
             <WeeklySummary logs={logs} fuelPurchases={fuelPurchases} />
 
             {/* Gamification Section */}
@@ -514,23 +535,6 @@ export default function App() {
             {/* Badges */}
             <BadgeList />
 
-            {/* Year Filter Tabs */}
-            <div className="flex justify-center">
-              <div className="inline-flex rounded-lg bg-gray-100 dark:bg-gray-800 p-1">
-                {(['2026', '2025', 'all'] as const).map((year) => (
-                  <button
-                    key={year}
-                    onClick={() => setYearFilter(year)}
-                    className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${yearFilter === year
-                      ? 'bg-white dark:bg-gray-700 text-primary-600 dark:text-primary-400 shadow-sm'
-                      : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-                      }`}
-                  >
-                    {year === 'all' ? 'Hepsi' : year}
-                  </button>
-                ))}
-              </div>
-            </div>
 
             <div className="space-y-6">
               <div className="lg:col-span-2 space-y-6">
@@ -825,6 +829,13 @@ export default function App() {
           </div>
         </div>
       )}
+
+      {/* Success Popup */}
+      <SuccessPopup
+        isOpen={showSuccessPopup}
+        onClose={() => setShowSuccessPopup(false)}
+        logs={logs}
+      />
 
       <PwaReloadPrompt />
     </div>

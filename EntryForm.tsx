@@ -380,34 +380,7 @@ export const EntryForm: React.FC<EntryFormProps> = ({ logs, onAdd, onUpdate, onI
           </p>
         </div>
 
-        <div>
-          <label className={labelClasses}>İstasyon / Marka</label>
-          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-            {['Shell', 'Opet', 'BP', 'Petrol Ofisi', 'Total', 'Aytemiz', 'Diğer'].map((brand) => (
-              <button
-                key={brand}
-                type="button"
-                onClick={() => setFuelStation(brand)}
-                className={`px-3 py-2 rounded-lg text-sm font-bold whitespace-nowrap transition-all border ${fuelStation === brand
-                  ? 'bg-primary-600 text-white border-primary-600 shadow-md transform scale-105'
-                  : 'bg-[#333333] dark:bg-gray-700 text-gray-300 border-transparent hover:bg-gray-600'
-                  }`}
-              >
-                {brand}
-              </button>
-            ))}
-          </div>
-          <div className="relative mt-2">
-            <Fuel className="absolute left-3 top-3.5 w-5 h-5 text-gray-500" />
-            <input
-              type="text"
-              placeholder="İstasyon Adı (Opsiyonel)"
-              value={fuelStation}
-              onChange={(e) => setFuelStation(e.target.value)}
-              className={inputBaseClasses}
-            />
-          </div>
-        </div>
+
 
         {/* Dynamic Calculations Panel */}
         {liveStats && (
@@ -426,25 +399,7 @@ export const EntryForm: React.FC<EntryFormProps> = ({ logs, onAdd, onUpdate, onI
           </div>
         )}
 
-        <div>
-          <div className="flex items-center justify-between border-t border-gray-100 dark:border-gray-700 pt-4 mb-4">
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Bu işlemde yakıt alındı mı?</span>
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                checked={isRefuelDay}
-                onChange={(e) => {
-                  setIsRefuelDay(e.target.checked);
-                  if (e.target.checked) {
-                    setShowPhotoScanner(true);
-                  }
-                }}
-                className="sr-only peer"
-              />
-              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
-            </label>
-          </div>
-        </div>
+
 
         {/* Notes Field */}
         <div>

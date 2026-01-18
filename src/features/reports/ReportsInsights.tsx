@@ -156,7 +156,7 @@ export const YearEndProjection: React.FC<InsightsProps> = ({ logs, purchases }) 
         const thisYearLogs = logs.filter(l => new Date(l.date).getFullYear() === currentYear);
         const thisYearPurchases = purchases.filter(p => new Date(p.date).getFullYear() === currentYear);
 
-        const ytdCost = thisYearLogs.reduce((sum, l) => sum + l.dailyCost, 0) + thisYearPurchases.reduce((sum, p) => sum + p.totalAmount, 0);
+        const ytdCost = thisYearLogs.reduce((sum, l) => sum + l.dailyCost, 0); // Sadece günlük kayıtlar
         const ytdDistance = thisYearLogs.reduce((sum, l) => sum + l.dailyDistance, 0);
         const ytdFuel = thisYearLogs.reduce((sum, l) => sum + l.dailyFuelConsumed, 0) + thisYearPurchases.reduce((sum, p) => sum + p.liters, 0);
 
@@ -174,7 +174,7 @@ export const YearEndProjection: React.FC<InsightsProps> = ({ logs, purchases }) 
         const lastYear = currentYear - 1;
         const lastYearLogs = logs.filter(l => new Date(l.date).getFullYear() === lastYear);
         const lastYearPurchases = purchases.filter(p => new Date(p.date).getFullYear() === lastYear);
-        const lastYearCost = lastYearLogs.reduce((sum, l) => sum + l.dailyCost, 0) + lastYearPurchases.reduce((sum, p) => sum + p.totalAmount, 0);
+        const lastYearCost = lastYearLogs.reduce((sum, l) => sum + l.dailyCost, 0); // Sadece günlük kayıtlar
 
         return {
             ytdCost,

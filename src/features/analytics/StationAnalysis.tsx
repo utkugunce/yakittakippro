@@ -53,13 +53,15 @@ export const StationAnalysis: React.FC<StationAnalysisProps> = ({ fuelPurchases 
     }, [fuelPurchases]);
 
     const cheapest = useMemo(() => {
-        if (stationStats.length === 0) return null;
-        return stationStats.reduce((min, s) => s.avgPrice < min.avgPrice ? s : min);
+        const validStations = stationStats.filter(s => s.avgPrice > 0);
+        if (validStations.length === 0) return null;
+        return validStations.reduce((min, s) => s.avgPrice < min.avgPrice ? s : min);
     }, [stationStats]);
 
     const mostExpensive = useMemo(() => {
-        if (stationStats.length === 0) return null;
-        return stationStats.reduce((max, s) => s.avgPrice > max.avgPrice ? s : max);
+        const validStations = stationStats.filter(s => s.avgPrice > 0);
+        if (validStations.length === 0) return null;
+        return validStations.reduce((max, s) => s.avgPrice > max.avgPrice ? s : max);
     }, [stationStats]);
 
     const mostVisited = stationStats[0];

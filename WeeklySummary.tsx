@@ -68,7 +68,7 @@ export const WeeklySummary: React.FC<WeeklySummaryProps> = ({ logs, fuelPurchase
 
             return {
                 distance: logArr.reduce((sum, l) => sum + l.dailyDistance, 0),
-                cost: logCost + purchaseCost,
+                cost: logCost, // Sadece günlük kayıtlar
                 fuel: logArr.reduce((sum, l) => sum + l.dailyFuelConsumed, 0) + purchaseFuel,
                 logCount: logArr.length,
                 purchaseCount: purchaseArr.length,
