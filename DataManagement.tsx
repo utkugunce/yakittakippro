@@ -365,7 +365,9 @@ export const DataManagement: React.FC<DataManagementProps> = ({ logs, onImport, 
                 type="file"
                 accept=".json,.xlsx,.xls"
                 onChange={handleFileChange}
-                style={{ position: 'fixed', top: '-100px', left: '-100px', opacity: 0 }}
+                className="fixed top-[-100px] left-[-100px] opacity-0"
+                title="Dosya Yükle"
+                aria-label="Dosya Yükle"
             />
 
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
@@ -421,6 +423,8 @@ export const DataManagement: React.FC<DataManagementProps> = ({ logs, onImport, 
                         accept=".json,.xlsx,.xls"
                         onChange={handleFileChange}
                         className="block w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:font-bold file:bg-emerald-600 file:text-white hover:file:bg-emerald-700 cursor-pointer"
+                        title="iOS Dosya Yükle"
+                        aria-label="iOS Dosya Yükle"
                     />
                 </div>
 
@@ -478,7 +482,7 @@ export const DataManagement: React.FC<DataManagementProps> = ({ logs, onImport, 
                                 <FileSpreadsheet className="w-5 h-5 text-green-600" />
                                 Sütun Eşleştirme
                             </h3>
-                            <button onClick={() => setMappingModalOpen(false)} className="text-gray-400 hover:text-red-500">
+                            <button onClick={() => setMappingModalOpen(false)} className="text-gray-400 hover:text-red-500" title="Kapat" aria-label="Kapat">
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
@@ -500,6 +504,8 @@ export const DataManagement: React.FC<DataManagementProps> = ({ logs, onImport, 
                                             value={columnMapping[fieldKey]}
                                             onChange={(e) => setColumnMapping(prev => ({ ...prev, [fieldKey]: e.target.value }))}
                                             className="flex-1 px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg text-sm"
+                                            title="Sütun Seçimi"
+                                            aria-label="Sütun Seçimi"
                                         >
                                             <option value="">Seçiniz...</option>
                                             {excelHeaders.map(header => (
