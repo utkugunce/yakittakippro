@@ -248,6 +248,7 @@ export const FuelPurchaseForm: React.FC<FuelPurchaseFormProps> = ({ onAdd, onUpd
                         <input
                             type="date"
                             required
+                            aria-label="Tarih"
                             value={date}
                             onChange={(e) => setDate(e.target.value)}
                             className={inputBaseClasses}
@@ -465,6 +466,7 @@ export const FuelPurchaseForm: React.FC<FuelPurchaseFormProps> = ({ onAdd, onUpd
                             <input
                                 type="checkbox"
                                 checked={addLocation}
+                                aria-label="Konum Ekle"
                                 onChange={(e) => setAddLocation(e.target.checked)}
                                 className="sr-only peer"
                             />

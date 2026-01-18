@@ -61,6 +61,7 @@ export const Charts: React.FC<ChartsProps> = ({ logs, purchases = [] }) => {
   }, [logs, purchases]);
 
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
+  const COLOR_CLASSES = ['bg-blue-500', 'bg-emerald-400', 'bg-amber-400', 'bg-orange-400', 'bg-indigo-400'];
 
   if (logs.length < 2 && purchases.length < 2) {
     return (
@@ -174,7 +175,7 @@ export const Charts: React.FC<ChartsProps> = ({ logs, purchases = [] }) => {
                 {stationData.map((station, index) => (
                   <div key={station.name} className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
                     <div className="flex items-center space-x-3">
-                      <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }}></div>
+                      <div className={`w-3 h-3 rounded-full ${COLOR_CLASSES[index % COLOR_CLASSES.length]}`}></div>
                       <span className="font-medium text-gray-700 dark:text-gray-300">{station.name}</span>
                     </div>
                     <span className="font-bold text-gray-900 dark:text-white">{station.value} Ziyaret</span>
