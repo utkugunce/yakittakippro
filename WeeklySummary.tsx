@@ -1,12 +1,19 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { DailyLog } from './types';
-import { TrendingUp, TrendingDown, Minus, Calendar, Fuel, Route, Wallet } from 'lucide-react';
+import { FuelPurchase } from './FuelPurchaseForm';
+import {
+    TrendingUp, TrendingDown, Minus, Calendar, Fuel, Route, Wallet,
+    ChevronDown, ChevronUp, Droplets, Activity, Target, BarChart3
+} from 'lucide-react';
 
 interface WeeklySummaryProps {
     logs: DailyLog[];
+    fuelPurchases?: FuelPurchase[];
 }
 
-export const WeeklySummary: React.FC<WeeklySummaryProps> = ({ logs }) => {
+export const WeeklySummary: React.FC<WeeklySummaryProps> = ({ logs, fuelPurchases = [] }) => {
+    const [isExpanded, setIsExpanded] = useState(false);
+
     const summary = useMemo(() => {
         const now = new Date();
         const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -30,42 +37,74 @@ export const WeeklySummary: React.FC<WeeklySummaryProps> = ({ logs }) => {
         const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
         const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
 
-        const filterByRange = (start: Date, end: Date) => {
+        const filterLogsByRange = (start: Date, end: Date) => {
             return logs.filter(log => {
                 const logDate = new Date(log.date);
                 return logDate >= start && logDate <= end;
             });
         };
 
-        const thisWeekLogs = filterByRange(thisWeekStart, today);
-        const lastWeekLogs = filterByRange(lastWeekStart, lastWeekEnd);
-        const thisMonthLogs = filterByRange(thisMonthStart, today);
-        const lastMonthLogs = filterByRange(lastMonthStart, lastMonthEnd);
+        const filterPurchasesByRange = (start: Date, end: Date) => {
+            return fuelPurchases.filter(p => {
+                const pDate = new Date(p.date);
+                return pDate >= start && pDate <= end;
+            });
+        };
 
-        const calcTotals = (logArr: DailyLog[]) => ({
-            distance: logArr.reduce((sum, l) => sum + l.dailyDistance, 0),
-            cost: logArr.reduce((sum, l) => sum + l.dailyCost, 0),
-            fuel: logArr.reduce((sum, l) => sum + l.dailyFuelConsumed, 0),
-            count: logArr.length
-        });
+        const thisWeekLogs = filterLogsByRange(thisWeekStart, today);
+        const lastWeekLogs = filterLogsByRange(lastWeekStart, lastWeekEnd);
+        const thisMonthLogs = filterLogsByRange(thisMonthStart, today);
+        const lastMonthLogs = filterLogsByRange(lastMonthStart, lastMonthEnd);
+
+        const thisWeekPurchases = filterPurchasesByRange(thisWeekStart, today);
+        const lastWeekPurchases = filterPurchasesByRange(lastWeekStart, lastWeekEnd);
+        const thisMonthPurchases = filterPurchasesByRange(thisMonthStart, today);
+        const lastMonthPurchases = filterPurchasesByRange(lastMonthStart, lastMonthEnd);
+
+        const calcTotals = (logArr: DailyLog[], purchaseArr: FuelPurchase[]) => {
+            const logCost = logArr.reduce((sum, l) => sum + l.dailyCost, 0);
+            const purchaseCost = purchaseArr.reduce((sum, p) => sum + p.totalAmount, 0);
+            const purchaseFuel = purchaseArr.reduce((sum, p) => sum + p.liters, 0);
+
+            return {
+                distance: logArr.reduce((sum, l) => sum + l.dailyDistance, 0),
+                cost: logCost + purchaseCost,
+                fuel: logArr.reduce((sum, l) => sum + l.dailyFuelConsumed, 0) + purchaseFuel,
+                logCount: logArr.length,
+                purchaseCount: purchaseArr.length,
+                avgConsumption: logArr.length > 0
+                    ? logArr.reduce((sum, l) => sum + l.avgConsumption, 0) / logArr.length
+                    : 0
+            };
+        };
 
         return {
-            thisWeek: calcTotals(thisWeekLogs),
-            lastWeek: calcTotals(lastWeekLogs),
-            thisMonth: calcTotals(thisMonthLogs),
-            lastMonth: calcTotals(lastMonthLogs)
+            thisWeek: calcTotals(thisWeekLogs, thisWeekPurchases),
+            lastWeek: calcTotals(lastWeekLogs, lastWeekPurchases),
+            thisMonth: calcTotals(thisMonthLogs, thisMonthPurchases),
+            lastMonth: calcTotals(lastMonthLogs, lastMonthPurchases)
         };
-    }, [logs]);
+    }, [logs, fuelPurchases]);
 
     const getChangePercent = (current: number, previous: number) => {
-        if (previous === 0) return 0;
+        if (previous === 0) return current > 0 ? 100 : 0;
         return ((current - previous) / previous) * 100;
     };
 
     const renderChange = (current: number, previous: number, inverse: boolean = false) => {
         const change = getChangePercent(current, previous);
         const isUp = change > 0;
-        const color = inverse ? (isUp ? 'text-red-500' : 'text-green-500') : (isUp ? 'text-green-500' : 'text-red-500');
+        const isDown = change < 0;
+
+        // inverse: artış kötü (maliyet gibi), azalış iyi
+        let color = 'text-gray-400';
+        if (Math.abs(change) >= 1) {
+            if (inverse) {
+                color = isUp ? 'text-red-500' : 'text-emerald-500';
+            } else {
+                color = isUp ? 'text-emerald-500' : 'text-red-500';
+            }
+        }
 
         if (Math.abs(change) < 1) {
             return <Minus className="w-3 h-3 text-gray-400" />;
@@ -79,60 +118,253 @@ export const WeeklySummary: React.FC<WeeklySummaryProps> = ({ logs }) => {
         );
     };
 
-    if (logs.length < 3) return null;
+    // Calculate averages
+    const weeklyAvgPerDay = summary.thisWeek.logCount > 0
+        ? summary.thisWeek.cost / 7
+        : 0;
+
+    const monthlyAvgPerDay = summary.thisMonth.logCount > 0
+        ? summary.thisMonth.cost / new Date().getDate()
+        : 0;
+
+    // Estimate monthly projection
+    const daysInMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate();
+    const monthlyProjection = monthlyAvgPerDay * daysInMonth;
+
+    if (logs.length < 1 && fuelPurchases.length < 1) return null;
 
     return (
-        <div className="bg-gradient-to-r from-violet-50 to-purple-50 dark:from-violet-900/20 dark:to-purple-900/20 rounded-xl p-4 border border-violet-200 dark:border-violet-800">
-            <h3 className="text-sm font-bold text-violet-800 dark:text-violet-300 mb-3 flex items-center">
-                <Calendar className="w-4 h-4 mr-2" />
-                Haftalık & Aylık Özet
-            </h3>
+        <div className="bg-gradient-to-br from-violet-500/10 via-purple-500/10 to-fuchsia-500/10 dark:from-violet-900/30 dark:via-purple-900/30 dark:to-fuchsia-900/30 rounded-2xl border border-violet-200/50 dark:border-violet-700/50 overflow-hidden backdrop-blur-sm shadow-lg">
+            {/* Header */}
+            <div
+                className="p-4 flex items-center justify-between cursor-pointer hover:bg-white/20 dark:hover:bg-black/10 transition-colors"
+                onClick={() => setIsExpanded(!isExpanded)}
+            >
+                <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-gradient-to-br from-violet-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+                        <BarChart3 className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                        <h3 className="text-base font-bold text-gray-800 dark:text-white">Haftalık & Aylık Özet</h3>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                            {summary.thisWeek.logCount + summary.thisWeek.purchaseCount} kayıt bu hafta
+                        </p>
+                    </div>
+                </div>
+                <button className="p-2 rounded-lg hover:bg-white/30 dark:hover:bg-black/20 transition-colors">
+                    {isExpanded ? (
+                        <ChevronUp className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                    ) : (
+                        <ChevronDown className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                    )}
+                </button>
+            </div>
 
-            <div className="grid grid-cols-2 gap-4">
-                {/* This Week */}
-                <div className="bg-white/50 dark:bg-black/20 rounded-lg p-3">
-                    <p className="text-xs text-violet-600 dark:text-violet-400 font-medium mb-2">Bu Hafta</p>
-                    <div className="space-y-1">
+            {/* Summary Cards - Always Visible */}
+            <div className="px-4 pb-4 grid grid-cols-2 gap-3">
+                {/* This Week Card */}
+                <div className="bg-white/60 dark:bg-gray-800/60 rounded-xl p-4 backdrop-blur-sm border border-white/20 dark:border-gray-700/30">
+                    <div className="flex items-center justify-between mb-3">
+                        <span className="text-xs font-semibold text-violet-600 dark:text-violet-400 uppercase tracking-wide">Bu Hafta</span>
+                        <Calendar className="w-4 h-4 text-violet-500" />
+                    </div>
+                    <div className="space-y-2">
                         <div className="flex items-center justify-between">
-                            <span className="text-xs text-gray-600 dark:text-gray-400 flex items-center">
-                                <Route className="w-3 h-3 mr-1" /> Mesafe
+                            <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center">
+                                <Route className="w-3.5 h-3.5 mr-1.5 text-blue-500" /> Mesafe
                             </span>
-                            <span className="text-sm font-bold text-gray-800 dark:text-white">{summary.thisWeek.distance} km</span>
+                            <span className="text-sm font-bold text-gray-800 dark:text-white">
+                                {summary.thisWeek.distance.toLocaleString('tr-TR')} km
+                            </span>
                         </div>
                         <div className="flex items-center justify-between">
-                            <span className="text-xs text-gray-600 dark:text-gray-400 flex items-center">
-                                <Wallet className="w-3 h-3 mr-1" /> Harcama
+                            <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center">
+                                <Wallet className="w-3.5 h-3.5 mr-1.5 text-emerald-500" /> Harcama
                             </span>
-                            <div className="flex flex-col items-end">
-                                <span className="text-sm font-bold text-gray-800 dark:text-white">₺{summary.thisWeek.cost.toFixed(0)}</span>
+                            <div className="flex items-center space-x-2">
+                                <span className="text-sm font-bold text-gray-800 dark:text-white">
+                                    ₺{summary.thisWeek.cost.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}
+                                </span>
                                 {renderChange(summary.thisWeek.cost, summary.lastWeek.cost, true)}
                             </div>
+                        </div>
+                        <div className="flex items-center justify-between">
+                            <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center">
+                                <Droplets className="w-3.5 h-3.5 mr-1.5 text-cyan-500" /> Yakıt
+                            </span>
+                            <span className="text-sm font-bold text-gray-800 dark:text-white">
+                                {summary.thisWeek.fuel.toFixed(1)} L
+                            </span>
                         </div>
                     </div>
                 </div>
 
-                {/* This Month */}
-                <div className="bg-white/50 dark:bg-black/20 rounded-lg p-3">
-                    <p className="text-xs text-violet-600 dark:text-violet-400 font-medium mb-2">Bu Ay</p>
-                    <div className="space-y-1">
+                {/* This Month Card */}
+                <div className="bg-white/60 dark:bg-gray-800/60 rounded-xl p-4 backdrop-blur-sm border border-white/20 dark:border-gray-700/30">
+                    <div className="flex items-center justify-between mb-3">
+                        <span className="text-xs font-semibold text-purple-600 dark:text-purple-400 uppercase tracking-wide">Bu Ay</span>
+                        <Calendar className="w-4 h-4 text-purple-500" />
+                    </div>
+                    <div className="space-y-2">
                         <div className="flex items-center justify-between">
-                            <span className="text-xs text-gray-600 dark:text-gray-400 flex items-center">
-                                <Route className="w-3 h-3 mr-1" /> Mesafe
+                            <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center">
+                                <Route className="w-3.5 h-3.5 mr-1.5 text-blue-500" /> Mesafe
                             </span>
-                            <span className="text-sm font-bold text-gray-800 dark:text-white">{summary.thisMonth.distance} km</span>
+                            <span className="text-sm font-bold text-gray-800 dark:text-white">
+                                {summary.thisMonth.distance.toLocaleString('tr-TR')} km
+                            </span>
                         </div>
                         <div className="flex items-center justify-between">
-                            <span className="text-xs text-gray-600 dark:text-gray-400 flex items-center">
-                                <Wallet className="w-3 h-3 mr-1" /> Harcama
+                            <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center">
+                                <Wallet className="w-3.5 h-3.5 mr-1.5 text-emerald-500" /> Harcama
                             </span>
-                            <div className="flex flex-col items-end">
-                                <span className="text-sm font-bold text-gray-800 dark:text-white">₺{summary.thisMonth.cost.toFixed(0)}</span>
+                            <div className="flex items-center space-x-2">
+                                <span className="text-sm font-bold text-gray-800 dark:text-white">
+                                    ₺{summary.thisMonth.cost.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}
+                                </span>
                                 {renderChange(summary.thisMonth.cost, summary.lastMonth.cost, true)}
                             </div>
+                        </div>
+                        <div className="flex items-center justify-between">
+                            <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center">
+                                <Droplets className="w-3.5 h-3.5 mr-1.5 text-cyan-500" /> Yakıt
+                            </span>
+                            <span className="text-sm font-bold text-gray-800 dark:text-white">
+                                {summary.thisMonth.fuel.toFixed(1)} L
+                            </span>
                         </div>
                     </div>
                 </div>
             </div>
+
+            {/* Expanded Details */}
+            {isExpanded && (
+                <div className="px-4 pb-4 space-y-4 animate-in slide-in-from-top duration-300">
+                    {/* Comparison Stats */}
+                    <div className="bg-white/40 dark:bg-gray-800/40 rounded-xl p-4 backdrop-blur-sm">
+                        <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center">
+                            <Activity className="w-4 h-4 mr-2 text-violet-500" />
+                            Detaylı Karşılaştırma
+                        </h4>
+                        <div className="grid grid-cols-2 gap-4">
+                            {/* Weekly Comparison */}
+                            <div className="space-y-2">
+                                <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Haftalık Karşılaştırma</p>
+                                <div className="space-y-1.5">
+                                    <div className="flex justify-between items-center text-xs">
+                                        <span className="text-gray-600 dark:text-gray-400">Geçen Hafta:</span>
+                                        <span className="font-medium text-gray-700 dark:text-gray-300">
+                                            ₺{summary.lastWeek.cost.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}
+                                        </span>
+                                    </div>
+                                    <div className="flex justify-between items-center text-xs">
+                                        <span className="text-gray-600 dark:text-gray-400">Bu Hafta:</span>
+                                        <span className="font-medium text-gray-700 dark:text-gray-300">
+                                            ₺{summary.thisWeek.cost.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}
+                                        </span>
+                                    </div>
+                                    <div className="flex justify-between items-center text-xs pt-1 border-t border-gray-200 dark:border-gray-700">
+                                        <span className="text-gray-600 dark:text-gray-400">Fark:</span>
+                                        <span className={`font-bold ${summary.thisWeek.cost > summary.lastWeek.cost ? 'text-red-500' : 'text-emerald-500'}`}>
+                                            {summary.thisWeek.cost > summary.lastWeek.cost ? '+' : ''}
+                                            ₺{(summary.thisWeek.cost - summary.lastWeek.cost).toLocaleString('tr-TR', { maximumFractionDigits: 0 })}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Monthly Comparison */}
+                            <div className="space-y-2">
+                                <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Aylık Karşılaştırma</p>
+                                <div className="space-y-1.5">
+                                    <div className="flex justify-between items-center text-xs">
+                                        <span className="text-gray-600 dark:text-gray-400">Geçen Ay:</span>
+                                        <span className="font-medium text-gray-700 dark:text-gray-300">
+                                            ₺{summary.lastMonth.cost.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}
+                                        </span>
+                                    </div>
+                                    <div className="flex justify-between items-center text-xs">
+                                        <span className="text-gray-600 dark:text-gray-400">Bu Ay:</span>
+                                        <span className="font-medium text-gray-700 dark:text-gray-300">
+                                            ₺{summary.thisMonth.cost.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}
+                                        </span>
+                                    </div>
+                                    <div className="flex justify-between items-center text-xs pt-1 border-t border-gray-200 dark:border-gray-700">
+                                        <span className="text-gray-600 dark:text-gray-400">Fark:</span>
+                                        <span className={`font-bold ${summary.thisMonth.cost > summary.lastMonth.cost ? 'text-red-500' : 'text-emerald-500'}`}>
+                                            {summary.thisMonth.cost > summary.lastMonth.cost ? '+' : ''}
+                                            ₺{(summary.thisMonth.cost - summary.lastMonth.cost).toLocaleString('tr-TR', { maximumFractionDigits: 0 })}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Projections */}
+                    <div className="bg-gradient-to-r from-amber-500/10 to-orange-500/10 dark:from-amber-900/20 dark:to-orange-900/20 rounded-xl p-4 border border-amber-200/50 dark:border-amber-700/50">
+                        <h4 className="text-sm font-semibold text-amber-700 dark:text-amber-400 mb-3 flex items-center">
+                            <Target className="w-4 h-4 mr-2" />
+                            Ay Sonu Tahmini
+                        </h4>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Günlük Ortalama</p>
+                                <p className="text-lg font-bold text-gray-800 dark:text-white">
+                                    ₺{monthlyAvgPerDay.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}
+                                </p>
+                            </div>
+                            <div>
+                                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Ay Sonu Projeksiyonu</p>
+                                <p className="text-lg font-bold text-amber-600 dark:text-amber-400">
+                                    ₺{monthlyProjection.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}
+                                </p>
+                            </div>
+                        </div>
+                        {summary.lastMonth.cost > 0 && (
+                            <div className="mt-3 pt-3 border-t border-amber-200/50 dark:border-amber-700/50">
+                                <div className="flex items-center justify-between text-xs">
+                                    <span className="text-gray-600 dark:text-gray-400">Geçen aya göre tahmini değişim:</span>
+                                    <span className={`font-bold ${monthlyProjection > summary.lastMonth.cost ? 'text-red-500' : 'text-emerald-500'}`}>
+                                        {monthlyProjection > summary.lastMonth.cost ? '+' : ''}
+                                        {((monthlyProjection - summary.lastMonth.cost) / summary.lastMonth.cost * 100).toFixed(0)}%
+                                    </span>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Fuel Efficiency */}
+                    {(summary.thisWeek.avgConsumption > 0 || summary.thisMonth.avgConsumption > 0) && (
+                        <div className="bg-gradient-to-r from-cyan-500/10 to-blue-500/10 dark:from-cyan-900/20 dark:to-blue-900/20 rounded-xl p-4 border border-cyan-200/50 dark:border-cyan-700/50">
+                            <h4 className="text-sm font-semibold text-cyan-700 dark:text-cyan-400 mb-3 flex items-center">
+                                <Fuel className="w-4 h-4 mr-2" />
+                                Yakıt Verimliliği
+                            </h4>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Haftalık Ort. Tüketim</p>
+                                    <div className="flex items-center space-x-2">
+                                        <p className="text-lg font-bold text-gray-800 dark:text-white">
+                                            {summary.thisWeek.avgConsumption.toFixed(1)} L/100km
+                                        </p>
+                                        {summary.lastWeek.avgConsumption > 0 && renderChange(summary.thisWeek.avgConsumption, summary.lastWeek.avgConsumption, true)}
+                                    </div>
+                                </div>
+                                <div>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Aylık Ort. Tüketim</p>
+                                    <div className="flex items-center space-x-2">
+                                        <p className="text-lg font-bold text-gray-800 dark:text-white">
+                                            {summary.thisMonth.avgConsumption.toFixed(1)} L/100km
+                                        </p>
+                                        {summary.lastMonth.avgConsumption > 0 && renderChange(summary.thisMonth.avgConsumption, summary.lastMonth.avgConsumption, true)}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            )}
         </div>
     );
 };

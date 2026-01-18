@@ -494,6 +494,9 @@ export default function App() {
           <div className="space-y-6 animate-in fade-in duration-500">
             <DashboardStatsCard stats={stats} alerts={activeAlerts} currentOdometer={lastOdometer} />
 
+            {/* Weekly/Monthly Summary - En Üstte */}
+            <WeeklySummary logs={logs} fuelPurchases={fuelPurchases} />
+
             {/* Gamification Section */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <GamificationDisplay />
@@ -506,10 +509,7 @@ export default function App() {
               <WeeklyChallenges logs={logs} fuelPurchases={fuelPurchases} />
             </div>
 
-            {/* Weekly/Monthly Summary & Budget */}
-            <div className="grid grid-cols-1 gap-4">
-              <WeeklySummary logs={logs} />
-            </div>
+
 
             {/* Badges */}
             <BadgeList />
