@@ -446,7 +446,7 @@ export const FuelPurchaseForm: React.FC<FuelPurchaseFormProps> = ({ onAdd, onUpd
                         <div className="flex items-center">
                             <MapPin className={`w-5 h-5 mr-2 ${location ? 'text-green-500' : 'text-gray-400'}`} />
                             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                {location ? 'Konum Eklendi' : 'Konum Ekle'}
+                                {location ? `Konum Eklendi ${city ? `(${city})` : ''}` : 'Konum Ekle'}
                             </span>
                         </div>
                         <label className="relative inline-flex items-center cursor-pointer">
