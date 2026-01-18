@@ -1,23 +1,8 @@
-import React, { useMemo, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
+import React, { useMemo, useState, useCallback } from 'react';
+import { GoogleMap, useJsApiLoader, Marker, InfoWindow } from '@react-google-maps/api';
 import { DailyLog } from './types';
 import { FuelPurchase } from './FuelPurchaseForm';
-import { Fuel, Calendar, Gauge, Droplets, Coins, Map } from 'lucide-react';
-
-// Fix Leaflet Default Icon Issue in React
-import icon from 'leaflet/dist/images/marker-icon.png';
-import iconShadow from 'leaflet/dist/images/marker-shadow.png';
-
-let DefaultIcon = L.icon({
-    iconUrl: icon,
-    shadowUrl: iconShadow,
-    iconSize: [25, 41],
-    iconAnchor: [12, 41]
-});
-
-L.Marker.prototype.options.icon = DefaultIcon;
+import { Fuel, Calendar, Gauge, Droplets, Coins, Map, AlertTriangle } from 'lucide-react';
 
 interface FuelMapProps {
     logs: DailyLog[];
@@ -34,8 +19,33 @@ interface MapItem {
     type: 'log' | 'purchase';
 }
 
+const containerStyle = {
+    width: '100%',
+    height: '400px'
+};
+
+const defaultCenter = { lat: 39.9334, lng: 32.8597 }; // Ankara
+
+const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
+
 export const FuelMap: React.FC<FuelMapProps> = ({ logs, purchases = [] }) => {
     const [showMap, setShowMap] = useState(false);
+    const [selectedItem, setSelectedItem] = useState<MapItem | null>(null);
+
+    const { isLoaded, loadError } = useJsApiLoader({
+        id: 'google-map-script',
+        googleMapsApiKey: GOOGLE_MAPS_API_KEY
+    });
+
+    const [map, setMap] = useState<google.maps.Map | null>(null);
+
+    const onLoad = useCallback((map: google.maps.Map) => {
+        setMap(map);
+    }, []);
+
+    const onUnmount = useCallback(() => {
+        setMap(null);
+    }, []);
 
     // Merge logs and purchases into map items
     const items: MapItem[] = useMemo(() => {
@@ -100,9 +110,8 @@ export const FuelMap: React.FC<FuelMapProps> = ({ logs, purchases = [] }) => {
     }, [logs, purchases]);
 
     // Calculate center based on recent items
-    const defaultCenter: [number, number] = [39.9334, 32.8597]; // Ankara
-    const center: [number, number] = items.length > 0
-        ? [items[0].lat, items[0].lng]
+    const center = items.length > 0
+        ? { lat: items[0].lat, lng: items[0].lng }
         : defaultCenter;
 
     // Station statistics
@@ -118,7 +127,6 @@ export const FuelMap: React.FC<FuelMapProps> = ({ logs, purchases = [] }) => {
                 stats[log.fuelStation].count++;
                 stats[log.fuelStation].totalSpent += log.dailyCost;
                 stats[log.fuelStation].avgPrice = log.fuelPrice;
-                // Note: logs doesn't strictly have liters per entry easily available correctly without calc, assuming just count/spent for now for logs
             }
         });
 
@@ -131,7 +139,6 @@ export const FuelMap: React.FC<FuelMapProps> = ({ logs, purchases = [] }) => {
                 stats[p.station].count++;
                 stats[p.station].totalSpent += p.totalAmount;
                 stats[p.station].totalLiters += p.liters;
-                // Running average for price
                 const currentTotal = stats[p.station].avgPrice * (stats[p.station].count - 1);
                 stats[p.station].avgPrice = (currentTotal + p.pricePerLiter) / stats[p.station].count;
             }
@@ -140,8 +147,39 @@ export const FuelMap: React.FC<FuelMapProps> = ({ logs, purchases = [] }) => {
         return Object.entries(stats)
             .map(([name, data]) => ({ name, ...data }))
             .sort((a, b) => b.count - a.count)
-            .slice(0, 3); // Top 3 stations
+            .slice(0, 3);
     }, [logs, purchases]);
+
+    // No API Key warning
+    if (!GOOGLE_MAPS_API_KEY) {
+        return (
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-amber-200 dark:border-amber-800 p-6">
+                <div className="flex items-start space-x-3">
+                    <div className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded-lg">
+                        <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                    </div>
+                    <div>
+                        <h3 className="font-bold text-gray-800 dark:text-white mb-1">Google Maps API Key Gerekli</h3>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+                            Haritayı görüntülemek için <code className="bg-gray-100 dark:bg-gray-700 px-1 py-0.5 rounded">.env</code> dosyasına API key ekleyin:
+                        </p>
+                        <pre className="bg-gray-100 dark:bg-gray-900 p-3 rounded-lg text-sm overflow-x-auto">
+                            VITE_GOOGLE_MAPS_API_KEY=AIza...
+                        </pre>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    if (loadError) {
+        return (
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-red-200 dark:border-red-800 p-6 text-center">
+                <AlertTriangle className="w-8 h-8 text-red-500 mx-auto mb-2" />
+                <p className="text-red-600 dark:text-red-400">Harita yüklenemedi. API key'inizi kontrol edin.</p>
+            </div>
+        );
+    }
 
     if (items.length === 0) {
         return (
@@ -154,7 +192,6 @@ export const FuelMap: React.FC<FuelMapProps> = ({ logs, purchases = [] }) => {
                     Yakıt girişi yaparken "Konum Ekle" seçeneğini işaretleyerek harita üzerinde yakıt aldığınız yerleri görebilirsiniz.
                 </p>
 
-                {/* Station Stats Cards */}
                 {stationStats.length > 0 && (
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
                         {stationStats.map((stat, index) => (
@@ -162,8 +199,8 @@ export const FuelMap: React.FC<FuelMapProps> = ({ logs, purchases = [] }) => {
                                 <div className="flex items-center justify-between mb-2">
                                     <div className="flex items-center space-x-2">
                                         <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${index === 0 ? 'bg-amber-100 text-amber-600' :
-                                                index === 1 ? 'bg-gray-100 text-gray-600' :
-                                                    'bg-orange-100 text-orange-600'
+                                            index === 1 ? 'bg-gray-100 text-gray-600' :
+                                                'bg-orange-100 text-orange-600'
                                             }`}>
                                             <span className="font-bold">{index + 1}</span>
                                         </div>
@@ -202,48 +239,80 @@ export const FuelMap: React.FC<FuelMapProps> = ({ logs, purchases = [] }) => {
                         <div className="w-12 h-12 bg-white dark:bg-gray-700 rounded-full shadow-sm flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
                             <Map className="w-6 h-6 text-primary-500" />
                         </div>
-                        <span className="font-medium text-gray-600 dark:text-gray-300">Haritayı Görüntüle</span>
+                        <span className="font-medium text-gray-600 dark:text-gray-300">Google Haritayı Görüntüle</span>
                     </div>
-                ) : (
-                    <div className="h-[400px] w-full z-0 relative animate-in fade-in duration-500">
-                        <MapContainer center={center} zoom={6} style={{ height: '100%', width: '100%' }}>
-                            <TileLayer
-                                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                            />
+                ) : isLoaded ? (
+                    <div className="relative animate-in fade-in duration-500">
+                        <GoogleMap
+                            mapContainerStyle={containerStyle}
+                            center={center}
+                            zoom={6}
+                            onLoad={onLoad}
+                            onUnmount={onUnmount}
+                            options={{
+                                styles: [
+                                    {
+                                        featureType: 'poi',
+                                        stylers: [{ visibility: 'off' }]
+                                    }
+                                ],
+                                mapTypeControl: false,
+                                streetViewControl: false,
+                                fullscreenControl: false
+                            }}
+                        >
                             {items.map(item => (
-                                <Marker key={item.id} position={[item.lat, item.lng]}>
-                                    <Popup>
-                                        <div className="p-1">
-                                            <div className="flex items-center space-x-2 mb-2 border-b border-gray-100 pb-2">
-                                                {item.type === 'purchase' ? (
-                                                    <Fuel className={`w-4 h-4 ${item.title !== 'Yakıt Alımı' ? 'text-emerald-500' : 'text-blue-500'}`} />
-                                                ) : (
-                                                    <Calendar className="w-4 h-4 text-gray-400" />
-                                                )}
-                                                <span className="font-bold text-gray-800">{item.title}</span>
-                                            </div>
-                                            <div className="text-xs text-gray-500 mb-2">
-                                                {new Date(item.date).toLocaleDateString('tr-TR')}
-                                            </div>
-                                            {item.details}
-                                        </div>
-                                    </Popup>
-                                </Marker>
+                                <Marker
+                                    key={item.id}
+                                    position={{ lat: item.lat, lng: item.lng }}
+                                    onClick={() => setSelectedItem(item)}
+                                    icon={{
+                                        url: item.type === 'purchase'
+                                            ? 'https://maps.google.com/mapfiles/ms/icons/green-dot.png'
+                                            : 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png',
+                                        scaledSize: new google.maps.Size(32, 32)
+                                    }}
+                                />
                             ))}
-                        </MapContainer>
+
+                            {selectedItem && (
+                                <InfoWindow
+                                    position={{ lat: selectedItem.lat, lng: selectedItem.lng }}
+                                    onCloseClick={() => setSelectedItem(null)}
+                                >
+                                    <div className="p-2 min-w-[150px]">
+                                        <div className="flex items-center space-x-2 mb-2 border-b border-gray-100 pb-2">
+                                            {selectedItem.type === 'purchase' ? (
+                                                <Fuel className="w-4 h-4 text-emerald-500" />
+                                            ) : (
+                                                <Calendar className="w-4 h-4 text-blue-500" />
+                                            )}
+                                            <span className="font-bold text-gray-800">{selectedItem.title}</span>
+                                        </div>
+                                        <div className="text-xs text-gray-500 mb-2">
+                                            {new Date(selectedItem.date).toLocaleDateString('tr-TR')}
+                                        </div>
+                                        {selectedItem.details}
+                                    </div>
+                                </InfoWindow>
+                            )}
+                        </GoogleMap>
                         <button
                             onClick={(e) => { e.stopPropagation(); setShowMap(false); }}
-                            className="absolute top-4 right-4 z-[400] bg-white dark:bg-gray-800 p-2 rounded-lg shadow-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-gray-500 dark:text-gray-300"
+                            className="absolute top-4 right-4 z-10 bg-white dark:bg-gray-800 p-2 rounded-lg shadow-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-gray-500 dark:text-gray-300"
                             title="Haritayı Gizle"
                         >
                             <Map className="w-5 h-5 opacity-50" />
                         </button>
                     </div>
+                ) : (
+                    <div className="h-[400px] flex items-center justify-center">
+                        <div className="animate-spin w-8 h-8 border-4 border-primary-500 border-t-transparent rounded-full"></div>
+                    </div>
                 )}
             </div>
 
-            {/* Station Stats Cards (Always Visible) */}
+            {/* Station Stats Cards */}
             {stationStats.length > 0 && (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {stationStats.map((stat, index) => (
@@ -251,8 +320,8 @@ export const FuelMap: React.FC<FuelMapProps> = ({ logs, purchases = [] }) => {
                             <div className="flex items-center justify-between mb-2">
                                 <div className="flex items-center space-x-2">
                                     <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${index === 0 ? 'bg-amber-100 text-amber-600' :
-                                            index === 1 ? 'bg-gray-100 text-gray-600' :
-                                                'bg-orange-100 text-orange-600'
+                                        index === 1 ? 'bg-gray-100 text-gray-600' :
+                                            'bg-orange-100 text-orange-600'
                                         }`}>
                                         <span className="font-bold">{index + 1}</span>
                                     </div>
