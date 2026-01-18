@@ -40,7 +40,7 @@ export const ShareableStatsCard: React.FC<StatsCardProps> = ({ stats, userName =
     };
 
     const handleShare = async () => {
-        const text = `🚗 Yakıt Takip Pro İstatistiklerim\n\n` +
+        const text = `🚗 TripBook İstatistiklerim\n\n` +
             `📍 ${stats.totalDistance.toLocaleString('tr-TR')} km yol\n` +
             `⛽ ${stats.totalFuelPurchases} yakıt alımı\n` +
             `💰 ₺${stats.totalCost.toLocaleString('tr-TR')} harcama\n` +
@@ -79,7 +79,7 @@ export const ShareableStatsCard: React.FC<StatsCardProps> = ({ stats, userName =
                         </div>
                         <div>
                             <h2 className="font-bold text-lg">{userName}</h2>
-                            <p className="text-xs text-gray-400">Yakıt Takip Pro</p>
+                            <p className="text-xs text-gray-400">TripBook</p>
                         </div>
                     </div>
                     <div className="text-right">

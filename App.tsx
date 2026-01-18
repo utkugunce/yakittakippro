@@ -409,8 +409,8 @@ export default function App() {
               <Car className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-gray-900 dark:text-white leading-tight">Yakıt Takip Pro</h1>
-              <p className="text-xs text-gray-500 dark:text-gray-400">Aracınızın kontrolü sizde</p>
+              <h1 className="text-xl font-bold text-gray-900 dark:text-white leading-tight">TripBook</h1>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Yolculuk Günlüğünüz</p>
             </div>
           </div>
           <div className="flex items-center space-x-2">

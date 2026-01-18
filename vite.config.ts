@@ -16,7 +16,7 @@ export default defineConfig(({ mode }) => {
         registerType: 'autoUpdate',
         includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
         manifest: {
-          name: 'Yakıt Takip Pro',
+          name: 'TripBook',
           short_name: 'YakıtPro',
           description: 'Araç yakıt tüketimi ve masraf takip uygulaması',
           theme_color: '#111827',

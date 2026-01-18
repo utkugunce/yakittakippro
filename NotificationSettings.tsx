@@ -27,7 +27,7 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({ main
                 localStorage.setItem('notifications_enabled', 'true');
 
                 // Show test notification
-                new Notification('Yakıt Takip Pro', {
+                new Notification('TripBook', {
                     body: 'Bildirimler başarıyla etkinleştirildi! 🚗',
                     icon: '/pwa-192x192.png',
                     badge: '/pwa-192x192.png'

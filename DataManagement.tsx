@@ -90,7 +90,7 @@ export const DataManagement: React.FC<DataManagementProps> = ({ logs, onImport, 
             // Title
             doc.setFontSize(20);
             doc.setTextColor(59, 130, 246); // Blue
-            doc.text('Yakıt Takip Pro - Rapor', 14, 20);
+            doc.text('TripBook - Rapor', 14, 20);
 
             // Date
             doc.setFontSize(10);

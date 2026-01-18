@@ -154,7 +154,7 @@ export const Reports: React.FC<ReportsProps> = ({ logs, purchases = [], maintena
       doc.setPage(i);
       doc.setFontSize(8);
       doc.setTextColor(150);
-      doc.text('Yakıt Takip Pro - Dijital Araç Karnesi', 14, doc.internal.pageSize.height - 10);
+      doc.text('TripBook - Dijital Araç Karnesi', 14, doc.internal.pageSize.height - 10);
     }
 
     doc.save('arac-satis-raporu.pdf');
