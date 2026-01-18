@@ -472,16 +472,17 @@ const BrandCharts: React.FC<{ logs: DailyLog[], purchases: FuelPurchase[] }> = (
       </div>
 
       {/* Efficiency by Brand (Lower is better) - Mostly from Logs */}
-      {brandData.filter(d => d.efficiency > 0).length > 0 && (
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 transition-colors">
-          <div className="flex justify-between items-center mb-6">
-            <h3 className="text-lg font-bold text-gray-800 dark:text-white">Marka Verimliliği (L/100km)</h3>
-            <div className="flex flex-col items-end">
-              <span className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded">Düşük daha iyi</span>
-              <span className="text-[10px] text-gray-400 mt-1">*Sadece günlük kayıtlardan</span>
-            </div>
+      {/* Efficiency by Brand (Lower is better) - Mostly from Logs */}
+      <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 transition-colors">
+        <div className="flex justify-between items-center mb-6">
+          <h3 className="text-lg font-bold text-gray-800 dark:text-white">Marka Verimliliği (L/100km)</h3>
+          <div className="flex flex-col items-end">
+            <span className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded">Düşük daha iyi</span>
+            <span className="text-[10px] text-gray-400 mt-1">*Sadece günlük kayıtlardan</span>
           </div>
-          <div className="h-[250px] w-full">
+        </div>
+        <div className="h-[250px] w-full flex items-center justify-center">
+          {brandData.filter(d => d.efficiency > 1).length > 0 ? (
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={brandData.filter(d => d.efficiency > 1).sort((a, b) => a.efficiency - b.efficiency)} layout="vertical">
                 <CartesianGrid strokeDasharray="3 3" horizontal={false} strokeOpacity={0.1} />
@@ -495,9 +496,16 @@ const BrandCharts: React.FC<{ logs: DailyLog[], purchases: FuelPurchase[] }> = (
                 <Bar dataKey="efficiency" fill="#10b981" radius={[0, 4, 4, 0]} barSize={20} />
               </BarChart>
             </ResponsiveContainer>
-          </div>
+          ) : (
+            <div className="text-center p-4">
+              <p className="text-gray-500 dark:text-gray-400 text-sm mb-2">Görüntülenecek veri bulunamadı.</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500">
+                Verimlilik grafiği için Günlük Kayıtlara "İstasyon" ve "Yakıt" bilgisi girmelisiniz.
+              </p>
+            </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 };
