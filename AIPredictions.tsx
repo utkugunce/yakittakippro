@@ -169,7 +169,7 @@ export const AIPredictions: React.FC<AIPredictionsProps> = ({ logs, purchases = 
                     <div className="space-y-3">
                         <p className="text-sm text-gray-600 dark:text-gray-300">
                             Gerçek zamanlı AI analizleri için Google Gemini API anahtarı gerekli.
-                            <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" className="text-indigo-600 hover:underline ml-1 font-medium">
+                            <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer noopener" className="text-indigo-600 hover:underline ml-1 font-medium">
                                 Buradan ücretsiz alabilirsin.
                             </a>
                         </p>
@@ -190,49 +190,53 @@ export const AIPredictions: React.FC<AIPredictionsProps> = ({ logs, purchases = 
                         </div>
                     </div>
                 ) : (
-                    <>
-                        <div className="flex items-start gap-3">
-                            <MessageSquare className="w-5 h-5 text-indigo-500 mt-1 shrink-0" />
-                            <div className="flex-1">
-                                {isLoadingAi ? (
-                                    <div className="flex items-center gap-2 text-sm text-gray-500">
-                                        <Loader2 className="w-3 h-3 animate-spin" />
-                                        Veriler inceleniyor...
-                                    </div>
-                                ) : (
-                                    <p className="text-sm font-medium text-gray-800 dark:text-gray-100 leading-relaxed">
-                                        {aiMessage || "Verilerinizi analiz etmek için sağ üstteki pırıltı ikonuna tıklayın ✨"}
-                                    </p>
-                                )}
-                            </div>
+                ): (
+                        <>
+                        <div className = "flex items-start gap-3">
+                            <MessageSquare className = "w-5 h-5 text-indigo-500 mt-1 shrink-0" />
+                <div className="flex-1">
+                    {isLoadingAi ? (
+                        <div className="flex items-center gap-2 text-sm text-gray-500">
+                            <Loader2 className="w-3 h-3 animate-spin" />
+                            Veriler inceleniyor...
                         </div>
-
-                        {/* Feedback Loop */}
-                        {aiMessage && !isLoadingAi && (
-                            <div className="flex justify-end gap-2 mt-3 pt-3 border-t border-gray-100 dark:border-gray-700/50">
-                                <span className="text-[10px] text-gray-400 self-center mr-2">Bu tavsiye faydalı mıydı?</span>
-                                <button
-                                    onClick={() => setFeedback('iyi')}
-                                    className={`p-1.5 rounded-lg transition-colors ${feedback === 'iyi' ? 'bg-green-100 text-green-700' : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400'}`}
-                                >
-                                    <ThumbsUp className="w-3.5 h-3.5" />
-                                </button>
-                                <button
-                                    onClick={() => setFeedback('kötü')}
-                                    className={`p-1.5 rounded-lg transition-colors ${feedback === 'kötü' ? 'bg-red-100 text-red-700' : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400'}`}
-                                >
-                                    <ThumbsDown className="w-3.5 h-3.5" />
-                                </button>
-                            </div>
-                        )}
-                    </>
-                )}
+                    ) : (
+                        <p className="text-sm font-medium text-gray-800 dark:text-gray-100 leading-relaxed">
+                            {aiMessage || "Verilerinizi analiz etmek için sağ üstteki pırıltı ikonuna tıklayın ✨"}
+                        </p>
+                    )}
+                </div>
             </div>
 
-            {/* Quick Stats Grid (Existing Layout) */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
-                {/* Next Refuel */}
-                <div className="bg-white/60 dark:bg-gray-800/60 p-3 rounded-xl border border-white/50 dark:border-gray-700 backdrop-blur-sm">
+            {/* Feedback Loop */}
+            {aiMessage && !isLoadingAi && (
+                <div className="flex justify-end gap-2 mt-3 pt-3 border-t border-gray-100 dark:border-gray-700/50">
+                    <span className="text-[10px] text-gray-400 self-center mr-2">Bu tavsiye faydalı mıydı?</span>
+                    <button
+                        onClick={() => setFeedback('iyi')}
+                        className={`p-1.5 rounded-lg transition-colors ${feedback === 'iyi' ? 'bg-green-100 text-green-700' : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400'}`}
+                        title="Faydalı"
+                    >
+                        <ThumbsUp className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                        onClick={() => setFeedback('kötü')}
+                        className={`p-1.5 rounded-lg transition-colors ${feedback === 'kötü' ? 'bg-red-100 text-red-700' : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400'}`}
+                        title="Faydalı Değil"
+                    >
+                        <ThumbsDown className="w-3.5 h-3.5" />
+                    </button>
+                </div>
+            )}
+        </>
+    )
+}
+            </div >
+
+    {/* Quick Stats Grid (Existing Layout) */ }
+    < div className = "grid grid-cols-2 lg:grid-cols-4 gap-4 mt-4" >
+        {/* Next Refuel */ }
+        < div className = "bg-white/60 dark:bg-gray-800/60 p-3 rounded-xl border border-white/50 dark:border-gray-700 backdrop-blur-sm" >
                     <div className="flex items-center gap-2 mb-1 text-xs font-bold text-gray-500 uppercase">
                         <Droplets className="w-3 h-3" />
                         Sonraki Yakıt
@@ -240,10 +244,10 @@ export const AIPredictions: React.FC<AIPredictionsProps> = ({ logs, purchases = 
                     <div className="text-sm font-semibold text-gray-800 dark:text-white">
                         {predictions.nextRefuelDate.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long' })}
                     </div>
-                </div>
+                </div >
 
-                {/* Monthly Cost */}
-                <div className="bg-white/60 dark:bg-gray-800/60 p-3 rounded-xl border border-white/50 dark:border-gray-700 backdrop-blur-sm">
+    {/* Monthly Cost */ }
+    < div className = "bg-white/60 dark:bg-gray-800/60 p-3 rounded-xl border border-white/50 dark:border-gray-700 backdrop-blur-sm" >
                     <div className="flex items-center gap-2 mb-1 text-xs font-bold text-gray-500 uppercase">
                         <TrendingUp className="w-3 h-3" />
                         Bu Ay (Harcanan)
@@ -251,10 +255,10 @@ export const AIPredictions: React.FC<AIPredictionsProps> = ({ logs, purchases = 
                     <div className="text-sm font-semibold text-gray-800 dark:text-white">
                         ₺{predictions.thisMonthCost.toFixed(0)}
                     </div>
-                </div>
+                </div >
 
-                {/* Avg Consumption */}
-                <div className="bg-white/60 dark:bg-gray-800/60 p-3 rounded-xl border border-white/50 dark:border-gray-700 backdrop-blur-sm">
+    {/* Avg Consumption */ }
+    < div className = "bg-white/60 dark:bg-gray-800/60 p-3 rounded-xl border border-white/50 dark:border-gray-700 backdrop-blur-sm" >
                     <div className="flex items-center gap-2 mb-1 text-xs font-bold text-gray-500 uppercase">
                         <Calendar className="w-3 h-3" />
                         Ort. Tüketim
@@ -262,12 +266,12 @@ export const AIPredictions: React.FC<AIPredictionsProps> = ({ logs, purchases = 
                     <div className="text-sm font-semibold text-gray-800 dark:text-white">
                         {predictions.avgConsumption.toFixed(1)} L/100km
                     </div>
-                </div>
+                </div >
 
-                {/* Weekly Trend */}
-                <div className={`p-3 rounded-xl border backdrop-blur-sm ${predictions.weeklyChange > 0
-                    ? 'bg-red-50/50 dark:bg-red-900/10 border-red-100 dark:border-red-900/30'
-                    : 'bg-green-50/50 dark:bg-green-900/10 border-green-100 dark:border-green-900/30'}`}>
+    {/* Weekly Trend */ }
+    < div className = {`p-3 rounded-xl border backdrop-blur-sm ${predictions.weeklyChange > 0
+        ? 'bg-red-50/50 dark:bg-red-900/10 border-red-100 dark:border-red-900/30'
+        : 'bg-green-50/50 dark:bg-green-900/10 border-green-100 dark:border-green-900/30'}`}>
                     <div className="flex items-center gap-2 mb-1 text-xs font-bold text-gray-500 uppercase">
                         <TrendingUp className={`w-3 h-3 ${predictions.weeklyChange > 0 ? 'text-red-500' : 'text-green-500 rotate-180'}`} />
                         Haftalık Trend
@@ -275,8 +279,8 @@ export const AIPredictions: React.FC<AIPredictionsProps> = ({ logs, purchases = 
                     <div className={`text-sm font-semibold ${predictions.weeklyChange > 0 ? 'text-red-700 dark:text-red-400' : 'text-green-700 dark:text-green-400'}`}>
                         {Math.abs(predictions.weeklyChange).toFixed(1)}% {predictions.weeklyChange > 0 ? 'Artış' : 'Düşüş'}
                     </div>
-                </div>
-            </div>
-        </div>
+                </div >
+            </div >
+        </div >
     );
 };

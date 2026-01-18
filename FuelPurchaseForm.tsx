@@ -103,40 +103,6 @@ export const FuelPurchaseForm: React.FC<FuelPurchaseFormProps> = ({ onAdd, onUpd
     const [manualLng, setManualLng] = useState<string>('');
     const [gpsLoading, setGpsLoading] = useState(false);
     const [showMapPicker, setShowMapPicker] = useState(false);
-    const [city, setCity] = useState<string>('');
-
-    // Reverse Geocoding to get City
-    useEffect(() => {
-        if (location && addLocation) {
-            const fetchCity = async () => {
-                try {
-                    const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
-                    if (!apiKey) return;
-
-                    const response = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${location.latitude},${location.longitude}&key=${apiKey}&language=tr`);
-                    const data = await response.json();
-
-                    if (data.results && data.results.length > 0) {
-                        const cityResult = data.results.find((r: any) => r.types.includes('administrative_area_level_1')) ||
-                            data.results.find((r: any) => r.types.includes('locality'));
-
-                        if (cityResult) {
-                            // Extract just the name (e.g. "İstanbul" from "İstanbul, Türkiye")
-                            const addressComp = cityResult.address_components.find((c: any) => c.types.includes('administrative_area_level_1') || c.types.includes('locality'));
-                            if (addressComp) {
-                                setCity(addressComp.long_name);
-                            }
-                        }
-                    }
-                } catch (error) {
-                    console.error("Geocoding error:", error);
-                }
-            };
-            fetchCity();
-        } else {
-            setCity('');
-        }
-    }, [location, addLocation]);
 
     // Pre-fill last fuel price disabled by user request
     // useEffect(() => {
