@@ -31,6 +31,22 @@ export interface Vehicle {
   createdAt: string;
 }
 
+export interface FuelPurchase {
+  id: string;
+  date: string;
+  liters: number;
+  pricePerLiter: number;
+  totalAmount: number;
+  station?: string;
+  odometer?: number;
+  latitude?: number;
+  longitude?: number;
+  notes?: string;
+  fuelType?: 'benzin' | 'dizel' | 'lpg' | 'elektrik';
+  fullTank?: boolean;
+  city?: string;
+}
+
 export interface DashboardStats {
   totalDistance: number;
   totalCost: number;
