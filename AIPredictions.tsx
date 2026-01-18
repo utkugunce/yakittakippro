@@ -190,7 +190,6 @@ export const AIPredictions: React.FC<AIPredictionsProps> = ({ logs, purchases = 
                         </div>
                     </div>
                 ) : (
-                ): (
                         <>
                         <div className = "flex items-start gap-3">
                             <MessageSquare className = "w-5 h-5 text-indigo-500 mt-1 shrink-0" />
