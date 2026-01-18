@@ -54,12 +54,12 @@ export const FuelPurchaseForm: React.FC<FuelPurchaseFormProps> = ({ onAdd, onUpd
     const [gpsLoading, setGpsLoading] = useState(false);
     const [showMapPicker, setShowMapPicker] = useState(false);
 
-    // Pre-fill last fuel price
-    useEffect(() => {
-        if (lastFuelPrice > 0 && !pricePerLiter && !editingPurchase) {
-            setPricePerLiter(lastFuelPrice.toFixed(2));
-        }
-    }, [lastFuelPrice]);
+    // Pre-fill last fuel price disabled by user request
+    // useEffect(() => {
+    //     if (lastFuelPrice > 0 && !pricePerLiter && !editingPurchase) {
+    //         setPricePerLiter(lastFuelPrice.toFixed(2));
+    //     }
+    // }, [lastFuelPrice]);
 
     // Populate form when editing
     useEffect(() => {
