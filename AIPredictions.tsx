@@ -70,7 +70,7 @@ export const AIPredictions: React.FC<AIPredictionsProps> = ({ logs, purchases = 
     const [aiMessage, setAiMessage] = useState<string | null>(null);
     const [isLoadingAi, setIsLoadingAi] = useState(false);
     const [showApiKeyInput, setShowApiKeyInput] = useState(false);
-    const [apiKey, setApiKey] = useState(localStorage.getItem('gemini_api_key') || '');
+    const [apiKey, setApiKey] = useState(import.meta.env.VITE_GEMINI_API_KEY || localStorage.getItem('gemini_api_key') || '');
     const [feedback, setFeedback] = useState<'kötü' | 'iyi' | null>(null);
 
     // Save API key
@@ -81,8 +81,10 @@ export const AIPredictions: React.FC<AIPredictionsProps> = ({ logs, purchases = 
     };
 
     const generateAiInsight = async () => {
-        if (!predictions || !apiKey) {
-            if (!apiKey) setShowApiKeyInput(true);
+        const activeKey = apiKey || import.meta.env.VITE_GEMINI_API_KEY;
+
+        if (!predictions || !activeKey) {
+            if (!activeKey) setShowApiKeyInput(true);
             return;
         }
 
@@ -123,7 +125,11 @@ export const AIPredictions: React.FC<AIPredictionsProps> = ({ logs, purchases = 
 
     // Auto-generate on mount if key exists and data ready
     useEffect(() => {
-        if (apiKey && predictions && !aiMessage) {
+        const activeKey = apiKey || import.meta.env.VITE_GEMINI_API_KEY;
+        if (activeKey && predictions && !aiMessage) {
+            if (!apiKey && import.meta.env.VITE_GEMINI_API_KEY) {
+                setApiKey(import.meta.env.VITE_GEMINI_API_KEY);
+            }
             generateAiInsight();
         }
     }, [apiKey, predictions]);
