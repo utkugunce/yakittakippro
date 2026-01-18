@@ -214,7 +214,7 @@ export const YearEndProjection: React.FC<InsightsProps> = ({ logs, purchases }) 
                 <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                     <div
                         className="h-full bg-gradient-to-r from-violet-500 to-purple-500 rounded-full transition-all"
-                        style={{ width: `${(projection.dayOfYear / 365) * 100}%` }}
+                        style={{ width: `${Math.min((projection.dayOfYear / 365) * 100, 100)}%` }}
                     />
                 </div>
             </div>

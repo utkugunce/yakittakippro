@@ -163,12 +163,17 @@ export const SeasonalAnalysis: React.FC<AnalyticsProps> = ({ logs }) => {
                 {data.map((season, i) => (
                     <div
                         key={season.name}
-                        className="text-center p-3 rounded-xl border-2 transition-all"
-                        style={{ borderColor: COLORS[i] + '40', backgroundColor: COLORS[i] + '10' }}
+                        className="text-center p-3 rounded-xl border-2 transition-all relative overflow-hidden group"
+                        style={{
+                            '--border-color': COLORS[i] + '40',
+                            '--bg-color': COLORS[i] + '10',
+                            borderColor: 'var(--border-color)',
+                            backgroundColor: 'var(--bg-color)'
+                        } as React.CSSProperties}
                     >
                         <span className="text-2xl">{season.icon}</span>
                         <p className="font-bold text-gray-800 dark:text-white mt-1">{season.name}</p>
-                        <p className="text-lg font-bold" style={{ color: COLORS[i] }}>
+                        <p className="text-lg font-bold" style={{ '--text-color': COLORS[i], color: 'var(--text-color)' } as React.CSSProperties}>
                             {season.tuketim > 0 ? `${season.tuketim} L` : '-'}
                         </p>
                         <p className="text-[10px] text-gray-500 dark:text-gray-400">/100km</p>
