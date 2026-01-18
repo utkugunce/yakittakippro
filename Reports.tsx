@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { DailyLog, MaintenanceItem, VehiclePart } from './types';
 import { FileText, TrendingUp, TrendingDown, Calendar, Award, BarChart3, Fuel, Route, Coins, ArrowUpRight, ArrowDownRight, Download, FileSpreadsheet, Table } from 'lucide-react';
 import jsPDF from 'jspdf';
@@ -6,6 +6,19 @@ import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 
 import { FuelPurchase } from './FuelPurchaseForm';
+
+// New Analytics Imports
+import {
+  DayOfWeekAnalysis,
+  SeasonalAnalysis,
+  StationPriceComparison,
+  AnomalyDetection,
+  SavingsInsights,
+  YearEndProjection,
+  ReportsFilters,
+  getDateRangeFromPreset,
+  DateRangePreset
+} from '@/src/features/reports';
 
 interface ReportsProps {
   logs: DailyLog[];
@@ -358,6 +371,27 @@ export const Reports: React.FC<ReportsProps> = ({ logs, purchases = [], maintena
     };
   }, [logs]);
 
+  // Date filter state
+  const [datePreset, setDatePreset] = useState<DateRangePreset>('all');
+  const dateRange = useMemo(() => getDateRangeFromPreset(datePreset), [datePreset]);
+
+  // Filter data based on date range
+  const filteredLogs = useMemo(() => {
+    if (!dateRange) return logs;
+    return logs.filter(l => {
+      const d = new Date(l.date);
+      return d >= dateRange.start && d <= dateRange.end;
+    });
+  }, [logs, dateRange]);
+
+  const filteredPurchases = useMemo(() => {
+    if (!dateRange) return purchases;
+    return purchases.filter(p => {
+      const d = new Date(p.date);
+      return d >= dateRange.start && d <= dateRange.end;
+    });
+  }, [purchases, dateRange]);
+
   if (logs.length === 0 && purchases.length === 0) {
     return (
       <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
@@ -370,6 +404,31 @@ export const Reports: React.FC<ReportsProps> = ({ logs, purchases = [], maintena
 
   return (
     <div className="space-y-6">
+      {/* Date Filters */}
+      <ReportsFilters
+        selectedPreset={datePreset}
+        onPresetChange={setDatePreset}
+        dateRange={dateRange}
+      />
+
+      {/* Insights Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <SavingsInsights logs={logs} purchases={purchases} />
+        <YearEndProjection logs={logs} purchases={purchases} />
+      </div>
+
+      {/* Anomaly Detection */}
+      <AnomalyDetection logs={logs} purchases={purchases} />
+
+      {/* Analytics Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <DayOfWeekAnalysis logs={filteredLogs} purchases={filteredPurchases} dateRange={dateRange || undefined} />
+        <StationPriceComparison logs={filteredLogs} purchases={filteredPurchases} />
+      </div>
+
+      {/* Seasonal Analysis */}
+      <SeasonalAnalysis logs={logs} purchases={purchases} />
+
       {/* Best/Worst Cards */}
       {stats?.bestLog && stats?.worstLog && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
