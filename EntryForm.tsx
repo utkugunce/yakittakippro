@@ -28,6 +28,7 @@ export const EntryForm: React.FC<EntryFormProps> = ({ logs, onAdd, onUpdate, onI
   const [currentOdometer, setCurrentOdometer] = useState<string>('');
   const [dailyDistance, setDailyDistance] = useState<string>('');
   const [avgConsumption, setAvgConsumption] = useState<string>('');
+  const [avgSpeed, setAvgSpeed] = useState<string>('');
   const [fuelPrice, setFuelPrice] = useState<string>('');
   const [fuelStation, setFuelStation] = useState<string>('');
   const [isRefuelDay, setIsRefuelDay] = useState(false);
@@ -83,6 +84,7 @@ export const EntryForm: React.FC<EntryFormProps> = ({ logs, onAdd, onUpdate, onI
       setCurrentOdometer(editingLog.currentOdometer.toString());
       setDailyDistance(editingLog.dailyDistance.toString());
       setAvgConsumption(editingLog.avgConsumption.toString());
+      setAvgSpeed(editingLog.avgSpeed?.toString() || '');
       setFuelPrice(editingLog.fuelPrice.toString());
       setFuelStation(editingLog.fuelStation || '');
       setIsRefuelDay(editingLog.isRefuelDay);
@@ -152,6 +154,7 @@ export const EntryForm: React.FC<EntryFormProps> = ({ logs, onAdd, onUpdate, onI
 
     setDailyDistance('');
     setAvgConsumption('');
+    setAvgSpeed('');
 
     if (lastFuelPrice > 0) setFuelPrice(lastFuelPrice.toString());
     else setFuelPrice('');
@@ -197,6 +200,7 @@ export const EntryForm: React.FC<EntryFormProps> = ({ logs, onAdd, onUpdate, onI
       currentOdometer: currOdo,
       dailyDistance: dist,
       avgConsumption: cons,
+      avgSpeed: avgSpeed ? parseFloat(avgSpeed) : undefined,
       isRefuelDay,
       fuelPrice: price,
       dailyFuelConsumed,
@@ -217,6 +221,7 @@ export const EntryForm: React.FC<EntryFormProps> = ({ logs, onAdd, onUpdate, onI
     // Reset form but keep smart defaults
     setDailyDistance('');
     setAvgConsumption('');
+    setAvgSpeed('');
     setCurrentOdometer(''); // Will trigger useEffect to reset to new Last Odometer
     setFuelStation('');
     setIsRefuelDay(false);
@@ -263,6 +268,7 @@ export const EntryForm: React.FC<EntryFormProps> = ({ logs, onAdd, onUpdate, onI
             if (data.odometer) setCurrentOdometer(data.odometer.toString());
             if (data.consumption) setAvgConsumption(data.consumption.toString());
             if (data.distance) setDailyDistance(data.distance.toString());
+            if (data.avgSpeed) setAvgSpeed(data.avgSpeed.toString());
           }}
           onReceiptData={(data) => {
             if (data.fuelPrice) setFuelPrice(data.fuelPrice.toString());
@@ -345,6 +351,22 @@ export const EntryForm: React.FC<EntryFormProps> = ({ logs, onAdd, onUpdate, onI
               className={inputBaseClasses}
             />
           </div>
+        </div>
+
+        <div>
+          <label className={labelClasses}>Ort. Hız (km/h)</label>
+          <div className="relative">
+            <Gauge className="absolute left-3 top-3.5 w-5 h-5 text-gray-500" />
+            <input
+              type="number"
+              step="0.1"
+              placeholder="Örn: 45"
+              value={avgSpeed}
+              onChange={(e) => setAvgSpeed(e.target.value)}
+              className={inputBaseClasses}
+            />
+          </div>
+          <p className="text-xs text-gray-400 mt-1">*Opsiyonel - Fotoğraftan otomatik alınabilir</p>
         </div>
 
         <div>

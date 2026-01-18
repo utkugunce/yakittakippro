@@ -7,6 +7,7 @@ interface DashboardData {
     odometer: number | null;
     consumption: number | null;
     distance: number | null;
+    avgSpeed: number | null;
 }
 
 interface ReceiptData {
@@ -29,15 +30,16 @@ Ekranda "Tüketim" veya "L/100" yazan değeri bul.
 SADECE JSON formatında döndür:
 {"consumption": number veya null, "odometer": number veya null, "distance": null}`;
     } else if (mode === 'distance') {
-        prompt = `Bu araç gösterge paneli fotoğrafından SADECE şu bilgiyi çıkar:
+        prompt = `Bu araç gösterge paneli fotoğrafından şu bilgileri çıkar:
 - Yapılan mesafe / trip distance (km olarak)
+- Ortalama hız (km/h olarak)
 - Kilometre sayacı (varsa)
 
-Ekranda "Yol bilgisi" veya yapılan km değerini bul.
+Ekranda "Yol bilgisi" veya yapılan km değerini ve ortalama hız (Ø km/h) değerini bul.
 ÖNEMLİ: Sadece net olarak okuduğun değerleri yaz.
 
 SADECE JSON formatında döndür:
-{"distance": number veya null, "odometer": number veya null, "consumption": null}`;
+{"distance": number veya null, "avgSpeed": number veya null, "odometer": number veya null, "consumption": null}`;
     } else {
         prompt = `Bu araç gösterge paneli fotoğrafından şu bilgileri çıkar:
 - Kilometre sayacı (toplam km)

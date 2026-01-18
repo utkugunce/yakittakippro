@@ -6,7 +6,7 @@ type ScanType = 'receipt' | 'dashboard' | null;
 type DashboardStep = 'consumption' | 'distance' | 'done';
 
 interface PhotoScannerProps {
-    onDashboardData?: (data: { odometer?: number, consumption?: number, distance?: number }) => void;
+    onDashboardData?: (data: { odometer?: number, consumption?: number, distance?: number, avgSpeed?: number }) => void;
     onReceiptData?: (data: { fuelPrice?: number, total?: number, liters?: number, date?: string }) => void;
     onClose: () => void;
 }
@@ -15,6 +15,7 @@ interface DashboardResults {
     consumption?: number;
     distance?: number;
     odometer?: number;
+    avgSpeed?: number;
 }
 
 export const PhotoScanner: React.FC<PhotoScannerProps> = ({ onDashboardData, onReceiptData, onClose }) => {
@@ -73,6 +74,7 @@ export const PhotoScanner: React.FC<PhotoScannerProps> = ({ onDashboardData, onR
                     setDashboardResults(prev => ({
                         ...prev,
                         distance: result.distance ?? undefined,
+                        avgSpeed: result.avgSpeed ?? undefined,
                         odometer: result.odometer ?? prev.odometer ?? undefined
                     }));
                     setDashboardStep('done');
@@ -107,7 +109,8 @@ export const PhotoScanner: React.FC<PhotoScannerProps> = ({ onDashboardData, onR
             onDashboardData({
                 odometer: dashboardResults.odometer,
                 consumption: dashboardResults.consumption,
-                distance: dashboardResults.distance
+                distance: dashboardResults.distance,
+                avgSpeed: dashboardResults.avgSpeed
             });
         }
         onClose();
@@ -371,6 +374,14 @@ export const PhotoScanner: React.FC<PhotoScannerProps> = ({ onDashboardData, onR
                                             {dashboardResults.distance ? `${dashboardResults.distance} km` : '-'}
                                         </span>
                                     </div>
+                                    {dashboardResults.avgSpeed && (
+                                        <div className="bg-gray-800 rounded-xl p-4 flex justify-between items-center">
+                                            <span className="text-gray-400">Ort. Hız</span>
+                                            <span className="text-white font-bold text-lg">
+                                                {dashboardResults.avgSpeed} km/h
+                                            </span>
+                                        </div>
+                                    )}
                                     {dashboardResults.odometer && (
                                         <div className="bg-gray-800 rounded-xl p-4 flex justify-between items-center">
                                             <span className="text-gray-400">Kilometre</span>

@@ -5,6 +5,7 @@ export interface DailyLog {
   currentOdometer: number; // Güncel KM
   dailyDistance: number;   // O gün yapılan KM
   avgConsumption: number;  // Ortalama Tüketim (L/100km)
+  avgSpeed?: number;       // Ortalama Hız (km/h)
   isRefuelDay: boolean;    // Yakıt alındı mı?
   fuelPrice: number;       // Benzin Fiyatı (TL/L)
   fuelStation?: string;    // Yakıt İstasyonu / Marka (Shell, Opet vb.)
