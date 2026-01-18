@@ -17,7 +17,9 @@ import {
   YearEndProjection,
   ReportsFilters,
   getDateRangeFromPreset,
-  DateRangePreset
+  DateRangePreset,
+  MonthlyDrilldown,
+  ShareableSummary
 } from '@/src/features/reports';
 
 interface ReportsProps {
@@ -375,6 +377,9 @@ export const Reports: React.FC<ReportsProps> = ({ logs, purchases = [], maintena
   const [datePreset, setDatePreset] = useState<DateRangePreset>('all');
   const dateRange = useMemo(() => getDateRangeFromPreset(datePreset), [datePreset]);
 
+  // Drilldown state
+  const [drilldownMonth, setDrilldownMonth] = useState<string | null>(null);
+
   // Filter data based on date range
   const filteredLogs = useMemo(() => {
     if (!dateRange) return logs;
@@ -717,7 +722,12 @@ export const Reports: React.FC<ReportsProps> = ({ logs, purchases = [], maintena
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
               {stats?.monthlyData.map((month) => (
-                <tr key={month.month} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                <tr
+                  key={month.month}
+                  onClick={() => setDrilldownMonth(month.month)}
+                  className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors cursor-pointer"
+                  title="Detayları görmek için tıklayın"
+                >
                   <td className="px-4 py-3 font-medium text-gray-900 dark:text-white">
                     {new Date(month.month + '-01').toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' })}
                   </td>
@@ -745,7 +755,22 @@ export const Reports: React.FC<ReportsProps> = ({ logs, purchases = [], maintena
             </tbody>
           </table>
         </div>
+        <p className="px-4 pb-3 text-xs text-gray-400 dark:text-gray-500 text-center">Detay için aya tıklayın</p>
       </div>
+
+      {/* Shareable Summary */}
+      <ShareableSummary logs={logs} purchases={purchases} />
+
+      {/* Monthly Drilldown Modal */}
+      {drilldownMonth && (
+        <MonthlyDrilldown
+          isOpen={!!drilldownMonth}
+          onClose={() => setDrilldownMonth(null)}
+          monthKey={drilldownMonth}
+          logs={logs}
+          purchases={purchases}
+        />
+      )}
     </div>
   );
 };
