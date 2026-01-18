@@ -274,9 +274,13 @@ export default function App() {
     const totalCost = filteredLogs.reduce((sum, log) => sum + log.dailyCost, 0);
 
     // Calculate weighted average consumption (Total Fuel / Total Dist)
-    const totalFuelConsumedLogs = filteredLogs.reduce((sum, log) => sum + log.dailyFuelConsumed, 0);
-    const avgConsumption = totalDistance > 0
-      ? (totalFuelConsumedLogs / totalDistance) * 100
+    // Only verify logs that have consumption data
+    const validLogs = filteredLogs.filter(l => l.dailyFuelConsumed > 0 && l.dailyDistance > 0);
+    const totalFuelConsumedLogs = validLogs.reduce((sum, log) => sum + log.dailyFuelConsumed, 0);
+    const totalDistLogs = validLogs.reduce((sum, log) => sum + log.dailyDistance, 0);
+
+    const avgConsumption = totalDistLogs > 0
+      ? (totalFuelConsumedLogs / totalDistLogs) * 100
       : 0;
 
     // Last fuel price (latest of Logs or Purchases)

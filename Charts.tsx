@@ -411,8 +411,8 @@ const BrandCharts: React.FC<{ logs: DailyLog[], purchases: FuelPurchase[] }> = (
 
     // Process Logs
     logs.forEach(log => {
-      // Skip logs with no distance to avoid skewing efficiency
-      if (!log.fuelStation || log.dailyDistance <= 0) return;
+      // Skip logs with no distance or no fuel (to avoid 0 efficiency)
+      if (!log.fuelStation || log.dailyDistance <= 0 || log.dailyFuelConsumed <= 0) return;
 
       const brand = log.fuelStation;
       if (!stats[brand]) stats[brand] = { totalCost: 0, totalDist: 0, totalFuel: 0, count: 0 };
@@ -483,7 +483,7 @@ const BrandCharts: React.FC<{ logs: DailyLog[], purchases: FuelPurchase[] }> = (
           </div>
           <div className="h-[250px] w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={brandData.filter(d => d.efficiency > 0).sort((a, b) => a.efficiency - b.efficiency)} layout="vertical">
+              <BarChart data={brandData.filter(d => d.efficiency > 1).sort((a, b) => a.efficiency - b.efficiency)} layout="vertical">
                 <CartesianGrid strokeDasharray="3 3" horizontal={false} strokeOpacity={0.1} />
                 <XAxis type="number" domain={[0, 'auto']} hide />
                 <YAxis dataKey="name" type="category" width={80} tick={{ fontSize: 11 }} />
