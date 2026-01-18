@@ -66,7 +66,7 @@ export const DashboardStatsCard: React.FC<Props> = ({ stats, alerts, currentOdom
         </div>
       )}
 
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
         {/* Total Distance */}
         <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 transition-colors">
           <div className="flex items-center space-x-2 text-primary-600 dark:text-primary-400 mb-2">
@@ -83,6 +83,24 @@ export const DashboardStatsCard: React.FC<Props> = ({ stats, alerts, currentOdom
             <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Toplam Harcama</h3>
           </div>
           <p className="text-xl font-bold text-gray-900 dark:text-white">₺{stats.totalCost.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</p>
+        </div>
+
+        {/* Total Fuel */}
+        <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 transition-colors">
+          <div className="flex items-center space-x-2 text-blue-600 dark:text-blue-400 mb-2">
+            <Fuel className="w-4 h-4" />
+            <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Toplam Yakıt</h3>
+          </div>
+          <p className="text-xl font-bold text-gray-900 dark:text-white">{stats.totalLiters.toLocaleString('tr-TR', { maximumFractionDigits: 0 })} <span className="text-xs font-normal text-gray-500 dark:text-gray-400">L</span></p>
+        </div>
+
+        {/* Cost Per Km */}
+        <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 transition-colors">
+          <div className="flex items-center space-x-2 text-purple-600 dark:text-purple-400 mb-2">
+            <TrendingUp className="w-4 h-4" />
+            <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">KM Başına</h3>
+          </div>
+          <p className="text-xl font-bold text-gray-900 dark:text-white">₺{stats.avgCostPerKm.toFixed(2)}</p>
         </div>
 
         {/* Average Consumption */}

@@ -268,7 +268,7 @@ export default function App() {
       ? fuelPurchases
       : fuelPurchases.filter(p => new Date(p.date).getFullYear().toString() === yearFilter);
 
-    if (filteredLogs.length === 0 && filteredPurchases.length === 0) return { totalDistance: 0, totalCost: 0, avgCostPerKm: 0, avgConsumption: 0, lastFuelPrice: 0 };
+    if (filteredLogs.length === 0 && filteredPurchases.length === 0) return { totalDistance: 0, totalCost: 0, avgCostPerKm: 0, avgConsumption: 0, lastFuelPrice: 0, totalLiters: 0 };
 
     const totalDistance = filteredLogs.reduce((sum, log) => sum + log.dailyDistance, 0);
     const totalCost = filteredLogs.reduce((sum, log) => sum + log.dailyCost, 0);
@@ -320,6 +320,7 @@ export default function App() {
       avgCostPerKm: totalDistance > 0 ? totalCost / totalDistance : 0,
       avgConsumption,
       lastFuelPrice,
+      totalLiters,
       weightedAvgPrice
     };
   }, [logs, fuelPurchases, yearFilter]);
@@ -345,7 +346,8 @@ export default function App() {
           const due = new Date(item.dueDate);
           const diffTime = due.getTime() - today.getTime();
           const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-          if (diffDays <= (item.notifyBeforeDays || 15)) isDue = true;
+          // Bakım uyarılarını 15 günle sınırla (eski verilerde 30 olsa bile)
+          if (diffDays <= Math.min((item.notifyBeforeDays || 15), 15)) isDue = true;
         }
       }
 
@@ -521,7 +523,18 @@ export default function App() {
 
             {/* Analytics Section */}
             <StationAnalysis fuelPurchases={fuelPurchases} />
+
+            {/* AI Predictions */}
+            <AIPredictions logs={logs} purchases={fuelPurchases} maintenanceItems={maintenanceItems} parts={vehicleParts} currentOdometer={lastOdometer} />
           </div>
+        )}
+
+        {activeTab === 'charts' && (
+          <ChartsPage
+            logs={logs}
+            purchases={fuelPurchases}
+            yearFilter={yearFilter}
+          />
         )}
 
         {activeTab === 'history' && (
