@@ -26,7 +26,7 @@ const containerStyle = {
 
 const defaultCenter = { lat: 39.9334, lng: 32.8597 }; // Ankara
 
-const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
+const GOOGLE_MAPS_API_KEY = (import.meta as any).env?.VITE_GOOGLE_MAPS_API_KEY || '';
 
 export const FuelMap: React.FC<FuelMapProps> = ({ logs, purchases = [] }) => {
     const [showMap, setShowMap] = useState(false);

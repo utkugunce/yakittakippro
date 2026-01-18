@@ -419,6 +419,8 @@ export default function App() {
               <select
                 value={selectedVehicleId || ''}
                 onChange={(e) => setSelectedVehicleId(e.target.value)}
+                title="Araç Seçimi"
+                aria-label="Araç Seçimi"
                 className="px-3 py-2 text-sm bg-gray-100 dark:bg-gray-700 border-0 rounded-lg text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-primary-500"
               >
                 {vehicles.map(v => (
@@ -773,7 +775,7 @@ export default function App() {
               <h2 className="text-lg font-bold text-gray-800 dark:text-white">
                 {editingLog ? 'Kaydı Düzenle' : 'Yeni Kayıt Ekle'}
               </h2>
-              <button onClick={() => { setShowEntryModal(false); setEditingLog(null); }} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-1">
+              <button onClick={() => { setShowEntryModal(false); setEditingLog(null); }} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-1" title="Kapat" aria-label="Kapat">
                 <X className="w-6 h-6" />
               </button>
             </div>
@@ -809,7 +811,7 @@ export default function App() {
                   {editingFuelPurchase ? 'Yakıt Alımını Düzenle' : 'Yakıt Alımı'}
                 </h2>
               </div>
-              <button onClick={() => { setShowFuelPurchaseModal(false); setEditingFuelPurchase(null); }} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-1">
+              <button onClick={() => { setShowFuelPurchaseModal(false); setEditingFuelPurchase(null); }} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-1" title="Kapat" aria-label="Kapat">
                 <X className="w-6 h-6" />
               </button>
             </div>
