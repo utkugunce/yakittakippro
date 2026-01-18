@@ -44,7 +44,7 @@ export const StationAnalysis: React.FC<StationAnalysisProps> = ({ fuelPurchases 
             stats[name].visitCount++;
         });
 
-        // Calculate averages
+        // Calculate weighted averages (Total Spent / Total Liters)
         Object.values(stats).forEach(s => {
             s.avgPrice = s.totalLiters > 0 ? s.totalSpent / s.totalLiters : 0;
         });

@@ -16,16 +16,15 @@ import { AIPredictions } from './AIPredictions';
 import { ThemeSettings, AccentColor } from './ThemeSettings';
 import { FuelPurchaseForm, FuelPurchase } from './FuelPurchaseForm';
 import { FuelPurchaseHistory } from './FuelPurchaseHistory';
-import { Car, LayoutDashboard, History, FileText, Moon, Sun, Settings, Wrench, Plus, X, Fuel } from 'lucide-react';
+import { Car, LayoutDashboard, History, FileText, Moon, Sun, Settings, Wrench, Plus, X, Fuel, BarChart3 } from 'lucide-react';
 import { PwaReloadPrompt } from './PwaReloadPrompt';
 import { SuccessPopup } from './SuccessPopup';
 
 
 
 // New feature imports
-import { BudgetTracker } from '@/src/features/budget';
-import { StationAnalysis, CarbonFootprint } from '@/src/features/analytics';
-import { ShareableStatsCard } from '@/src/features/sharing';
+import { ChartsPage } from '@/src/features/charts/ChartsPage';
+import { StationAnalysis } from '@/src/features/analytics';
 
 const LOCAL_STORAGE_KEY = 'yakit_takip_logs_v1';
 const MAINTENANCE_STORAGE_KEY = 'yakit_takip_maintenance_v1';
@@ -39,7 +38,7 @@ export default function App() {
   const [vehicleParts, setVehicleParts] = useState<VehiclePart[]>([]);
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'history' | 'reports' | 'maintenance' | 'settings'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'history' | 'charts' | 'reports' | 'maintenance' | 'settings'>('dashboard');
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [accentColor, setAccentColor] = useState<AccentColor>('blue');
   const [yearFilter, setYearFilter] = useState<'2026' | '2025' | 'all'>('all');
@@ -300,12 +299,28 @@ export default function App() {
       lastFuelPrice = lastPurchaseAll.pricePerLiter;
     }
 
+    // Weighted Average Calculation
+    let weightedAvgPrice = 0;
+    const allPurchases = yearFilter === 'all'
+      ? fuelPurchases
+      : fuelPurchases.filter(p => new Date(p.date).getFullYear().toString() === yearFilter);
+
+    // Also include Logs that have fuel info if needed, but Purchases are more reliable for price
+    // For consistency with StationAnalysis, let's use purchases for this calc
+    const totalSpent = allPurchases.reduce((sum, p) => sum + p.totalAmount, 0);
+    const totalLiters = allPurchases.reduce((sum, p) => sum + p.liters, 0);
+
+    if (totalLiters > 0) {
+      weightedAvgPrice = totalSpent / totalLiters;
+    }
+
     return {
       totalDistance,
       totalCost,
       avgCostPerKm: totalDistance > 0 ? totalCost / totalDistance : 0,
       avgConsumption,
-      lastFuelPrice
+      lastFuelPrice,
+      weightedAvgPrice
     };
   }, [logs, fuelPurchases, yearFilter]);
 
@@ -330,7 +345,7 @@ export default function App() {
           const due = new Date(item.dueDate);
           const diffTime = due.getTime() - today.getTime();
           const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-          if (diffDays <= (item.notifyBeforeDays || 30)) isDue = true;
+          if (diffDays <= (item.notifyBeforeDays || 15)) isDue = true;
         }
       }
 
@@ -428,6 +443,16 @@ export default function App() {
             <span>Panel & Giriş</span>
           </button>
           <button
+            onClick={() => setActiveTab('charts')}
+            className={`flex-1 flex items-center justify-center py-2.5 text-sm font-medium rounded-lg transition-all ${activeTab === 'charts'
+              ? 'bg-white dark:bg-gray-700 text-indigo-700 dark:text-indigo-300 shadow-sm'
+              : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+              }`}
+          >
+            <BarChart3 className="w-4 h-4 mr-2" />
+            Grafikler
+          </button>
+          <button
             onClick={() => setActiveTab('history')}
             className={`flex-1 flex items-center justify-center py-2.5 text-sm font-medium rounded-lg transition-all ${activeTab === 'history'
               ? 'bg-white dark:bg-gray-700 text-blue-700 dark:text-blue-300 shadow-sm'
@@ -495,18 +520,7 @@ export default function App() {
             <WeeklySummary logs={logs} fuelPurchases={fuelPurchases} />
 
             {/* Analytics Section */}
-            {/* Budget Tracker */}
-            <BudgetTracker fuelPurchases={fuelPurchases} />
-
-            {/* Shareable Stats Card */}
-            <ShareableStatsCard
-              stats={{
-                totalDistance: stats.totalDistance,
-                totalCost: stats.totalCost,
-                avgConsumption: stats.avgConsumption,
-                totalFuelPurchases: fuelPurchases.length
-              }}
-            />
+            <StationAnalysis fuelPurchases={fuelPurchases} />
           </div>
         )}
 
@@ -643,6 +657,10 @@ export default function App() {
           <button onClick={() => setActiveTab('history')} className={`flex flex-col items-center p-2 rounded-xl transition-colors ${activeTab === 'history' ? 'text-primary-600 dark:text-primary-400' : 'text-gray-500 dark:text-gray-400'}`}>
             <History className="w-6 h-6 mb-1" />
             <span className="text-[10px] font-medium">Geçmiş</span>
+          </button>
+          <button onClick={() => setActiveTab('charts')} className={`flex flex-col items-center p-2 rounded-xl transition-colors ${activeTab === 'charts' ? 'text-primary-600 dark:text-primary-400' : 'text-gray-500 dark:text-gray-400'}`}>
+            <BarChart3 className="w-6 h-6 mb-1" />
+            <span className="text-[10px] font-medium">Grafik</span>
           </button>
           <button onClick={() => setActiveTab('maintenance')} className={`flex flex-col items-center p-2 rounded-xl transition-colors ${activeTab === 'maintenance' ? 'text-primary-600 dark:text-primary-400' : 'text-gray-500 dark:text-gray-400'}`}>
             <Wrench className="w-6 h-6 mb-1" />

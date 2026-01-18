@@ -94,22 +94,20 @@ export const DashboardStatsCard: React.FC<Props> = ({ stats, alerts, currentOdom
           <p className="text-xl font-bold text-gray-900 dark:text-white">{stats.avgConsumption.toFixed(1)} <span className="text-xs font-normal text-gray-500 dark:text-gray-400">L/100km</span></p>
         </div>
 
-        {/* Avg Cost Per KM */}
-        <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 transition-colors">
-          <div className="flex items-center space-x-2 text-purple-600 dark:text-purple-400 mb-2">
-            <TrendingUp className="w-4 h-4" />
-            <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Km Başına</h3>
-          </div>
-          <p className="text-xl font-bold text-gray-900 dark:text-white">₺{stats.avgCostPerKm.toFixed(2)}</p>
-        </div>
-
         {/* Last Fuel Price */}
         <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 transition-colors">
           <div className="flex items-center space-x-2 text-amber-600 dark:text-amber-500 mb-2">
             <Droplets className="w-4 h-4" />
             <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Son Benzin</h3>
           </div>
-          <p className="text-xl font-bold text-gray-900 dark:text-white">₺{stats.lastFuelPrice.toFixed(2)}</p>
+          <div className="flex flex-col">
+            <p className="text-xl font-bold text-gray-900 dark:text-white">₺{stats.lastFuelPrice.toFixed(2)}</p>
+            {stats.weightedAvgPrice && (
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                Ort: ₺{stats.weightedAvgPrice.toFixed(2)}
+              </p>
+            )}
+          </div>
         </div>
       </div>
     </div>

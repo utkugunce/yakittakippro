@@ -37,6 +37,7 @@ export interface DashboardStats {
   avgCostPerKm: number;
   avgConsumption: number;  // Ortalama Yakıt Tüketimi (L/100km)
   lastFuelPrice: number;
+  weightedAvgPrice?: number; // Ağırlıklı Ortalama Yakıt Fiyatı
 }
 
 export interface MaintenanceItem {

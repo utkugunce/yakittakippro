@@ -151,8 +151,35 @@ export const AIPredictions: React.FC<AIPredictionsProps> = ({ logs, maintenanceI
         // Weekly change calculation
         const prev7Days = sortedLogs.slice(7, 14);
         const prev7Cost = prev7Days.reduce((sum, l) => sum + l.dailyCost, 0);
-        const last7Cost = last7Days.reduce((sum, l) => sum + l.dailyCost, 0);
+        const last7Cost = sortedLogs.slice(0, 7).reduce((sum, l) => sum + l.dailyCost, 0);
         const weeklyChange = prev7Cost > 0 ? ((last7Cost - prev7Cost) / prev7Cost) * 100 : 0;
+
+        // 7. Manufacturer/Brand Analysis for Tips
+        const brandStats: Record<string, { totalAmount: number, totalLiters: number }> = {};
+        logs.forEach(l => {
+            if (l.fuelStation && l.dailyFuelConsumed > 0) {
+                if (!brandStats[l.fuelStation]) brandStats[l.fuelStation] = { totalAmount: 0, totalLiters: 0 };
+                brandStats[l.fuelStation].totalAmount += l.dailyCost;
+                brandStats[l.fuelStation].totalLiters += l.dailyFuelConsumed;
+            }
+        });
+
+        // Calculate avg price per brand
+        const brands = Object.keys(brandStats).map(b => {
+            const stats = brandStats[b];
+            return { name: b, avgPrice: stats.totalLiters > 0 ? stats.totalAmount / stats.totalLiters : 0 };
+        }).filter(b => b.avgPrice > 0);
+
+        if (brands.length > 1) {
+            brands.sort((a, b) => a.avgPrice - b.avgPrice);
+            const cheapest = brands[0];
+            const mostExpensive = brands[brands.length - 1];
+
+            if (mostExpensive.avgPrice > cheapest.avgPrice * 1.05) { // 5% difference
+                const diff = mostExpensive.avgPrice - cheapest.avgPrice;
+                savingsTips.push(`🏷️ ${cheapest.name} istasyonları ${mostExpensive.name}'e göre ortalama ₺${diff.toFixed(2)}/L daha ucuz!`);
+            }
+        }
 
         return {
             avgDailyKm,
@@ -170,10 +197,15 @@ export const AIPredictions: React.FC<AIPredictionsProps> = ({ logs, maintenanceI
     if (!predictions) return null;
 
     return (
-        <div className="bg-gradient-to-br from-primary-50 to-primary-100 dark:from-gray-800 dark:to-gray-900 p-5 rounded-2xl border border-primary-100 dark:border-primary-900 shadow-sm animate-in fade-in duration-700">
+        <div className="bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-gray-800 dark:to-gray-900 p-5 rounded-2xl border border-indigo-100 dark:border-gray-700 shadow-sm animate-in fade-in duration-700">
             <div className="flex items-center gap-2 mb-4">
-                <Brain className="w-5 h-5 text-primary-600 dark:text-primary-400" />
-                <h3 className="text-lg font-bold text-gray-800 dark:text-white">AI Asistanı & Tahminler</h3>
+                <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg">
+                    <Brain className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                </div>
+                <div>
+                    <h3 className="text-lg font-bold text-gray-800 dark:text-white">AI Asistanı</h3>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Akıllı analizler ve tahminler</p>
+                </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -190,9 +222,11 @@ export const AIPredictions: React.FC<AIPredictionsProps> = ({ logs, maintenanceI
                 </div>
 
                 {/* Maintenance/Part Prediction */}
-                <div className="bg-white/60 dark:bg-gray-800/60 p-3 rounded-xl border border-white/50 dark:border-gray-700 backdrop-blur-sm">
+                <div className={`p-3 rounded-xl border backdrop-blur-sm ${predictions.nextService?.type === 'maintenance' && new Date(predictions.nextService.date).getTime() - new Date().getTime() < 7 * 24 * 60 * 60 * 1000
+                    ? 'bg-red-50/80 dark:bg-red-900/20 border-red-100 dark:border-red-800'
+                    : 'bg-white/60 dark:bg-gray-800/60 border-white/50 dark:border-gray-700'}`}>
                     <div className="flex items-center gap-2 mb-1 text-xs font-bold text-gray-500 uppercase">
-                        <AlertTriangle className="w-3 h-3" />
+                        <AlertTriangle className={`w-3 h-3 ${predictions.nextService?.type === 'maintenance' ? 'text-orange-500' : 'text-gray-500'}`} />
                         Sıradaki İşlem
                     </div>
                     {predictions.nextService ? (
@@ -266,12 +300,13 @@ export const AIPredictions: React.FC<AIPredictionsProps> = ({ logs, maintenanceI
             {predictions.savingsTips.length > 0 && (
                 <div className="mt-4 p-3 bg-amber-50 dark:bg-amber-900/20 rounded-xl border border-amber-200 dark:border-amber-800">
                     <div className="flex items-center gap-2 mb-2">
-                        <span className="text-amber-600 dark:text-amber-400 text-sm font-bold">💡 Tasarruf Önerileri</span>
+                        <span className="text-amber-600 dark:text-amber-400 text-sm font-bold">💡 Akıllı Öneriler</span>
                     </div>
-                    <div className="space-y-1.5">
-                        {predictions.savingsTips.slice(0, 3).map((tip, i) => (
-                            <p key={i} className="text-xs text-amber-800 dark:text-amber-200">
-                                {tip}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        {predictions.savingsTips.slice(0, 4).map((tip, i) => (
+                            <p key={i} className="text-xs text-amber-800 dark:text-amber-200 flex items-start gap-1.5">
+                                <span className="mt-0.5">•</span>
+                                <span>{tip}</span>
                             </p>
                         ))}
                     </div>
