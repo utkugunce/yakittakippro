@@ -161,38 +161,38 @@ export const WeeklySummary: React.FC<WeeklySummaryProps> = ({ logs, fuelPurchase
             </div>
 
             {/* Summary Cards - Always Visible */}
-            <div className="px-4 pb-4 grid grid-cols-2 gap-3">
+            <div className="px-3 sm:px-4 pb-4 grid grid-cols-2 gap-2 sm:gap-3">
                 {/* This Week Card */}
-                <div className="bg-white/60 dark:bg-gray-800/60 rounded-xl p-4 backdrop-blur-sm border border-white/20 dark:border-gray-700/30">
-                    <div className="flex items-center justify-between mb-3">
-                        <span className="text-xs font-semibold text-violet-600 dark:text-violet-400 uppercase tracking-wide">Bu Hafta</span>
-                        <Calendar className="w-4 h-4 text-violet-500" />
+                <div className="bg-white/60 dark:bg-gray-800/60 rounded-xl p-3 sm:p-4 backdrop-blur-sm border border-white/20 dark:border-gray-700/30 min-w-0">
+                    <div className="flex items-center justify-between mb-2 sm:mb-3">
+                        <span className="text-[10px] sm:text-xs font-semibold text-violet-600 dark:text-violet-400 uppercase tracking-wide">Bu Hafta</span>
+                        <Calendar className="w-3 h-3 sm:w-4 sm:h-4 text-violet-500 flex-shrink-0" />
                     </div>
-                    <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                            <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center">
-                                <Route className="w-3.5 h-3.5 mr-1.5 text-blue-500" /> Mesafe
+                    <div className="space-y-1.5 sm:space-y-2">
+                        <div className="flex items-center justify-between gap-1">
+                            <span className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 flex items-center flex-shrink-0">
+                                <Route className="w-3 h-3 mr-1 text-blue-500" />
                             </span>
-                            <span className="text-sm font-bold text-gray-800 dark:text-white">
+                            <span className="text-xs sm:text-sm font-bold text-gray-800 dark:text-white truncate">
                                 {summary.thisWeek.distance.toLocaleString('tr-TR')} km
                             </span>
                         </div>
-                        <div className="flex items-center justify-between">
-                            <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center">
-                                <Wallet className="w-3.5 h-3.5 mr-1.5 text-emerald-500" /> Harcama
+                        <div className="flex items-center justify-between gap-1">
+                            <span className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 flex items-center flex-shrink-0">
+                                <Wallet className="w-3 h-3 mr-1 text-emerald-500" />
                             </span>
-                            <div className="flex items-center space-x-2">
-                                <span className="text-sm font-bold text-gray-800 dark:text-white">
+                            <div className="flex items-center gap-1 min-w-0">
+                                <span className="text-xs sm:text-sm font-bold text-gray-800 dark:text-white truncate">
                                     ₺{summary.thisWeek.cost.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}
                                 </span>
                                 {renderChange(summary.thisWeek.cost, summary.lastWeek.cost, true)}
                             </div>
                         </div>
-                        <div className="flex items-center justify-between">
-                            <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center">
-                                <Droplets className="w-3.5 h-3.5 mr-1.5 text-cyan-500" /> Yakıt
+                        <div className="flex items-center justify-between gap-1">
+                            <span className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 flex items-center flex-shrink-0">
+                                <Droplets className="w-3 h-3 mr-1 text-cyan-500" />
                             </span>
-                            <span className="text-sm font-bold text-gray-800 dark:text-white">
+                            <span className="text-xs sm:text-sm font-bold text-gray-800 dark:text-white truncate">
                                 {summary.thisWeek.fuel.toFixed(1)} L
                             </span>
                         </div>
@@ -200,36 +200,36 @@ export const WeeklySummary: React.FC<WeeklySummaryProps> = ({ logs, fuelPurchase
                 </div>
 
                 {/* This Month Card */}
-                <div className="bg-white/60 dark:bg-gray-800/60 rounded-xl p-4 backdrop-blur-sm border border-white/20 dark:border-gray-700/30">
-                    <div className="flex items-center justify-between mb-3">
-                        <span className="text-xs font-semibold text-purple-600 dark:text-purple-400 uppercase tracking-wide">Bu Ay</span>
-                        <Calendar className="w-4 h-4 text-purple-500" />
+                <div className="bg-white/60 dark:bg-gray-800/60 rounded-xl p-3 sm:p-4 backdrop-blur-sm border border-white/20 dark:border-gray-700/30 min-w-0">
+                    <div className="flex items-center justify-between mb-2 sm:mb-3">
+                        <span className="text-[10px] sm:text-xs font-semibold text-purple-600 dark:text-purple-400 uppercase tracking-wide">Bu Ay</span>
+                        <Calendar className="w-3 h-3 sm:w-4 sm:h-4 text-purple-500 flex-shrink-0" />
                     </div>
-                    <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                            <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center">
-                                <Route className="w-3.5 h-3.5 mr-1.5 text-blue-500" /> Mesafe
+                    <div className="space-y-1.5 sm:space-y-2">
+                        <div className="flex items-center justify-between gap-1">
+                            <span className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 flex items-center flex-shrink-0">
+                                <Route className="w-3 h-3 mr-1 text-blue-500" />
                             </span>
-                            <span className="text-sm font-bold text-gray-800 dark:text-white">
+                            <span className="text-xs sm:text-sm font-bold text-gray-800 dark:text-white truncate">
                                 {summary.thisMonth.distance.toLocaleString('tr-TR')} km
                             </span>
                         </div>
-                        <div className="flex items-center justify-between">
-                            <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center">
-                                <Wallet className="w-3.5 h-3.5 mr-1.5 text-emerald-500" /> Harcama
+                        <div className="flex items-center justify-between gap-1">
+                            <span className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 flex items-center flex-shrink-0">
+                                <Wallet className="w-3 h-3 mr-1 text-emerald-500" />
                             </span>
-                            <div className="flex items-center space-x-2">
-                                <span className="text-sm font-bold text-gray-800 dark:text-white">
+                            <div className="flex items-center gap-1 min-w-0">
+                                <span className="text-xs sm:text-sm font-bold text-gray-800 dark:text-white truncate">
                                     ₺{summary.thisMonth.cost.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}
                                 </span>
                                 {renderChange(summary.thisMonth.cost, summary.lastMonth.cost, true)}
                             </div>
                         </div>
-                        <div className="flex items-center justify-between">
-                            <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center">
-                                <Droplets className="w-3.5 h-3.5 mr-1.5 text-cyan-500" /> Yakıt
+                        <div className="flex items-center justify-between gap-1">
+                            <span className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 flex items-center flex-shrink-0">
+                                <Droplets className="w-3 h-3 mr-1 text-cyan-500" />
                             </span>
-                            <span className="text-sm font-bold text-gray-800 dark:text-white">
+                            <span className="text-xs sm:text-sm font-bold text-gray-800 dark:text-white truncate">
                                 {summary.thisMonth.fuel.toFixed(1)} L
                             </span>
                         </div>
@@ -239,33 +239,33 @@ export const WeeklySummary: React.FC<WeeklySummaryProps> = ({ logs, fuelPurchase
 
             {/* Expanded Details */}
             {isExpanded && (
-                <div className="px-4 pb-4 space-y-4 animate-in slide-in-from-top duration-300">
+                <div className="px-3 sm:px-4 pb-4 space-y-3 sm:space-y-4 animate-in slide-in-from-top duration-300">
                     {/* Comparison Stats */}
-                    <div className="bg-white/40 dark:bg-gray-800/40 rounded-xl p-4 backdrop-blur-sm">
-                        <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center">
-                            <Activity className="w-4 h-4 mr-2 text-violet-500" />
+                    <div className="bg-white/40 dark:bg-gray-800/40 rounded-xl p-3 sm:p-4 backdrop-blur-sm">
+                        <h4 className="text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 sm:mb-3 flex items-center">
+                            <Activity className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2 text-violet-500" />
                             Detaylı Karşılaştırma
                         </h4>
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-2 gap-2 sm:gap-4">
                             {/* Weekly Comparison */}
-                            <div className="space-y-2">
-                                <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Haftalık Karşılaştırma</p>
-                                <div className="space-y-1.5">
-                                    <div className="flex justify-between items-center text-xs">
-                                        <span className="text-gray-600 dark:text-gray-400">Geçen Hafta:</span>
-                                        <span className="font-medium text-gray-700 dark:text-gray-300">
+                            <div className="space-y-1.5 sm:space-y-2 min-w-0">
+                                <p className="text-[10px] sm:text-xs font-medium text-gray-500 dark:text-gray-400">Haftalık</p>
+                                <div className="space-y-1">
+                                    <div className="flex justify-between items-center text-[10px] sm:text-xs gap-1">
+                                        <span className="text-gray-600 dark:text-gray-400 truncate">Geçen:</span>
+                                        <span className="font-medium text-gray-700 dark:text-gray-300 truncate">
                                             ₺{summary.lastWeek.cost.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}
                                         </span>
                                     </div>
-                                    <div className="flex justify-between items-center text-xs">
-                                        <span className="text-gray-600 dark:text-gray-400">Bu Hafta:</span>
-                                        <span className="font-medium text-gray-700 dark:text-gray-300">
+                                    <div className="flex justify-between items-center text-[10px] sm:text-xs gap-1">
+                                        <span className="text-gray-600 dark:text-gray-400 truncate">Bu:</span>
+                                        <span className="font-medium text-gray-700 dark:text-gray-300 truncate">
                                             ₺{summary.thisWeek.cost.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}
                                         </span>
                                     </div>
-                                    <div className="flex justify-between items-center text-xs pt-1 border-t border-gray-200 dark:border-gray-700">
+                                    <div className="flex justify-between items-center text-[10px] sm:text-xs pt-1 border-t border-gray-200 dark:border-gray-700 gap-1">
                                         <span className="text-gray-600 dark:text-gray-400">Fark:</span>
-                                        <span className={`font-bold ${summary.thisWeek.cost > summary.lastWeek.cost ? 'text-red-500' : 'text-emerald-500'}`}>
+                                        <span className={`font-bold truncate ${summary.thisWeek.cost > summary.lastWeek.cost ? 'text-red-500' : 'text-emerald-500'}`}>
                                             {summary.thisWeek.cost > summary.lastWeek.cost ? '+' : ''}
                                             ₺{(summary.thisWeek.cost - summary.lastWeek.cost).toLocaleString('tr-TR', { maximumFractionDigits: 0 })}
                                         </span>
@@ -274,24 +274,24 @@ export const WeeklySummary: React.FC<WeeklySummaryProps> = ({ logs, fuelPurchase
                             </div>
 
                             {/* Monthly Comparison */}
-                            <div className="space-y-2">
-                                <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Aylık Karşılaştırma</p>
-                                <div className="space-y-1.5">
-                                    <div className="flex justify-between items-center text-xs">
-                                        <span className="text-gray-600 dark:text-gray-400">Geçen Ay:</span>
-                                        <span className="font-medium text-gray-700 dark:text-gray-300">
+                            <div className="space-y-1.5 sm:space-y-2 min-w-0">
+                                <p className="text-[10px] sm:text-xs font-medium text-gray-500 dark:text-gray-400">Aylık</p>
+                                <div className="space-y-1">
+                                    <div className="flex justify-between items-center text-[10px] sm:text-xs gap-1">
+                                        <span className="text-gray-600 dark:text-gray-400 truncate">Geçen:</span>
+                                        <span className="font-medium text-gray-700 dark:text-gray-300 truncate">
                                             ₺{summary.lastMonth.cost.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}
                                         </span>
                                     </div>
-                                    <div className="flex justify-between items-center text-xs">
-                                        <span className="text-gray-600 dark:text-gray-400">Bu Ay:</span>
-                                        <span className="font-medium text-gray-700 dark:text-gray-300">
+                                    <div className="flex justify-between items-center text-[10px] sm:text-xs gap-1">
+                                        <span className="text-gray-600 dark:text-gray-400 truncate">Bu:</span>
+                                        <span className="font-medium text-gray-700 dark:text-gray-300 truncate">
                                             ₺{summary.thisMonth.cost.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}
                                         </span>
                                     </div>
-                                    <div className="flex justify-between items-center text-xs pt-1 border-t border-gray-200 dark:border-gray-700">
+                                    <div className="flex justify-between items-center text-[10px] sm:text-xs pt-1 border-t border-gray-200 dark:border-gray-700 gap-1">
                                         <span className="text-gray-600 dark:text-gray-400">Fark:</span>
-                                        <span className={`font-bold ${summary.thisMonth.cost > summary.lastMonth.cost ? 'text-red-500' : 'text-emerald-500'}`}>
+                                        <span className={`font-bold truncate ${summary.thisMonth.cost > summary.lastMonth.cost ? 'text-red-500' : 'text-emerald-500'}`}>
                                             {summary.thisMonth.cost > summary.lastMonth.cost ? '+' : ''}
                                             ₺{(summary.thisMonth.cost - summary.lastMonth.cost).toLocaleString('tr-TR', { maximumFractionDigits: 0 })}
                                         </span>
@@ -302,29 +302,29 @@ export const WeeklySummary: React.FC<WeeklySummaryProps> = ({ logs, fuelPurchase
                     </div>
 
                     {/* Projections */}
-                    <div className="bg-gradient-to-r from-amber-500/10 to-orange-500/10 dark:from-amber-900/20 dark:to-orange-900/20 rounded-xl p-4 border border-amber-200/50 dark:border-amber-700/50">
-                        <h4 className="text-sm font-semibold text-amber-700 dark:text-amber-400 mb-3 flex items-center">
-                            <Target className="w-4 h-4 mr-2" />
+                    <div className="bg-gradient-to-r from-amber-500/10 to-orange-500/10 dark:from-amber-900/20 dark:to-orange-900/20 rounded-xl p-3 sm:p-4 border border-amber-200/50 dark:border-amber-700/50">
+                        <h4 className="text-xs sm:text-sm font-semibold text-amber-700 dark:text-amber-400 mb-2 sm:mb-3 flex items-center">
+                            <Target className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
                             Ay Sonu Tahmini
                         </h4>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Günlük Ortalama</p>
-                                <p className="text-lg font-bold text-gray-800 dark:text-white">
+                        <div className="grid grid-cols-2 gap-2 sm:gap-4">
+                            <div className="min-w-0">
+                                <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 mb-0.5 sm:mb-1">Günlük Ort.</p>
+                                <p className="text-sm sm:text-lg font-bold text-gray-800 dark:text-white truncate">
                                     ₺{monthlyAvgPerDay.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}
                                 </p>
                             </div>
-                            <div>
-                                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Ay Sonu Projeksiyonu</p>
-                                <p className="text-lg font-bold text-amber-600 dark:text-amber-400">
+                            <div className="min-w-0">
+                                <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 mb-0.5 sm:mb-1">Ay Sonu</p>
+                                <p className="text-sm sm:text-lg font-bold text-amber-600 dark:text-amber-400 truncate">
                                     ₺{monthlyProjection.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}
                                 </p>
                             </div>
                         </div>
                         {summary.lastMonth.cost > 0 && (
-                            <div className="mt-3 pt-3 border-t border-amber-200/50 dark:border-amber-700/50">
-                                <div className="flex items-center justify-between text-xs">
-                                    <span className="text-gray-600 dark:text-gray-400">Geçen aya göre tahmini değişim:</span>
+                            <div className="mt-2 sm:mt-3 pt-2 sm:pt-3 border-t border-amber-200/50 dark:border-amber-700/50">
+                                <div className="flex items-center justify-between text-[10px] sm:text-xs gap-1">
+                                    <span className="text-gray-600 dark:text-gray-400 truncate">Geçen aya göre:</span>
                                     <span className={`font-bold ${monthlyProjection > summary.lastMonth.cost ? 'text-red-500' : 'text-emerald-500'}`}>
                                         {monthlyProjection > summary.lastMonth.cost ? '+' : ''}
                                         {((monthlyProjection - summary.lastMonth.cost) / summary.lastMonth.cost * 100).toFixed(0)}%
