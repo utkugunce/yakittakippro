@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useMemo } from 'react';
 import { GoogleMap, useJsApiLoader, Marker, Autocomplete } from '@react-google-maps/api';
 import { MapPin, Crosshair, X, Check, Loader2, Search } from 'lucide-react';
 
@@ -18,9 +18,6 @@ const defaultCenter = { lat: 39.9334, lng: 32.8597 };
 
 const GOOGLE_MAPS_API_KEY = (import.meta as any).env?.VITE_GOOGLE_MAPS_API_KEY || '';
 
-// Libraries array must be constant to avoid re-loads
-const libraries: ("places")[] = ["places"];
-
 export const LocationPicker: React.FC<LocationPickerProps> = ({ onSelect, onClose, initialPosition }) => {
     const [selectedPosition, setSelectedPosition] = useState<{ lat: number; lng: number } | null>(
         initialPosition || null
@@ -28,6 +25,9 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({ onSelect, onClos
     const [gpsLoading, setGpsLoading] = useState(false);
     const [map, setMap] = useState<google.maps.Map | null>(null);
     const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
+
+    // Libraries array must be constant (memoized) to avoid re-loads/conflicts
+    const libraries: ("places")[] = useMemo(() => ["places"], []);
 
     const { isLoaded, loadError } = useJsApiLoader({
         id: 'google-map-script',
@@ -136,7 +136,7 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({ onSelect, onClos
 
     return (
         <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col h-[600px] md:h-auto max-h-[90vh]">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col h-[600px] max-h-[90vh]">
                 {/* Header */}
                 <div className="p-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between bg-white dark:bg-gray-800 shrink-0">
                     <div className="flex items-center space-x-2">

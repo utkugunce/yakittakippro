@@ -32,9 +32,13 @@ export const FuelMap: React.FC<FuelMapProps> = ({ logs, purchases = [] }) => {
     const [showMap, setShowMap] = useState(false);
     const [selectedItem, setSelectedItem] = useState<MapItem | null>(null);
 
+    // Libraries must be constant
+    const libraries: ("places")[] = useMemo(() => ["places"], []);
+
     const { isLoaded, loadError } = useJsApiLoader({
         id: 'google-map-script',
-        googleMapsApiKey: GOOGLE_MAPS_API_KEY
+        googleMapsApiKey: GOOGLE_MAPS_API_KEY,
+        libraries
     });
 
     const [map, setMap] = useState<google.maps.Map | null>(null);
