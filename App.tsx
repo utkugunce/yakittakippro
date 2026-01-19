@@ -431,7 +431,7 @@ export default function App() {
               onClick={toggleTheme}
               title={isDarkMode ? 'Aydınlık Mod' : 'Karanlık Mod'}
               aria-label={isDarkMode ? 'Aydınlık Moda Geç' : 'Karanlık Moda Geç'}
-              className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+              className="min-h-[44px] min-w-[44px] p-2.5 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-all touch-manipulation active:scale-95"
             >
               {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
             </button>
@@ -685,55 +685,57 @@ export default function App() {
 
       </main >
 
-      {/* Mobile Bottom Navigation */}
-      < div className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 pb-safe pt-2 px-2 z-50" >
-        <div className="flex items-center justify-around">
-          <button onClick={() => setActiveTab('dashboard')} className={`flex flex-col items-center p-2 rounded-xl transition-colors ${activeTab === 'dashboard' ? 'text-primary-600 dark:text-primary-400' : 'text-gray-500 dark:text-gray-400'}`}>
-            <LayoutDashboard className="w-6 h-6 mb-1" />
+      {/* Mobile Bottom Navigation - Thumb-Zone Optimized */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-lg border-t border-gray-200 dark:border-gray-800 z-50" style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 8px)' }}>
+        <div className="flex items-center justify-around px-1 pt-1">
+          <button onClick={() => setActiveTab('dashboard')} className={`flex flex-col items-center justify-center min-h-[52px] min-w-[52px] p-1.5 rounded-xl touch-manipulation transition-all active:scale-95 active:bg-gray-100 dark:active:bg-gray-800 ${activeTab === 'dashboard' ? 'text-primary-600 dark:text-primary-400' : 'text-gray-500 dark:text-gray-400'}`}>
+            <LayoutDashboard className="w-6 h-6 mb-0.5" />
             <span className="text-[10px] font-medium">Panel</span>
           </button>
-          <button onClick={() => setActiveTab('history')} className={`flex flex-col items-center p-2 rounded-xl transition-colors ${activeTab === 'history' ? 'text-primary-600 dark:text-primary-400' : 'text-gray-500 dark:text-gray-400'}`}>
-            <History className="w-6 h-6 mb-1" />
+          <button onClick={() => setActiveTab('history')} className={`flex flex-col items-center justify-center min-h-[52px] min-w-[52px] p-1.5 rounded-xl touch-manipulation transition-all active:scale-95 active:bg-gray-100 dark:active:bg-gray-800 ${activeTab === 'history' ? 'text-primary-600 dark:text-primary-400' : 'text-gray-500 dark:text-gray-400'}`}>
+            <History className="w-6 h-6 mb-0.5" />
             <span className="text-[10px] font-medium">Geçmiş</span>
           </button>
-          <button onClick={() => setActiveTab('charts')} className={`flex flex-col items-center p-2 rounded-xl transition-colors ${activeTab === 'charts' ? 'text-primary-600 dark:text-primary-400' : 'text-gray-500 dark:text-gray-400'}`}>
-            <BarChart3 className="w-6 h-6 mb-1" />
+          <button onClick={() => setActiveTab('charts')} className={`flex flex-col items-center justify-center min-h-[52px] min-w-[52px] p-1.5 rounded-xl touch-manipulation transition-all active:scale-95 active:bg-gray-100 dark:active:bg-gray-800 ${activeTab === 'charts' ? 'text-primary-600 dark:text-primary-400' : 'text-gray-500 dark:text-gray-400'}`}>
+            <BarChart3 className="w-6 h-6 mb-0.5" />
             <span className="text-[10px] font-medium">Grafik</span>
           </button>
-          <button onClick={() => setActiveTab('maintenance')} className={`flex flex-col items-center p-2 rounded-xl transition-colors ${activeTab === 'maintenance' ? 'text-primary-600 dark:text-primary-400' : 'text-gray-500 dark:text-gray-400'}`}>
-            <Wrench className="w-6 h-6 mb-1" />
+          <button onClick={() => setActiveTab('maintenance')} className={`flex flex-col items-center justify-center min-h-[52px] min-w-[52px] p-1.5 rounded-xl touch-manipulation transition-all active:scale-95 active:bg-gray-100 dark:active:bg-gray-800 ${activeTab === 'maintenance' ? 'text-primary-600 dark:text-primary-400' : 'text-gray-500 dark:text-gray-400'}`}>
+            <Wrench className="w-6 h-6 mb-0.5" />
             <span className="text-[10px] font-medium">Bakım</span>
           </button>
-          <button onClick={() => setActiveTab('reports')} className={`flex flex-col items-center p-2 rounded-xl transition-colors ${activeTab === 'reports' ? 'text-primary-600 dark:text-primary-400' : 'text-gray-500 dark:text-gray-400'}`}>
-            <FileText className="w-6 h-6 mb-1" />
+          <button onClick={() => setActiveTab('reports')} className={`flex flex-col items-center justify-center min-h-[52px] min-w-[52px] p-1.5 rounded-xl touch-manipulation transition-all active:scale-95 active:bg-gray-100 dark:active:bg-gray-800 ${activeTab === 'reports' ? 'text-primary-600 dark:text-primary-400' : 'text-gray-500 dark:text-gray-400'}`}>
+            <FileText className="w-6 h-6 mb-0.5" />
             <span className="text-[10px] font-medium">Rapor</span>
           </button>
-          <button onClick={() => setActiveTab('settings')} className={`flex flex-col items-center p-2 rounded-xl transition-colors ${activeTab === 'settings' ? 'text-primary-600 dark:text-primary-400' : 'text-gray-500 dark:text-gray-400'}`}>
-            <Settings className="w-6 h-6 mb-1" />
+          <button onClick={() => setActiveTab('settings')} className={`flex flex-col items-center justify-center min-h-[52px] min-w-[52px] p-1.5 rounded-xl touch-manipulation transition-all active:scale-95 active:bg-gray-100 dark:active:bg-gray-800 ${activeTab === 'settings' ? 'text-primary-600 dark:text-primary-400' : 'text-gray-500 dark:text-gray-400'}`}>
+            <Settings className="w-6 h-6 mb-0.5" />
             <span className="text-[10px] font-medium">Ayarlar</span>
           </button>
         </div>
-      </div >
+      </div>
 
-      {/* Floating Action Buttons */}
-      < div className="fixed bottom-24 md:bottom-8 right-6 flex flex-col space-y-3 z-40" >
+      {/* Floating Action Buttons - Touch Optimized */}
+      <div className="fixed bottom-28 md:bottom-8 right-4 flex flex-col space-y-3 z-40">
         {/* Fuel Purchase Button */}
-        < button
+        <button
           onClick={() => setShowFuelPurchaseModal(true)}
-          className="w-14 h-14 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center"
+          className="w-14 h-14 min-w-[56px] min-h-[56px] bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all touch-manipulation active:scale-95 active:shadow-md flex items-center justify-center"
           title="Yakıt Alımı"
+          aria-label="Yakıt Alımı"
         >
           <Fuel className="w-7 h-7" />
-        </button >
+        </button>
         {/* Daily Entry Button */}
-        < button
+        <button
           onClick={() => setShowEntryModal(true)}
-          className="w-14 h-14 bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center"
+          className="w-14 h-14 min-w-[56px] min-h-[56px] bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white rounded-full shadow-lg hover:shadow-xl transition-all touch-manipulation active:scale-95 active:shadow-md flex items-center justify-center"
           title="Yeni Kayıt Ekle"
+          aria-label="Yeni Kayıt Ekle"
         >
           <Plus className="w-7 h-7" />
-        </button >
-      </div >
+        </button>
+      </div>
 
       {/* Entry Form Modal */}
       {

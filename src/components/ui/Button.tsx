@@ -23,16 +23,16 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         }
 
         const sizes = {
-            sm: "h-8 px-3 text-xs",
-            md: "h-10 px-4 py-2 text-sm",
-            lg: "h-12 px-8 text-base",
-            icon: "h-10 w-10 p-2 items-center justify-center"
+            sm: "min-h-[44px] h-auto px-3 py-2 text-xs",
+            md: "min-h-[44px] h-auto px-4 py-2.5 text-sm",
+            lg: "min-h-[48px] h-auto px-8 py-3 text-base",
+            icon: "min-h-[44px] min-w-[44px] h-11 w-11 p-2 items-center justify-center"
         }
 
         return (
             <button
                 className={cn(
-                    "inline-flex items-center justify-center rounded-xl font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-white dark:ring-offset-gray-900 active:scale-95",
+                    "inline-flex items-center justify-center rounded-xl font-medium transition-all touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-white dark:ring-offset-gray-900 active:scale-[0.97] active:opacity-90",
                     variants[variant],
                     sizes[size],
                     className
