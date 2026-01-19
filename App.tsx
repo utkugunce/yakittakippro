@@ -15,6 +15,7 @@ import { ThemeSettings, AccentColor } from './ThemeSettings';
 import { FuelPurchaseForm } from './FuelPurchaseForm';
 import { FuelPurchase } from './types';
 import { FuelPurchaseHistory } from './FuelPurchaseHistory';
+import { HeroSection } from './HeroSection';
 import { Car, LayoutDashboard, History, FileText, Moon, Sun, Settings, Wrench, Plus, X, Fuel, BarChart3, Loader2 } from 'lucide-react';
 import { PwaReloadPrompt } from './PwaReloadPrompt';
 import { SuccessPopup } from './SuccessPopup';
@@ -524,6 +525,15 @@ export default function App() {
                 ))}
               </div>
             </div>
+
+            {/* Hero Section Preview */}
+            <HeroSection
+              logs={filteredLogs}
+              fuelPurchases={fuelPurchases}
+              vehicle={vehicles.find(v => v.id === selectedVehicleId)}
+              onAddFuel={() => setShowFuelPurchaseModal(true)}
+              onAddEntry={() => setShowEntryModal(true)}
+            />
 
             <DashboardStatsCard stats={stats} alerts={activeAlerts} currentOdometer={lastOdometer} />
 
