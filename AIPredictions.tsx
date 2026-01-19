@@ -1,7 +1,6 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo } from 'react';
 import { DailyLog, MaintenanceItem, VehiclePart, FuelPurchase } from './types';
-import { Brain, Calendar, TrendingUp, AlertTriangle, Droplets, MessageSquare, ThumbsUp, ThumbsDown, Sparkles, Loader2 } from 'lucide-react';
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { Droplets, TrendingUp, TrendingDown, Gauge, Calendar, Wallet, BarChart3 } from 'lucide-react';
 
 interface AIPredictionsProps {
     logs: DailyLog[];
@@ -11,255 +10,255 @@ interface AIPredictionsProps {
     currentOdometer: number;
 }
 
-declare const process: { env: { GEMINI_API_KEY?: string } };
-
-import { useAppStore } from './src/stores/appStore';
-
-// ... (existing helper function if any)
-
 export const AIPredictions: React.FC<AIPredictionsProps> = ({ logs, purchases = [], maintenanceItems, vehicleParts, currentOdometer }) => {
-    // --- Existing Logic (Calculations) ---
-    // ...
     const predictions = useMemo(() => {
-        // ... (Keep existing calculations mostly same, reused for prompt context)
-        if (logs.length < 2) return null;
+        if (logs.length < 2 && purchases.length < 2) return null;
+
         const sortedLogs = [...logs].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-        const lastLog = sortedLogs[0];
-        const firstLog = sortedLogs[sortedLogs.length - 1];
-        const totalDays = (new Date(lastLog.date).getTime() - new Date(firstLog.date).getTime()) / (1000 * 60 * 60 * 24);
-        const totalKm = lastLog.currentOdometer - firstLog.currentOdometer;
-        const avgDailyKm = totalDays > 0 ? totalKm / totalDays : 0;
+        const sortedPurchases = [...purchases].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-        // Next Refuel
-        const refuelLogs = sortedLogs.filter(l => l.isRefuelDay);
-        let avgDaysBetweenRefuels = 7;
-        if (refuelLogs.length > 1) {
-            let totalRefuelDays = 0;
-            for (let i = 0; i < refuelLogs.length - 1; i++) {
-                totalRefuelDays += (new Date(refuelLogs[i].date).getTime() - new Date(refuelLogs[i + 1].date).getTime()) / (1000 * 60 * 60 * 24);
-            }
-            avgDaysBetweenRefuels = totalRefuelDays / (refuelLogs.length - 1);
-        }
-        const nextRefuelDate = new Date(lastLog.date);
-        nextRefuelDate.setDate(nextRefuelDate.getDate() + (avgDaysBetweenRefuels || 7));
-
-        // Next Service (Simplified for context)
-        let nextService = null;
-        // ... (Service logic omitted for brevity in prompt context, but kept UI display logic below)
-
-        // Monthly Cost
-        const currentMonth = new Date().getMonth();
-        const thisMonthLogs = logs.filter(l => new Date(l.date).getMonth() === currentMonth);
-        const thisMonthCost = thisMonthLogs.reduce((sum, l) => sum + l.dailyCost, 0);
-
-        // Avg Consumption
+        // --- Ortalama Tüketim Hesaplama ---
         const consumptionValues = logs.filter(l => l.avgConsumption > 0).map(l => l.avgConsumption);
-        const avgConsumption = consumptionValues.length > 0 ? consumptionValues.reduce((a, b) => a + b, 0) / consumptionValues.length : 0;
+        const avgConsumption = consumptionValues.length > 0 
+            ? consumptionValues.reduce((a, b) => a + b, 0) / consumptionValues.length 
+            : 0;
 
-        // Weekly Change
-        const prev7Days = sortedLogs.slice(7, 14);
-        const prev7Cost = prev7Days.reduce((sum, l) => sum + l.dailyCost, 0);
-        const last7Cost = sortedLogs.slice(0, 7).reduce((sum, l) => sum + l.dailyCost, 0);
-        const weeklyChange = prev7Cost > 0 ? ((last7Cost - prev7Cost) / prev7Cost) * 100 : 0;
+        // --- Günlük Ortalama KM ---
+        let avgDailyKm = 0;
+        if (sortedLogs.length >= 2) {
+            const lastLog = sortedLogs[0];
+            const firstLog = sortedLogs[sortedLogs.length - 1];
+            const totalDays = (new Date(lastLog.date).getTime() - new Date(firstLog.date).getTime()) / (1000 * 60 * 60 * 24);
+            const totalKm = lastLog.currentOdometer - firstLog.currentOdometer;
+            avgDailyKm = totalDays > 0 ? totalKm / totalDays : 0;
+        }
+
+        // --- Tahmini Sonraki Yakıt Alımı ---
+        // Yakıt alımları arasındaki ortalama gün sayısı
+        let avgDaysBetweenRefuels = 7;
+        let estimatedRefuelDate = new Date();
+        
+        if (sortedPurchases.length >= 2) {
+            let totalRefuelDays = 0;
+            for (let i = 0; i < sortedPurchases.length - 1; i++) {
+                totalRefuelDays += (new Date(sortedPurchases[i].date).getTime() - new Date(sortedPurchases[i + 1].date).getTime()) / (1000 * 60 * 60 * 24);
+            }
+            avgDaysBetweenRefuels = Math.round(totalRefuelDays / (sortedPurchases.length - 1));
+            
+            const lastPurchaseDate = new Date(sortedPurchases[0].date);
+            estimatedRefuelDate = new Date(lastPurchaseDate);
+            estimatedRefuelDate.setDate(estimatedRefuelDate.getDate() + avgDaysBetweenRefuels);
+        } else if (sortedLogs.length > 0) {
+            const refuelLogs = sortedLogs.filter(l => l.isRefuelDay);
+            if (refuelLogs.length > 1) {
+                let totalRefuelDays = 0;
+                for (let i = 0; i < refuelLogs.length - 1; i++) {
+                    totalRefuelDays += (new Date(refuelLogs[i].date).getTime() - new Date(refuelLogs[i + 1].date).getTime()) / (1000 * 60 * 60 * 24);
+                }
+                avgDaysBetweenRefuels = Math.round(totalRefuelDays / (refuelLogs.length - 1));
+            }
+            estimatedRefuelDate = new Date(sortedLogs[0].date);
+            estimatedRefuelDate.setDate(estimatedRefuelDate.getDate() + avgDaysBetweenRefuels);
+        }
+        
+        // Eğer tahmin geçmişte kaldıysa bugünden itibaren hesapla
+        if (estimatedRefuelDate < new Date()) {
+            const daysPassed = Math.floor((new Date().getTime() - estimatedRefuelDate.getTime()) / (1000 * 60 * 60 * 24));
+            const cyclesPassed = Math.ceil(daysPassed / avgDaysBetweenRefuels);
+            estimatedRefuelDate.setDate(estimatedRefuelDate.getDate() + (cyclesPassed * avgDaysBetweenRefuels));
+        }
+
+        // --- Tahmini Aylık Harcama ---
+        // Son 30 günlük harcamayı baz al
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        
+        const last30DaysPurchases = purchases.filter(p => new Date(p.date) >= thirtyDaysAgo);
+        const last30DaysCost = last30DaysPurchases.reduce((sum, p) => sum + p.totalAmount, 0);
+        
+        // Eğer son 30 günde yeterli veri yoksa, tüm verilerin ortalamasını al
+        let estimatedMonthlyCost = last30DaysCost;
+        if (last30DaysPurchases.length < 2 && purchases.length >= 2) {
+            const totalPurchaseCost = purchases.reduce((sum, p) => sum + p.totalAmount, 0);
+            const firstPurchase = sortedPurchases[sortedPurchases.length - 1];
+            const lastPurchase = sortedPurchases[0];
+            const totalDays = (new Date(lastPurchase.date).getTime() - new Date(firstPurchase.date).getTime()) / (1000 * 60 * 60 * 24);
+            if (totalDays > 0) {
+                estimatedMonthlyCost = (totalPurchaseCost / totalDays) * 30;
+            }
+        }
+
+        // --- Haftalık Trend (Maliyet Bazlı) ---
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        const fourteenDaysAgo = new Date();
+        fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
+
+        const thisWeekPurchases = purchases.filter(p => new Date(p.date) >= sevenDaysAgo);
+        const lastWeekPurchases = purchases.filter(p => new Date(p.date) >= fourteenDaysAgo && new Date(p.date) < sevenDaysAgo);
+        
+        const thisWeekCost = thisWeekPurchases.reduce((sum, p) => sum + p.totalAmount, 0);
+        const lastWeekCost = lastWeekPurchases.reduce((sum, p) => sum + p.totalAmount, 0);
+        
+        const weeklyChange = lastWeekCost > 0 ? ((thisWeekCost - lastWeekCost) / lastWeekCost) * 100 : 0;
+
+        // --- Aylık Trend ---
+        const sixtyDaysAgo = new Date();
+        sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
+
+        const thisMonthPurchases = purchases.filter(p => new Date(p.date) >= thirtyDaysAgo);
+        const lastMonthPurchases = purchases.filter(p => new Date(p.date) >= sixtyDaysAgo && new Date(p.date) < thirtyDaysAgo);
+        
+        const thisMonthCost = thisMonthPurchases.reduce((sum, p) => sum + p.totalAmount, 0);
+        const lastMonthCost = lastMonthPurchases.reduce((sum, p) => sum + p.totalAmount, 0);
+        
+        const monthlyChange = lastMonthCost > 0 ? ((thisMonthCost - lastMonthCost) / lastMonthCost) * 100 : 0;
+
+        // --- Kalan Gün Hesabı ---
+        const daysUntilRefuel = Math.max(0, Math.ceil((estimatedRefuelDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)));
 
         return {
-            avgDailyKm,
-            nextRefuelDate,
-            nextService,
-            thisMonthCost,
             avgConsumption,
+            avgDailyKm,
+            estimatedRefuelDate,
+            daysUntilRefuel,
+            avgDaysBetweenRefuels,
+            estimatedMonthlyCost,
             weeklyChange,
-            totalKm
+            monthlyChange,
+            thisWeekCost,
+            thisMonthCost
         };
-    }, [logs, maintenanceItems, vehicleParts, currentOdometer]);
+    }, [logs, purchases]);
 
-    // --- Gemini AI Integration ---
-    const [aiMessage, setAiMessage] = useState<string | null>(null);
-    const [isLoadingAi, setIsLoadingAi] = useState(false);
-    const [feedback, setFeedback] = useState<'kötü' | 'iyi' | null>(null);
-
-    // Store integration
-    const storedApiKey = useAppStore(state => state.geminiApiKey);
-    const setStoredApiKey = useAppStore(state => state.setGeminiApiKey);
-
-    const [apiKey, setApiKey] = useState(storedApiKey || import.meta.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY || '');
-
-    // Sync local state with store if store updates (e.g. hydration)
-    useEffect(() => {
-        if (storedApiKey) {
-            setApiKey(storedApiKey);
-        }
-    }, [storedApiKey]);
-
-    const generateAiInsight = async () => {
-        // PRIORITY: 1. .env file (system), 2. User manually entered key (local state), 3. process.env (legacy)
-        const envKey = import.meta.env.VITE_GEMINI_API_KEY;
-        const activeKey = (envKey && envKey !== 'undefined' && envKey !== 'null') ? envKey : (apiKey || process.env.GEMINI_API_KEY);
-
-        if (!activeKey || activeKey === 'undefined' || activeKey === 'null') {
-            setAiMessage("API anahtarı bulunamadı. Lütfen .env dosyasını veya Ayarlar'ı kontrol edin. 🔐");
-            return;
-        }
-
-        setIsLoadingAi(true);
-        setFeedback(null);
-        try {
-            const genAI = new GoogleGenerativeAI(activeKey);
-            const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-
-            const prompt = `
-                Araç verilerini analiz et ve sürücüye tek cümlelik, samimi, emojili (max 2) bir geri bildirim ver.
-                Veriler: ${predictions.avgConsumption.toFixed(1)} L/100km, ₺${predictions.thisMonthCost.toFixed(0)} Harcama, %${predictions.weeklyChange.toFixed(1)} Değişim (${predictions.weeklyChange > 0 ? 'Artış' : 'Azalış'}), ${predictions.totalKm} KM.
-                Kurallar: Tüketim arttıysa uyar, azaldıysa tebrik et. Robotik olma.
-            `;
-
-            const result = await model.generateContent(prompt);
-            const response = await result.response;
-            const text = response.text();
-            setAiMessage(text);
-        } catch (error: any) {
-            console.error("AI Assistant Error Detail:", error);
-            const errorMsg = error?.message || String(error) || "Bilinmeyen hata";
-
-            if (errorMsg.includes("quota") || errorMsg.includes("429")) {
-                setAiMessage("⚠️ Günlük limit doldu! Yarın tekrar deneyebilir veya farklı bir API anahtarı kullanabilirsiniz.");
-            } else if (errorMsg.includes("API key")) {
-                setAiMessage(`🔑 API Anahtarı Hatası: Anahtar geçersiz, yetkisiz veya kısıtlanmış. (Detay: ${errorMsg.substring(0, 100)})`);
-            } else {
-                setAiMessage(`❌ Hata: ${errorMsg.substring(0, 250)}`);
-            }
-        } finally {
-            setIsLoadingAi(false);
-        }
-    };
-
-    // Auto-generate on mount if key exists and data ready
-    useEffect(() => {
-        const activeKey = import.meta.env.VITE_GEMINI_API_KEY || apiKey || process.env.GEMINI_API_KEY;
-        if (activeKey && predictions && !aiMessage) {
-            generateAiInsight();
-        }
-    }, [apiKey, predictions]);
-
-
-    if (!predictions) return null;
+    if (!predictions) {
+        return (
+            <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 p-5 rounded-2xl border border-gray-200 dark:border-gray-700">
+                <div className="text-center text-gray-500 dark:text-gray-400 py-4">
+                    <Gauge className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                    <p className="text-sm">Tahminler için en az 2 kayıt gerekli</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
-        <div className="bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-gray-800 dark:to-gray-900 p-5 rounded-2xl border border-indigo-100 dark:border-gray-700 shadow-sm animate-in fade-in duration-700">
+        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-900 p-5 rounded-2xl border border-blue-100 dark:border-gray-700 shadow-sm">
             {/* Header */}
-            <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                    <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg">
-                        <Brain className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-                    </div>
-                    <div>
-                        <h3 className="text-lg font-bold text-gray-800 dark:text-white">AI Asistanı</h3>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">Google Gemini &trade; Destekli</p>
-                    </div>
+            <div className="flex items-center gap-2 mb-4">
+                <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                    <BarChart3 className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                 </div>
-                <button
-                    onClick={generateAiInsight}
-                    disabled={isLoadingAi}
-                    className="p-2 hover:bg-white/50 dark:hover:bg-gray-700/50 rounded-full transition-colors"
-                    title="Yeniden Analiz Et"
-                >
-                    <Sparkles className={`w-4 h-4 text-indigo-500 ${isLoadingAi ? 'animate-spin' : ''}`} />
-                </button>
+                <div>
+                    <h3 className="text-lg font-bold text-gray-800 dark:text-white">Tahminler & Trendler</h3>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Tüketim verilerinize göre</p>
+                </div>
             </div>
 
-            {/* AI Message Area */}
-            <div className="bg-white/80 dark:bg-gray-800/80 p-4 rounded-xl border border-indigo-100 dark:border-gray-700 backdrop-blur-sm relative overflow-hidden transition-all duration-300">
-                {/* Background Pattern */}
-                <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-indigo-500/10 rounded-full blur-2xl"></div>
+            {/* Stats Grid */}
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+                {/* Tahmini Sonraki Yakıt */}
+                <div className="bg-white/70 dark:bg-gray-800/70 p-4 rounded-xl border border-white/50 dark:border-gray-700 backdrop-blur-sm">
+                    <div className="flex items-center gap-2 mb-2">
+                        <Droplets className="w-4 h-4 text-blue-500" />
+                        <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Sonraki Yakıt</span>
+                    </div>
+                    <div className="text-lg font-bold text-gray-800 dark:text-white">
+                        {predictions.estimatedRefuelDate.toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })}
+                    </div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        ~{predictions.daysUntilRefuel} gün sonra
+                    </div>
+                </div>
 
-                <>
-                    <div className="flex items-start gap-3">
-                        <MessageSquare className="w-5 h-5 text-indigo-500 mt-1 shrink-0" />
-                        <div className="flex-1">
-                            {isLoadingAi ? (
-                                <div className="flex items-center gap-2 text-sm text-gray-500">
-                                    <Loader2 className="w-3 h-3 animate-spin" />
-                                    Veriler inceleniyor...
-                                </div>
-                            ) : (
-                                <p className="text-sm font-medium text-gray-800 dark:text-gray-100 leading-relaxed">
-                                    {aiMessage || "Verilerinizi analiz etmek için sağ üstteki pırıltı ikonuna tıklayın ✨"}
-                                </p>
-                            )}
+                {/* Tahmini Aylık Harcama */}
+                <div className="bg-white/70 dark:bg-gray-800/70 p-4 rounded-xl border border-white/50 dark:border-gray-700 backdrop-blur-sm">
+                    <div className="flex items-center gap-2 mb-2">
+                        <Wallet className="w-4 h-4 text-emerald-500" />
+                        <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Tahmini Aylık</span>
+                    </div>
+                    <div className="text-lg font-bold text-gray-800 dark:text-white">
+                        ₺{predictions.estimatedMonthlyCost.toFixed(0)}
+                    </div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        ~{predictions.avgDaysBetweenRefuels} günde 1 alım
+                    </div>
+                </div>
+
+                {/* Ortalama Tüketim */}
+                <div className="bg-white/70 dark:bg-gray-800/70 p-4 rounded-xl border border-white/50 dark:border-gray-700 backdrop-blur-sm">
+                    <div className="flex items-center gap-2 mb-2">
+                        <Gauge className="w-4 h-4 text-orange-500" />
+                        <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Ort. Tüketim</span>
+                    </div>
+                    <div className="text-lg font-bold text-gray-800 dark:text-white">
+                        {predictions.avgConsumption.toFixed(1)} <span className="text-sm font-normal">L/100km</span>
+                    </div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        ~{predictions.avgDailyKm.toFixed(0)} km/gün
+                    </div>
+                </div>
+
+                {/* Haftalık Trend */}
+                <div className={`p-4 rounded-xl border backdrop-blur-sm ${
+                    predictions.weeklyChange > 5 
+                        ? 'bg-red-50/70 dark:bg-red-900/20 border-red-200 dark:border-red-900/50'
+                        : predictions.weeklyChange < -5
+                        ? 'bg-green-50/70 dark:bg-green-900/20 border-green-200 dark:border-green-900/50'
+                        : 'bg-white/70 dark:bg-gray-800/70 border-white/50 dark:border-gray-700'
+                }`}>
+                    <div className="flex items-center gap-2 mb-2">
+                        {predictions.weeklyChange > 0 ? (
+                            <TrendingUp className="w-4 h-4 text-red-500" />
+                        ) : (
+                            <TrendingDown className="w-4 h-4 text-green-500" />
+                        )}
+                        <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Haftalık Trend</span>
+                    </div>
+                    <div className={`text-lg font-bold ${
+                        predictions.weeklyChange > 5 ? 'text-red-600 dark:text-red-400' 
+                        : predictions.weeklyChange < -5 ? 'text-green-600 dark:text-green-400'
+                        : 'text-gray-800 dark:text-white'
+                    }`}>
+                        {predictions.weeklyChange > 0 ? '+' : ''}{predictions.weeklyChange.toFixed(0)}%
+                    </div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        Bu hafta: ₺{predictions.thisWeekCost.toFixed(0)}
+                    </div>
+                </div>
+
+                {/* Aylık Trend */}
+                <div className={`p-4 rounded-xl border backdrop-blur-sm col-span-2 lg:col-span-2 ${
+                    predictions.monthlyChange > 10 
+                        ? 'bg-red-50/70 dark:bg-red-900/20 border-red-200 dark:border-red-900/50'
+                        : predictions.monthlyChange < -10
+                        ? 'bg-green-50/70 dark:bg-green-900/20 border-green-200 dark:border-green-900/50'
+                        : 'bg-white/70 dark:bg-gray-800/70 border-white/50 dark:border-gray-700'
+                }`}>
+                    <div className="flex items-center gap-2 mb-2">
+                        <Calendar className="w-4 h-4 text-purple-500" />
+                        <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Aylık Trend</span>
+                    </div>
+                    <div className="flex items-baseline gap-3">
+                        <div className={`text-lg font-bold ${
+                            predictions.monthlyChange > 10 ? 'text-red-600 dark:text-red-400' 
+                            : predictions.monthlyChange < -10 ? 'text-green-600 dark:text-green-400'
+                            : 'text-gray-800 dark:text-white'
+                        }`}>
+                            {predictions.monthlyChange > 0 ? '+' : ''}{predictions.monthlyChange.toFixed(0)}%
+                            <span className="text-sm font-normal ml-1">
+                                {predictions.monthlyChange > 10 ? '📈' : predictions.monthlyChange < -10 ? '📉' : '➡️'}
+                            </span>
+                        </div>
+                        <div className="text-sm text-gray-600 dark:text-gray-300">
+                            Bu ay: <span className="font-semibold">₺{predictions.thisMonthCost.toFixed(0)}</span>
                         </div>
                     </div>
-
-                    {/* Feedback Loop */}
-                    {aiMessage && !isLoadingAi && (
-                        <div className="flex justify-end gap-2 mt-3 pt-3 border-t border-gray-100 dark:border-gray-700/50">
-                            <span className="text-[10px] text-gray-400 self-center mr-2">Bu tavsiye faydalı mıydı?</span>
-                            <button
-                                onClick={() => setFeedback('iyi')}
-                                className={`p-1.5 rounded-lg transition-colors ${feedback === 'iyi' ? 'bg-green-100 text-green-700' : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400'}`}
-                                title="Faydalı"
-                            >
-                                <ThumbsUp className="w-3.5 h-3.5" />
-                            </button>
-                            <button
-                                onClick={() => setFeedback('kötü')}
-                                className={`p-1.5 rounded-lg transition-colors ${feedback === 'kötü' ? 'bg-red-100 text-red-700' : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400'}`}
-                                title="Faydalı Değil"
-                            >
-                                <ThumbsDown className="w-3.5 h-3.5" />
-                            </button>
-                        </div>
-                    )}
-                </>
-            </div >
-
-            {/* Quick Stats Grid (Existing Layout) */}
-            < div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-4" >
-                {/* Next Refuel */}
-                < div className="bg-white/60 dark:bg-gray-800/60 p-3 rounded-xl border border-white/50 dark:border-gray-700 backdrop-blur-sm" >
-                    <div className="flex items-center gap-2 mb-1 text-xs font-bold text-gray-500 uppercase">
-                        <Droplets className="w-3 h-3" />
-                        Sonraki Yakıt
+                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        Geçen aya kıyasla {predictions.monthlyChange > 0 ? 'artış' : predictions.monthlyChange < 0 ? 'düşüş' : 'değişim yok'}
                     </div>
-                    <div className="text-sm font-semibold text-gray-800 dark:text-white">
-                        {predictions.nextRefuelDate.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long' })}
-                    </div>
-                </div >
-
-                {/* Monthly Cost */}
-                < div className="bg-white/60 dark:bg-gray-800/60 p-3 rounded-xl border border-white/50 dark:border-gray-700 backdrop-blur-sm" >
-                    <div className="flex items-center gap-2 mb-1 text-xs font-bold text-gray-500 uppercase">
-                        <TrendingUp className="w-3 h-3" />
-                        Bu Ay (Harcanan)
-                    </div>
-                    <div className="text-sm font-semibold text-gray-800 dark:text-white">
-                        ₺{predictions.thisMonthCost.toFixed(0)}
-                    </div>
-                </div >
-
-                {/* Avg Consumption */}
-                < div className="bg-white/60 dark:bg-gray-800/60 p-3 rounded-xl border border-white/50 dark:border-gray-700 backdrop-blur-sm" >
-                    <div className="flex items-center gap-2 mb-1 text-xs font-bold text-gray-500 uppercase">
-                        <Calendar className="w-3 h-3" />
-                        Ort. Tüketim
-                    </div>
-                    <div className="text-sm font-semibold text-gray-800 dark:text-white">
-                        {predictions.avgConsumption.toFixed(1)} L/100km
-                    </div>
-                </div >
-
-                {/* Weekly Trend */}
-                < div className={`p-3 rounded-xl border backdrop-blur-sm ${predictions.weeklyChange > 0
-                    ? 'bg-red-50/50 dark:bg-red-900/10 border-red-100 dark:border-red-900/30'
-                    : 'bg-green-50/50 dark:bg-green-900/10 border-green-100 dark:border-green-900/30'}`}>
-                    <div className="flex items-center gap-2 mb-1 text-xs font-bold text-gray-500 uppercase">
-                        <TrendingUp className={`w-3 h-3 ${predictions.weeklyChange > 0 ? 'text-red-500' : 'text-green-500 rotate-180'}`} />
-                        Haftalık Trend
-                    </div>
-                    <div className={`text-sm font-semibold ${predictions.weeklyChange > 0 ? 'text-red-700 dark:text-red-400' : 'text-green-700 dark:text-green-400'}`}>
-                        {Math.abs(predictions.weeklyChange).toFixed(1)}% {predictions.weeklyChange > 0 ? 'Artış' : 'Düşüş'}
-                    </div>
-                </div >
-            </div >
-        </div >
+                </div>
+            </div>
+        </div>
     );
 };
