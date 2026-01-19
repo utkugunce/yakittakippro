@@ -18,6 +18,7 @@ import { FuelPurchaseHistory } from './FuelPurchaseHistory';
 import { Car, LayoutDashboard, History, FileText, Moon, Sun, Settings, Wrench, Plus, X, Fuel, BarChart3, Loader2 } from 'lucide-react';
 import { PwaReloadPrompt } from './PwaReloadPrompt';
 import { SuccessPopup } from './SuccessPopup';
+import { PageLoader } from './src/components/PageLoader';
 
 // Lazy Loaded Components (Code Splitting)
 const Charts = React.lazy(() => import('./Charts').then(module => ({ default: module.Charts })));
@@ -26,14 +27,7 @@ const FuelMap = React.lazy(() => import('./FuelMap').then(module => ({ default: 
 const ChartsPage = React.lazy(() => import('@/src/features/charts/ChartsPage').then(module => ({ default: module.ChartsPage })));
 const StationAnalysis = React.lazy(() => import('@/src/features/analytics').then(module => ({ default: module.StationAnalysis })));
 
-const PageLoader = () => (
-  <div className="flex items-center justify-center p-12 w-full h-full">
-    <div className="flex flex-col items-center gap-3">
-      <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
-      <p className="text-gray-500 dark:text-gray-400 text-sm animate-pulse">Yükleniyor...</p>
-    </div>
-  </div>
-);
+
 
 const LOCAL_STORAGE_KEY = 'yakit_takip_logs_v1';
 const MAINTENANCE_STORAGE_KEY = 'yakit_takip_maintenance_v1';
