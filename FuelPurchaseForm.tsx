@@ -3,6 +3,7 @@ import { Fuel, Calendar, Coins, Droplets, MapPin, Calculator, PlusCircle, Eraser
 import { LocationPicker } from './LocationPicker';
 import { FuelPurchase } from './types';
 import { Input } from './src/components/ui/Input';
+import { Button } from './src/components/ui/Button';
 
 interface FuelPurchaseFormProps {
     onAdd: (purchase: FuelPurchase) => void;
@@ -588,23 +589,27 @@ export const FuelPurchaseForm: React.FC<FuelPurchaseFormProps> = ({ onAdd, onUpd
                 </div>
 
                 {/* Action Buttons */}
-                <div className="flex space-x-3 pt-4">
-                    <button
+                <div className="flex gap-4 pt-4 sticky bottom-0 bg-white dark:bg-gray-800 p-4 -mx-4 -mb-4 z-10 border-t dark:border-gray-700">
+                    <Button
                         type="button"
                         onClick={handleClear}
-                        className="flex-1 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-white font-bold py-3 px-4 rounded-xl shadow-sm transition-all flex items-center justify-center space-x-2"
+                        variant="secondary"
+                        size="lg"
+                        className="flex-1"
+                        leftIcon={Eraser}
                     >
-                        <Eraser className="w-5 h-5" />
-                        <span>Temizle</span>
-                    </button>
+                        Temizle
+                    </Button>
 
-                    <button
+                    <Button
                         type="submit"
-                        className="flex-[2] bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold py-3 px-4 rounded-xl shadow-md hover:shadow-lg transition-all transform active:scale-[0.98] flex items-center justify-center space-x-2"
+                        variant="default"
+                        size="lg"
+                        className="flex-[2] shadow-md hover:shadow-lg"
+                        leftIcon={PlusCircle}
                     >
-                        <PlusCircle className="w-5 h-5" />
-                        <span>Yakıt Alımı Kaydet</span>
-                    </button>
+                        Yakıt Alımı Kaydet
+                    </Button>
                 </div>
             </form>
 
