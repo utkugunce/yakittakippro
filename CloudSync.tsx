@@ -12,6 +12,7 @@ import {
     loadFromCloud
 } from './lib/supabase';
 import { DailyLog, MaintenanceItem, Vehicle } from './types';
+import { useAppStore } from './src/stores/appStore';
 
 interface CloudSyncProps {
     logs: DailyLog[];
@@ -34,8 +35,14 @@ export const CloudSync: React.FC<CloudSyncProps> = ({
     const [loading, setLoading] = useState(true);
     const [syncing, setSyncing] = useState(false);
     const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-    const [autoSync, setAutoSync] = useState(() => localStorage.getItem('auto_sync') === 'true');
-    const [lastSyncTime, setLastSyncTime] = useState<string | null>(() => localStorage.getItem('last_sync_time'));
+
+    // Store State
+    const autoSync = useAppStore(state => state.autoSync);
+    const setAutoSync = useAppStore(state => state.setAutoSync);
+    const lastSyncTime = useAppStore(state => state.lastSyncTime);
+    const setLastSyncTime = useAppStore(state => state.setLastSyncTime);
+    const monthlyBudget = useAppStore(state => state.monthlyBudget);
+    const setMonthlyBudget = useAppStore(state => state.setMonthlyBudget);
 
     // Email auth states
     const [email, setEmail] = useState('');
@@ -104,8 +111,6 @@ export const CloudSync: React.FC<CloudSyncProps> = ({
         setSyncing(true);
         setMessage(null);
 
-        const monthlyBudget = parseFloat(localStorage.getItem('monthly_budget') || '0');
-
         const result = await saveToCloud({
             logs,
             maintenanceItems,
@@ -116,7 +121,6 @@ export const CloudSync: React.FC<CloudSyncProps> = ({
         if (result.success) {
             const now = new Date().toLocaleString('tr-TR');
             setLastSyncTime(now);
-            localStorage.setItem('last_sync_time', now);
             setMessage({ type: 'success', text: 'Veriler buluta yüklendi!' });
         } else {
             setMessage({ type: 'error', text: result.error || 'Yükleme başarısız' });
@@ -150,7 +154,7 @@ export const CloudSync: React.FC<CloudSyncProps> = ({
                 onImportVehicles(result.data.vehicles);
             }
             if (result.data.monthlyBudget > 0) {
-                localStorage.setItem('monthly_budget', result.data.monthlyBudget.toString());
+                setMonthlyBudget(result.data.monthlyBudget);
             }
             setMessage({ type: 'success', text: 'Veriler buluttan indirildi!' });
         } else {
@@ -159,6 +163,7 @@ export const CloudSync: React.FC<CloudSyncProps> = ({
 
         setSyncing(false);
     };
+
 
     // Not configured
     if (!isSupabaseConfigured()) {
@@ -293,7 +298,7 @@ export const CloudSync: React.FC<CloudSyncProps> = ({
                     onClick={() => {
                         const newState = !autoSync;
                         setAutoSync(newState);
-                        localStorage.setItem('auto_sync', newState.toString());
+                        // localStorage persistence handled by store
                         if (newState && user) {
                             handleSaveToCloud();
                         }

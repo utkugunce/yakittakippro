@@ -22,6 +22,14 @@ interface AppState {
   yearFilter: '2026' | '2025' | 'all';
   historySubTab: 'logs' | 'fuel';
 
+  // Settings & Sync
+  monthlyBudget: number;
+  notificationsEnabled: boolean;
+  lastNotificationCheck: string | null;
+  autoSync: boolean;
+  lastSyncTime: string | null;
+  geminiApiKey: string | null;
+
   // Actions - Logs
   addLog: (log: DailyLog) => void;
   deleteLog: (id: string) => void;
@@ -53,6 +61,14 @@ interface AppState {
   setYearFilter: (filter: AppState['yearFilter']) => void;
   setHistorySubTab: (tab: AppState['historySubTab']) => void;
 
+  // Actions - Settings
+  setMonthlyBudget: (budget: number) => void;
+  setNotificationsEnabled: (enabled: boolean) => void;
+  setLastNotificationCheck: (date: string | null) => void;
+  setAutoSync: (enabled: boolean) => void;
+  setLastSyncTime: (date: string | null) => void;
+  setGeminiApiKey: (key: string | null) => void;
+
   // Hydration
   hydrate: () => void;
 }
@@ -77,6 +93,14 @@ export const useAppStore = create<AppState>()(
       activeTab: 'dashboard',
       yearFilter: 'all',
       historySubTab: 'logs',
+
+      // Initial Settings (Migration from separate localStorage keys)
+      monthlyBudget: parseFloat(localStorage.getItem('monthly_budget') || '0'),
+      notificationsEnabled: localStorage.getItem('notifications_enabled') === 'true',
+      lastNotificationCheck: localStorage.getItem('last_notification_check'),
+      autoSync: localStorage.getItem('auto_sync') === 'true',
+      lastSyncTime: localStorage.getItem('last_sync_time'),
+      geminiApiKey: localStorage.getItem('gemini_api_key'),
 
       // Log Actions
       addLog: (log) => set((state) => ({ logs: [log, ...state.logs] })),
@@ -138,6 +162,14 @@ export const useAppStore = create<AppState>()(
       setYearFilter: (filter) => set({ yearFilter: filter }),
       setHistorySubTab: (tab) => set({ historySubTab: tab }),
 
+      // Settings Actions
+      setMonthlyBudget: (budget) => set({ monthlyBudget: budget }),
+      setNotificationsEnabled: (enabled) => set({ notificationsEnabled: enabled }),
+      setLastNotificationCheck: (date) => set({ lastNotificationCheck: date }),
+      setAutoSync: (enabled) => set({ autoSync: enabled }),
+      setLastSyncTime: (date) => set({ lastSyncTime: date }),
+      setGeminiApiKey: (key) => set({ geminiApiKey: key }),
+
       // Hydration from legacy localStorage
       hydrate: () => {
         try {
@@ -175,6 +207,12 @@ export const useAppStore = create<AppState>()(
         vehicles: state.vehicles,
         vehicleParts: state.vehicleParts,
         selectedVehicleId: state.selectedVehicleId,
+        monthlyBudget: state.monthlyBudget,
+        notificationsEnabled: state.notificationsEnabled,
+        lastNotificationCheck: state.lastNotificationCheck,
+        autoSync: state.autoSync,
+        lastSyncTime: state.lastSyncTime,
+        geminiApiKey: state.geminiApiKey,
       }),
     }
   )

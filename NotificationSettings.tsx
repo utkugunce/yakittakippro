@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Bell, BellOff, Check, X } from 'lucide-react';
 import { MaintenanceItem } from './types';
+import { useAppStore } from './src/stores/appStore';
 
 interface NotificationSettingsProps {
     maintenanceItems: MaintenanceItem[];
@@ -9,12 +10,15 @@ interface NotificationSettingsProps {
 
 export const NotificationSettings: React.FC<NotificationSettingsProps> = ({ maintenanceItems, currentOdometer }) => {
     const [permission, setPermission] = useState<NotificationPermission>('default');
-    const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+
+    const notificationsEnabled = useAppStore(state => state.notificationsEnabled);
+    const setNotificationsEnabled = useAppStore(state => state.setNotificationsEnabled);
+    const lastNotificationCheck = useAppStore(state => state.lastNotificationCheck);
+    const setLastNotificationCheck = useAppStore(state => state.setLastNotificationCheck);
 
     useEffect(() => {
         if ('Notification' in window) {
             setPermission(Notification.permission);
-            setNotificationsEnabled(localStorage.getItem('notifications_enabled') === 'true');
         }
     }, []);
 
@@ -24,7 +28,6 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({ main
             setPermission(result);
             if (result === 'granted') {
                 setNotificationsEnabled(true);
-                localStorage.setItem('notifications_enabled', 'true');
 
                 // Show test notification
                 new Notification('TripBook', {
@@ -64,7 +67,6 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({ main
     const toggleNotifications = () => {
         const newState = !notificationsEnabled;
         setNotificationsEnabled(newState);
-        localStorage.setItem('notifications_enabled', newState.toString());
 
         if (newState && permission === 'granted') {
             checkMaintenanceAlerts();
@@ -76,13 +78,12 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({ main
     // Schedule daily notification check
     const scheduleDailyCheck = () => {
         // Check if we should run today's check
-        const lastCheck = localStorage.getItem('last_notification_check');
         const today = new Date().toDateString();
 
-        if (lastCheck !== today) {
+        if (lastNotificationCheck !== today) {
             // Run the check
             checkMaintenanceAlerts();
-            localStorage.setItem('last_notification_check', today);
+            setLastNotificationCheck(today);
         }
     };
 
