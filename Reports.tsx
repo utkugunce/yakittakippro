@@ -18,7 +18,12 @@ import {
   getDateRangeFromPreset,
   DateRangePreset,
   MonthlyDrilldown,
-  ShareableSummary
+  ShareableSummary,
+  ReportHeader,
+  QuickSummaryCards,
+  DrivingScore,
+  MonthlyGoalProgress,
+  ReportTips
 } from '@/src/features/reports';
 
 interface ReportsProps {
@@ -407,13 +412,32 @@ export const Reports: React.FC<ReportsProps> = ({ logs, purchases = [], maintena
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-in fade-in duration-500">
+      {/* Enhanced Header */}
+      <ReportHeader 
+        totalLogs={logs.length} 
+        totalPurchases={purchases.length}
+        dateRange={dateRange ? `${dateRange.start.toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })} - ${dateRange.end.toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })}` : undefined}
+      />
+
       {/* Date Filters */}
       <ReportsFilters
         selectedPreset={datePreset}
         onPresetChange={setDatePreset}
         dateRange={dateRange}
       />
+
+      {/* Quick Summary Cards */}
+      <QuickSummaryCards logs={logs} purchases={purchases} />
+
+      {/* Driving Score & Monthly Goal */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <DrivingScore logs={logs} purchases={purchases} />
+        <MonthlyGoalProgress logs={logs} purchases={purchases} />
+      </div>
+
+      {/* Report Tips */}
+      <ReportTips logs={logs} purchases={purchases} />
 
       {/* Insights Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
