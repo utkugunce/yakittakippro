@@ -119,13 +119,16 @@ export const AIPredictions: React.FC<AIPredictionsProps> = ({ logs, purchases = 
             setAiMessage(text);
         } catch (error: any) {
             console.error("AI Assistant Error Detail:", error);
-            const errorMsg = error?.message || "";
+            const errorMsg = error?.message || "Bilinmeyen hata";
+
             if (errorMsg.includes("API key")) {
-                setAiMessage("API anahtarı hatası! Lütfen anahtarın doğruluğunu ve kısıtlamalarını kontrol edin. 🔑");
+                setAiMessage(`🔑 API Anahtarı Hatası: ${errorMsg}`);
             } else if (errorMsg.includes("model")) {
-                setAiMessage("Model hatası! Lütfen model isminin doğruluğunu kontrol edin. 🤖");
+                setAiMessage(`🤖 Model Hatası: ${errorMsg}`);
+            } else if (errorMsg.includes("fetch") || errorMsg.includes("network")) {
+                setAiMessage(`🌐 Ağ Hatası: İnternet bağlantınızı kontrol edin.`);
             } else {
-                setAiMessage("Bağlantı hatası 😔 Lütfen interneti ve API anahtarını kontrol edip tekrar dene.");
+                setAiMessage(`😔 Bağlantı Hatası: ${errorMsg.substring(0, 50)}...`);
             }
         } finally {
             setIsLoadingAi(false);
