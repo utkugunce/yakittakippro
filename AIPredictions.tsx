@@ -92,9 +92,12 @@ export const AIPredictions: React.FC<AIPredictionsProps> = ({ logs, purchases = 
     }, [storedApiKey]);
 
     const generateAiInsight = async () => {
-        const activeKey = apiKey || import.meta.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY;
+        // Prioritize .env key as it's the intended system key
+        const activeKey = import.meta.env.VITE_GEMINI_API_KEY || apiKey || process.env.GEMINI_API_KEY;
 
-        if (!predictions || !activeKey) {
+        if (!predictions || !activeKey || activeKey === 'undefined' || activeKey === 'null') {
+            console.warn("AI Assistant: Missing or invalid API key");
+            setAiMessage("API anahtarı eksik veya geçersiz. Lütfen Ayarlar'dan kontrol edin.");
             return;
         }
 
@@ -102,7 +105,7 @@ export const AIPredictions: React.FC<AIPredictionsProps> = ({ logs, purchases = 
         setFeedback(null);
         try {
             const genAI = new GoogleGenerativeAI(activeKey);
-            const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
             const prompt = `
                 Araç verilerini analiz et ve sürücüye tek cümlelik, samimi, emojili (max 2) bir geri bildirim ver.
@@ -114,9 +117,16 @@ export const AIPredictions: React.FC<AIPredictionsProps> = ({ logs, purchases = 
             const response = await result.response;
             const text = response.text();
             setAiMessage(text);
-        } catch (error) {
-            console.error("AI Error:", error);
-            setAiMessage("Bağlantı hatası 😔 API anahtarını kontrol eder misin?");
+        } catch (error: any) {
+            console.error("AI Assistant Error Detail:", error);
+            const errorMsg = error?.message || "";
+            if (errorMsg.includes("API key")) {
+                setAiMessage("API anahtarı hatası! Lütfen anahtarın doğruluğunu ve kısıtlamalarını kontrol edin. 🔑");
+            } else if (errorMsg.includes("model")) {
+                setAiMessage("Model hatası! Lütfen model isminin doğruluğunu kontrol edin. 🤖");
+            } else {
+                setAiMessage("Bağlantı hatası 😔 Lütfen interneti ve API anahtarını kontrol edip tekrar dene.");
+            }
         } finally {
             setIsLoadingAi(false);
         }
