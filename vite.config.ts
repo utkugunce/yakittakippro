@@ -1,3 +1,4 @@
+/// <reference types="vitest" />
 import path from 'path';
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
@@ -135,6 +136,11 @@ export default defineConfig(({ mode }) => {
         }
       })
     ],
+    test: {
+      globals: true,
+      environment: 'jsdom',
+      setupFiles: './src/test/setup.ts',
+    },
     define: {
       'process.env.GEMINI_API_KEY': JSON.stringify(process.env.GEMINI_API_KEY || env.GEMINI_API_KEY || ''),
       'process.env.GROQ_API_KEY': JSON.stringify(process.env.GROQ_API_KEY || env.GROQ_API_KEY || '')
@@ -150,6 +156,7 @@ export default defineConfig(({ mode }) => {
         output: {
           manualChunks: {
             'vendor-react': ['react', 'react-dom'],
+            'vendor-maps': ['@react-google-maps/api'],
             'vendor-charts': ['recharts'],
             'vendor-ocr': ['tesseract.js'],
             'vendor-db': ['@supabase/supabase-js'],
