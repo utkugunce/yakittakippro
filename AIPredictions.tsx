@@ -76,7 +76,6 @@ export const AIPredictions: React.FC<AIPredictionsProps> = ({ logs, purchases = 
     // --- Gemini AI Integration ---
     const [aiMessage, setAiMessage] = useState<string | null>(null);
     const [isLoadingAi, setIsLoadingAi] = useState(false);
-    const [isLoadingAi, setIsLoadingAi] = useState(false);
     const [feedback, setFeedback] = useState<'kötü' | 'iyi' | null>(null);
 
     // Store integration
