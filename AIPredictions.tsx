@@ -105,7 +105,7 @@ export const AIPredictions: React.FC<AIPredictionsProps> = ({ logs, purchases = 
         setFeedback(null);
         try {
             const genAI = new GoogleGenerativeAI(activeKey);
-            const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
             const prompt = `
                 Araç verilerini analiz et ve sürücüye tek cümlelik, samimi, emojili (max 2) bir geri bildirim ver.
@@ -119,18 +119,14 @@ export const AIPredictions: React.FC<AIPredictionsProps> = ({ logs, purchases = 
             setAiMessage(text);
         } catch (error: any) {
             console.error("AI Assistant Error Detail:", error);
-            const errorMsg = error?.message || "Bilinmeyen hata";
+            const errorMsg = error?.message || String(error) || "Bilinmeyen hata";
 
             if (errorMsg.includes("quota") || errorMsg.includes("429")) {
                 setAiMessage("⚠️ Günlük limit doldu! Yarın tekrar deneyebilir veya farklı bir API anahtarı kullanabilirsiniz.");
             } else if (errorMsg.includes("API key")) {
-                setAiMessage(`🔑 API Anahtarı Hatası: Anahtar geçersiz veya yetkisiz.`);
-            } else if (errorMsg.includes("model")) {
-                setAiMessage(`🤖 Model Hatası: ${errorMsg.substring(0, 100)}`);
-            } else if (errorMsg.includes("fetch") || errorMsg.includes("network")) {
-                setAiMessage(`🌐 Ağ Hatası: İnternet veya API erişim sorunu.`);
+                setAiMessage(`🔑 API Anahtarı Hatası: Anahtar geçersiz, yetkisiz veya kısıtlanmış. (Detay: ${errorMsg.substring(0, 100)})`);
             } else {
-                setAiMessage(`😔 Bağlantı Hatası: ${errorMsg.substring(0, 70)}`);
+                setAiMessage(`❌ Hata: ${errorMsg.substring(0, 250)}`);
             }
         } finally {
             setIsLoadingAi(false);
@@ -139,7 +135,7 @@ export const AIPredictions: React.FC<AIPredictionsProps> = ({ logs, purchases = 
 
     // Auto-generate on mount if key exists and data ready
     useEffect(() => {
-        const activeKey = apiKey || import.meta.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY;
+        const activeKey = import.meta.env.VITE_GEMINI_API_KEY || apiKey || process.env.GEMINI_API_KEY;
         if (activeKey && predictions && !aiMessage) {
             generateAiInsight();
         }
