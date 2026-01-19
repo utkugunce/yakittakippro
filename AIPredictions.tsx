@@ -76,7 +76,7 @@ export const AIPredictions: React.FC<AIPredictionsProps> = ({ logs, purchases = 
     // --- Gemini AI Integration ---
     const [aiMessage, setAiMessage] = useState<string | null>(null);
     const [isLoadingAi, setIsLoadingAi] = useState(false);
-    const [showApiKeyInput, setShowApiKeyInput] = useState(false);
+    const [isLoadingAi, setIsLoadingAi] = useState(false);
     const [feedback, setFeedback] = useState<'kötü' | 'iyi' | null>(null);
 
     // Store integration
@@ -92,18 +92,10 @@ export const AIPredictions: React.FC<AIPredictionsProps> = ({ logs, purchases = 
         }
     }, [storedApiKey]);
 
-    // Save API key
-    const handleSaveApiKey = () => {
-        setStoredApiKey(apiKey);
-        setShowApiKeyInput(false);
-        generateAiInsight();
-    };
-
     const generateAiInsight = async () => {
         const activeKey = apiKey || import.meta.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY;
 
         if (!predictions || !activeKey) {
-            if (!activeKey) setShowApiKeyInput(true);
             return;
         }
 
@@ -126,7 +118,6 @@ export const AIPredictions: React.FC<AIPredictionsProps> = ({ logs, purchases = 
         } catch (error) {
             console.error("AI Error:", error);
             setAiMessage("Bağlantı hatası 😔 API anahtarını kontrol eder misin?");
-            setShowApiKeyInput(true);
         } finally {
             setIsLoadingAi(false);
         }
@@ -171,71 +162,44 @@ export const AIPredictions: React.FC<AIPredictionsProps> = ({ logs, purchases = 
                 {/* Background Pattern */}
                 <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-indigo-500/10 rounded-full blur-2xl"></div>
 
-                {showApiKeyInput ? (
-                    <div className="space-y-3">
-                        <p className="text-sm text-gray-600 dark:text-gray-300">
-                            Gerçek zamanlı AI analizleri için Google Gemini API anahtarı gerekli.
-                            <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer noopener" className="text-indigo-600 hover:underline ml-1 font-medium">
-                                Buradan ücretsiz alabilirsin.
-                            </a>
-                        </p>
-                        <div className="flex gap-2">
-                            <input
-                                type="text"
-                                value={apiKey}
-                                onChange={(e) => setApiKey(e.target.value)}
-                                placeholder="API Anahtarını Yapıştır (AIzaSy...)"
-                                className="flex-1 px-3 py-2 text-sm border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none"
-                            />
-                            <button
-                                onClick={handleSaveApiKey}
-                                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition-colors"
-                            >
-                                Kaydet
-                            </button>
+                <>
+                    <div className="flex items-start gap-3">
+                        <MessageSquare className="w-5 h-5 text-indigo-500 mt-1 shrink-0" />
+                        <div className="flex-1">
+                            {isLoadingAi ? (
+                                <div className="flex items-center gap-2 text-sm text-gray-500">
+                                    <Loader2 className="w-3 h-3 animate-spin" />
+                                    Veriler inceleniyor...
+                                </div>
+                            ) : (
+                                <p className="text-sm font-medium text-gray-800 dark:text-gray-100 leading-relaxed">
+                                    {aiMessage || "Verilerinizi analiz etmek için sağ üstteki pırıltı ikonuna tıklayın ✨"}
+                                </p>
+                            )}
                         </div>
                     </div>
-                ) : (
-                    <>
-                        <div className="flex items-start gap-3">
-                            <MessageSquare className="w-5 h-5 text-indigo-500 mt-1 shrink-0" />
-                            <div className="flex-1">
-                                {isLoadingAi ? (
-                                    <div className="flex items-center gap-2 text-sm text-gray-500">
-                                        <Loader2 className="w-3 h-3 animate-spin" />
-                                        Veriler inceleniyor...
-                                    </div>
-                                ) : (
-                                    <p className="text-sm font-medium text-gray-800 dark:text-gray-100 leading-relaxed">
-                                        {aiMessage || "Verilerinizi analiz etmek için sağ üstteki pırıltı ikonuna tıklayın ✨"}
-                                    </p>
-                                )}
-                            </div>
-                        </div>
 
-                        {/* Feedback Loop */}
-                        {aiMessage && !isLoadingAi && (
-                            <div className="flex justify-end gap-2 mt-3 pt-3 border-t border-gray-100 dark:border-gray-700/50">
-                                <span className="text-[10px] text-gray-400 self-center mr-2">Bu tavsiye faydalı mıydı?</span>
-                                <button
-                                    onClick={() => setFeedback('iyi')}
-                                    className={`p-1.5 rounded-lg transition-colors ${feedback === 'iyi' ? 'bg-green-100 text-green-700' : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400'}`}
-                                    title="Faydalı"
-                                >
-                                    <ThumbsUp className="w-3.5 h-3.5" />
-                                </button>
-                                <button
-                                    onClick={() => setFeedback('kötü')}
-                                    className={`p-1.5 rounded-lg transition-colors ${feedback === 'kötü' ? 'bg-red-100 text-red-700' : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400'}`}
-                                    title="Faydalı Değil"
-                                >
-                                    <ThumbsDown className="w-3.5 h-3.5" />
-                                </button>
-                            </div>
-                        )}
-                    </>
-                )
-                }
+                    {/* Feedback Loop */}
+                    {aiMessage && !isLoadingAi && (
+                        <div className="flex justify-end gap-2 mt-3 pt-3 border-t border-gray-100 dark:border-gray-700/50">
+                            <span className="text-[10px] text-gray-400 self-center mr-2">Bu tavsiye faydalı mıydı?</span>
+                            <button
+                                onClick={() => setFeedback('iyi')}
+                                className={`p-1.5 rounded-lg transition-colors ${feedback === 'iyi' ? 'bg-green-100 text-green-700' : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400'}`}
+                                title="Faydalı"
+                            >
+                                <ThumbsUp className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                                onClick={() => setFeedback('kötü')}
+                                className={`p-1.5 rounded-lg transition-colors ${feedback === 'kötü' ? 'bg-red-100 text-red-700' : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400'}`}
+                                title="Faydalı Değil"
+                            >
+                                <ThumbsDown className="w-3.5 h-3.5" />
+                            </button>
+                        </div>
+                    )}
+                </>
             </div >
 
             {/* Quick Stats Grid (Existing Layout) */}
