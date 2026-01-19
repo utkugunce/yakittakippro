@@ -2,30 +2,38 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { DailyLog, MaintenanceItem, DashboardStats, Vehicle, VehiclePart } from './types';
 import { EntryForm } from './EntryForm';
 import { DashboardStatsCard } from './DashboardStatsCard';
+// Logs imported statically as it's the main view
 import { LogHistory } from './LogHistory';
-import { Charts } from './Charts';
-import { Reports } from './Reports';
 import { DataManagement } from './DataManagement';
 import { Maintenance } from './Maintenance';
 import { WeeklySummary } from './WeeklySummary';
 import { NotificationSettings } from './NotificationSettings';
 
 import { CloudSync } from './CloudSync';
-import { FuelMap } from './FuelMap';
 import { AIPredictions } from './AIPredictions';
 import { ThemeSettings, AccentColor } from './ThemeSettings';
 import { FuelPurchaseForm } from './FuelPurchaseForm';
 import { FuelPurchase } from './types';
 import { FuelPurchaseHistory } from './FuelPurchaseHistory';
-import { Car, LayoutDashboard, History, FileText, Moon, Sun, Settings, Wrench, Plus, X, Fuel, BarChart3 } from 'lucide-react';
+import { Car, LayoutDashboard, History, FileText, Moon, Sun, Settings, Wrench, Plus, X, Fuel, BarChart3, Loader2 } from 'lucide-react';
 import { PwaReloadPrompt } from './PwaReloadPrompt';
 import { SuccessPopup } from './SuccessPopup';
 
+// Lazy Loaded Components (Code Splitting)
+const Charts = React.lazy(() => import('./Charts').then(module => ({ default: module.Charts })));
+const Reports = React.lazy(() => import('./Reports').then(module => ({ default: module.Reports })));
+const FuelMap = React.lazy(() => import('./FuelMap').then(module => ({ default: module.FuelMap })));
+const ChartsPage = React.lazy(() => import('@/src/features/charts/ChartsPage').then(module => ({ default: module.ChartsPage })));
+const StationAnalysis = React.lazy(() => import('@/src/features/analytics').then(module => ({ default: module.StationAnalysis })));
 
-
-// New feature imports
-import { ChartsPage } from '@/src/features/charts/ChartsPage';
-import { StationAnalysis } from '@/src/features/analytics';
+const PageLoader = () => (
+  <div className="flex items-center justify-center p-12 w-full h-full">
+    <div className="flex flex-col items-center gap-3">
+      <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
+      <p className="text-gray-500 dark:text-gray-400 text-sm animate-pulse">Yükleniyor...</p>
+    </div>
+  </div>
+);
 
 const LOCAL_STORAGE_KEY = 'yakit_takip_logs_v1';
 const MAINTENANCE_STORAGE_KEY = 'yakit_takip_maintenance_v1';
@@ -527,7 +535,9 @@ export default function App() {
             <WeeklySummary logs={logs} fuelPurchases={fuelPurchases} />
 
             {/* Analytics Section */}
-            <StationAnalysis fuelPurchases={fuelPurchases} />
+            <React.Suspense fallback={<div className="h-64 bg-gray-100 dark:bg-gray-800 rounded-xl animate-pulse"></div>}>
+              <StationAnalysis fuelPurchases={fuelPurchases} />
+            </React.Suspense>
 
             {/* AI Predictions */}
             <AIPredictions logs={logs} purchases={fuelPurchases} maintenanceItems={maintenanceItems} vehicleParts={vehicleParts} currentOdometer={lastOdometer} />
@@ -535,11 +545,13 @@ export default function App() {
         )}
 
         {activeTab === 'charts' && (
-          <ChartsPage
-            logs={logs}
-            purchases={fuelPurchases}
-            yearFilter={yearFilter}
-          />
+          <React.Suspense fallback={<PageLoader />}>
+            <ChartsPage
+              logs={logs}
+              purchases={fuelPurchases}
+              yearFilter={yearFilter}
+            />
+          </React.Suspense>
         )}
 
         {activeTab === 'history' && (
@@ -590,13 +602,15 @@ export default function App() {
         {
           activeTab === 'reports' && (
             <div className="animate-in fade-in duration-500 space-y-6">
-              <FuelMap logs={logs} purchases={fuelPurchases} />
-              <Reports
-                logs={logs}
-                purchases={fuelPurchases}
-                maintenanceItems={maintenanceItems}
-                vehicleParts={vehicleParts}
-              />
+              <React.Suspense fallback={<PageLoader />}>
+                <FuelMap logs={logs} purchases={fuelPurchases} />
+                <Reports
+                  logs={logs}
+                  purchases={fuelPurchases}
+                  maintenanceItems={maintenanceItems}
+                  vehicleParts={vehicleParts}
+                />
+              </React.Suspense>
             </div>
           )
         }

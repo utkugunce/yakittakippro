@@ -1,4 +1,5 @@
-import Tesseract from 'tesseract.js';
+// import Tesseract from 'tesseract.js';
+import { DailyLog } from '../types'; // Preserving other imports if any (none seen in view_file, but playing safe with types which were not imported before? File view showed no other imports)
 
 export interface ScanResult {
     date?: string;
@@ -10,6 +11,9 @@ export interface ScanResult {
 
 export const scanReceipt = async (file: File): Promise<ScanResult> => {
     try {
+        // Dynamic import to reduce initial bundle size
+        const Tesseract = (await import('tesseract.js')).default;
+
         const result = await Tesseract.recognize(
             file,
             'eng+tur', // Scan for both English and Turkish
