@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { MaintenanceItem, VehiclePart, PartType } from './types';
 import { Wrench, Plus, Trash2, AlertTriangle, CheckCircle, AlertCircle, Circle, Archive, Disc, Zap, Fan } from 'lucide-react';
+import { MaintenanceHeaderGradient } from './src/components/MaintenanceHeaderGradient';
+import { MaintenanceStatsBar } from './src/components/MaintenanceStatsBar';
+import { MaintenanceTips } from './src/components/MaintenanceTips';
 
 interface MaintenanceProps {
     items: MaintenanceItem[];
@@ -150,33 +153,27 @@ export const Maintenance: React.FC<MaintenanceProps> = ({
     };
 
     return (
-        <div className="space-y-6">
-            {/* Header & Tabs */}
-            <div className="flex flex-col space-y-4">
-                <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-bold text-gray-800 dark:text-white flex items-center">
-                        <Wrench className="w-5 h-5 mr-2 text-primary-600 dark:text-primary-400" />
-                        Bakım & Parçalar
-                    </h3>
-                    <div className="px-3 py-1 text-xs font-normal bg-gray-100 dark:bg-gray-700 rounded-full text-gray-600 dark:text-gray-300">
-                        {currentOdometer.toLocaleString()} km
-                    </div>
-                </div>
-
-                <div className="flex p-1 bg-gray-100 dark:bg-gray-700 rounded-xl">
-                    <button
-                        onClick={() => setSubTab('scheduled')}
-                        className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${subTab === 'scheduled' ? 'bg-white dark:bg-gray-600 text-primary-600 dark:text-primary-300 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
-                    >
-                        Periyodik Bakım
-                    </button>
-                    <button
-                        onClick={() => setSubTab('parts')}
-                        className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${subTab === 'parts' ? 'bg-white dark:bg-gray-600 text-primary-600 dark:text-primary-300 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
-                    >
-                        Parça & Lastik
-                    </button>
-                </div>
+        <div className="space-y-6 animate-fadeIn">
+            {/* Gradient Header */}
+            <MaintenanceHeaderGradient />
+            {/* Stats Bar */}
+            <MaintenanceStatsBar items={items} />
+            {/* Tips */}
+            <MaintenanceTips />
+            {/* Tabs */}
+            <div className="flex p-1 bg-gray-100 dark:bg-gray-700 rounded-xl">
+                <button
+                    onClick={() => setSubTab('scheduled')}
+                    className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${subTab === 'scheduled' ? 'bg-white dark:bg-gray-600 text-primary-600 dark:text-primary-300 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                >
+                    Periyodik Bakım
+                </button>
+                <button
+                    onClick={() => setSubTab('parts')}
+                    className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${subTab === 'parts' ? 'bg-white dark:bg-gray-600 text-primary-600 dark:text-primary-300 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                >
+                    Parça & Lastik
+                </button>
             </div>
 
             {/* Add Button */}

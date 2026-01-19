@@ -1,6 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { FuelPurchase } from './types';
 import { Trash2, Fuel, Filter, X, Calendar, Pencil, MapPin, Droplets, Coins } from 'lucide-react';
+import { FuelPurchaseStatsBar } from './src/components/FuelPurchaseStatsBar';
+import { FuelPurchaseTips } from './src/components/FuelPurchaseTips';
 
 interface FuelPurchaseHistoryProps {
     purchases: FuelPurchase[];
@@ -58,7 +60,10 @@ export const FuelPurchaseHistory: React.FC<FuelPurchaseHistoryProps> = ({
     }
 
     return (
-        <div className="space-y-4">
+        <div className="space-y-4 animate-fadeIn">
+            {/* Gamification/Stats Section */}
+            <FuelPurchaseStatsBar purchases={sortedPurchases} />
+            <FuelPurchaseTips />
             {/* Header with filter toggle */}
             <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">

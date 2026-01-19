@@ -1,5 +1,8 @@
 import React from 'react';
 import { Moon, Sun, Monitor, Check } from 'lucide-react';
+import { ThemePreview } from './src/components/ThemePreview';
+import { ThemeBadge } from './src/components/ThemeBadge';
+import { ThemeSettingsTips } from './src/components/ThemeSettingsTips';
 
 export type AccentColor = 'blue' | 'green' | 'purple' | 'orange' | 'red' | 'violet';
 
@@ -24,7 +27,11 @@ export const ThemeSettings: React.FC<ThemeSettingsProps> = ({
     ];
 
     return (
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 space-y-6">
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 space-y-6 animate-fadeIn">
+            {/* Gamification/Engagement Section */}
+            <ThemePreview isDark={isDarkMode} accent={currentAccent} />
+            <ThemeBadge isDark={isDarkMode} accent={currentAccent} />
+            <ThemeSettingsTips />
             <h3 className="text-lg font-bold text-gray-800 dark:text-white border-b border-gray-100 dark:border-gray-700 pb-2">
                 Görünüm Ayarları
             </h3>
