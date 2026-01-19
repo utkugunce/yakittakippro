@@ -122,14 +122,16 @@ export const AIPredictions: React.FC<AIPredictionsProps> = ({ logs, purchases = 
             console.error("AI Assistant Error Detail:", error);
             const errorMsg = error?.message || "Bilinmeyen hata";
 
-            if (errorMsg.includes("API key")) {
-                setAiMessage(`🔑 API Anahtarı Hatası: ${errorMsg}`);
+            if (errorMsg.includes("quota") || errorMsg.includes("429")) {
+                setAiMessage("⚠️ Günlük limit doldu! Yarın tekrar deneyebilir veya farklı bir API anahtarı kullanabilirsiniz.");
+            } else if (errorMsg.includes("API key")) {
+                setAiMessage(`🔑 API Anahtarı Hatası: Anahtar geçersiz veya yetkisiz.`);
             } else if (errorMsg.includes("model")) {
-                setAiMessage(`🤖 Model Hatası: ${errorMsg}`);
+                setAiMessage(`🤖 Model Hatası: Bu modele şu an erişilemiyor.`);
             } else if (errorMsg.includes("fetch") || errorMsg.includes("network")) {
                 setAiMessage(`🌐 Ağ Hatası: İnternet bağlantınızı kontrol edin.`);
             } else {
-                setAiMessage(`😔 Bağlantı Hatası: ${errorMsg.substring(0, 50)}...`);
+                setAiMessage(`😔 Bağlantı Hatası: Tekrar denenebilir.`);
             }
         } finally {
             setIsLoadingAi(false);
