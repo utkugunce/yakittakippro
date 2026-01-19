@@ -92,12 +92,12 @@ export const AIPredictions: React.FC<AIPredictionsProps> = ({ logs, purchases = 
     }, [storedApiKey]);
 
     const generateAiInsight = async () => {
-        // Prioritize .env key as it's the intended system key
-        const activeKey = import.meta.env.VITE_GEMINI_API_KEY || apiKey || process.env.GEMINI_API_KEY;
+        // PRIORITY: 1. .env file (system), 2. User manually entered key (local state), 3. process.env (legacy)
+        const envKey = import.meta.env.VITE_GEMINI_API_KEY;
+        const activeKey = (envKey && envKey !== 'undefined' && envKey !== 'null') ? envKey : (apiKey || process.env.GEMINI_API_KEY);
 
-        if (!predictions || !activeKey || activeKey === 'undefined' || activeKey === 'null') {
-            console.warn("AI Assistant: Missing or invalid API key");
-            setAiMessage("API anahtarı eksik veya geçersiz. Lütfen Ayarlar'dan kontrol edin.");
+        if (!activeKey || activeKey === 'undefined' || activeKey === 'null') {
+            setAiMessage("API anahtarı bulunamadı. Lütfen .env dosyasını veya Ayarlar'ı kontrol edin. 🔐");
             return;
         }
 
@@ -105,7 +105,8 @@ export const AIPredictions: React.FC<AIPredictionsProps> = ({ logs, purchases = 
         setFeedback(null);
         try {
             const genAI = new GoogleGenerativeAI(activeKey);
-            const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+            // gemini-1.5-flash is currently the most stable widely available model
+            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
             const prompt = `
                 Araç verilerini analiz et ve sürücüye tek cümlelik, samimi, emojili (max 2) bir geri bildirim ver.
