@@ -51,12 +51,20 @@ SADECE JSON formatında döndür:
     }
 
     try {
+        console.log('Analyzing dashboard photo with mode:', mode);
         const response = await callVisionAPI(imageBase64, prompt);
-        const jsonMatch = response.match(/\{[\s\S]*\}/);
+        console.log('AI Raw Response:', response);
+
+        // Clean up markdown code blocks if present
+        const cleanResponse = response.replace(/```json\n|\n```/g, '').replace(/```/g, '');
+
+        const jsonMatch = cleanResponse.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
-            return JSON.parse(jsonMatch[0]);
+            const parsed = JSON.parse(jsonMatch[0]);
+            console.log('Parsed Data:', parsed);
+            return parsed;
         }
-        throw new Error('AI yanıt veremedi');
+        throw new Error('AI yanıtı JSON formatında değil: ' + response.substring(0, 100));
     } catch (error: any) {
         console.error('Dashboard analysis error:', error);
         throw new Error(error.message || 'Analiz başarısız');
@@ -73,12 +81,19 @@ SADECE JSON formatında döndür:
 {"pricePerLiter": number veya null, "totalAmount": number veya null, "liters": number veya null}`;
 
     try {
+        console.log('Analyzing receipt photo...');
         const response = await callVisionAPI(imageBase64, prompt);
-        const jsonMatch = response.match(/\{[\s\S]*\}/);
+        console.log('AI Receipt Raw Response:', response);
+
+        const cleanResponse = response.replace(/```json\n|\n```/g, '').replace(/```/g, '');
+        const jsonMatch = cleanResponse.match(/\{[\s\S]*\}/);
+
         if (jsonMatch) {
-            return JSON.parse(jsonMatch[0]);
+            const parsed = JSON.parse(jsonMatch[0]);
+            console.log('Parsed Receipt Data:', parsed);
+            return parsed;
         }
-        throw new Error('AI yanıt veremedi');
+        throw new Error('AI yanıtı JSON formatında değil');
     } catch (error: any) {
         console.error('Receipt analysis error:', error);
         throw new Error(error.message || 'Analiz başarısız');
@@ -114,7 +129,7 @@ async function callGroqVision(imageBase64: string, prompt: string, apiKey: strin
             'Authorization': `Bearer ${apiKey}`
         },
         body: JSON.stringify({
-            model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+            model: 'llama-3.2-90b-vision-preview',
             messages: [
                 {
                     role: 'user',
