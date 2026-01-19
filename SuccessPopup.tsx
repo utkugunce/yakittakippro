@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { DailyLog } from './types';
-import { CheckCircle, TrendingUp, TrendingDown, Minus, Route, Fuel, Wallet, X } from 'lucide-react';
+import { CheckCircle, TrendingUp, TrendingDown, Minus, Route, Fuel, Wallet, X, Sparkles } from 'lucide-react';
+import { hapticSuccess } from './src/lib/haptic';
 
 interface SuccessPopupProps {
     isOpen: boolean;
@@ -14,6 +15,7 @@ export const SuccessPopup: React.FC<SuccessPopupProps> = ({ isOpen, onClose, log
     useEffect(() => {
         if (isOpen) {
             setShow(true);
+            hapticSuccess();
         }
     }, [isOpen]);
 
@@ -96,14 +98,16 @@ export const SuccessPopup: React.FC<SuccessPopupProps> = ({ isOpen, onClose, log
             <div className={`bg-gradient-to-br from-green-500 to-emerald-600 rounded-3xl shadow-2xl max-w-sm w-full overflow-hidden transition-all duration-300 ${show ? 'scale-100 translate-y-0' : 'scale-95 translate-y-4'}`}>
                 {/* Header */}
                 <div className="pt-8 pb-4 text-center">
-                    <div className="w-20 h-20 bg-white rounded-full mx-auto flex items-center justify-center shadow-lg">
+                    <div className="w-20 h-20 bg-white rounded-full mx-auto flex items-center justify-center shadow-lg mb-3">
                         <CheckCircle className="w-12 h-12 text-green-500" />
                     </div>
+                    <h2 className="text-white text-xl font-bold">Harika! Bir adım daha 🎯</h2>
+                    <p className="text-white/80 text-sm mt-1">Her kayıt tasarruf için bir fırsat</p>
                 </div>
 
                 {/* Stats */}
                 <div className="bg-white rounded-t-3xl pt-6 pb-4 px-5">
-                    <h3 className="text-center text-gray-400 text-sm font-bold uppercase tracking-wider mb-4">30-DAY STATİSTİCS</h3>
+                    <h3 className="text-center text-gray-400 text-sm font-bold uppercase tracking-wider mb-4">Son 30 Günün</h3>
 
                     <div className="space-y-3">
                         {/* Consumption */}
@@ -140,7 +144,7 @@ export const SuccessPopup: React.FC<SuccessPopupProps> = ({ isOpen, onClose, log
                         <div className="flex items-center justify-between">
                             <div className="flex items-center space-x-2">
                                 <Fuel className="w-4 h-4 text-gray-400" />
-                                <span className="text-gray-700 text-sm font-medium">SINCE THE LAST FUEL-UP</span>
+                                <span className="text-gray-700 text-sm font-medium">SON DEPOYA GÖRE</span>
                             </div>
                             <span className="font-bold text-gray-900">{stats.sinceFuelDistance.toLocaleString('tr-TR')} KM</span>
                         </div>
@@ -166,9 +170,10 @@ export const SuccessPopup: React.FC<SuccessPopupProps> = ({ isOpen, onClose, log
                 <div className="bg-white px-5 pb-6">
                     <button
                         onClick={handleClose}
-                        className="w-full bg-gradient-to-r from-green-400 to-green-500 hover:from-green-500 hover:to-green-600 text-white font-bold py-4 rounded-2xl shadow-md hover:shadow-lg transition-all text-lg"
+                        className="w-full bg-gradient-to-r from-green-400 to-green-500 hover:from-green-500 hover:to-green-600 text-white font-bold py-4 rounded-2xl shadow-md hover:shadow-lg transition-all text-lg flex items-center justify-center gap-2"
                     >
-                        Got It
+                        <Sparkles className="w-5 h-5" />
+                        Devam Et
                     </button>
                 </div>
             </div>

@@ -57,7 +57,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl" />
             <div className="absolute bottom-0 left-0 w-48 h-48 bg-purple-400/20 rounded-full translate-y-1/2 -translate-x-1/2 blur-2xl" />
 
-            <div className="relative z-10">
+            <div className="relative">
                 {/* Greeting */}
                 <div className="flex items-center gap-3 mb-4">
                     <div className="p-2 bg-white/20 rounded-xl backdrop-blur-sm">

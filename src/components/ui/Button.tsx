@@ -1,6 +1,7 @@
 import * as React from "react"
 import { Loader2 } from "lucide-react"
 import { cn } from "../../lib/utils"
+import { hapticClick } from "../../lib/haptic"
 
 export interface ButtonProps
     extends React.ButtonHTMLAttributes<HTMLButtonElement> {
@@ -9,10 +10,16 @@ export interface ButtonProps
     isLoading?: boolean
     leftIcon?: React.ElementType
     rightIcon?: React.ElementType
+    haptic?: boolean
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-    ({ className, variant = "default", size = "md", isLoading, leftIcon: LeftIcon, rightIcon: RightIcon, children, disabled, ...props }, ref) => {
+    ({ className, variant = "default", size = "md", isLoading, leftIcon: LeftIcon, rightIcon: RightIcon, children, disabled, haptic = true, onClick, ...props }, ref) => {
+
+        const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+            if (haptic) hapticClick();
+            onClick?.(e);
+        };
 
         const variants = {
             default: "bg-blue-600 text-white hover:bg-blue-700 shadow-sm border-transparent",
@@ -39,6 +46,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
                 )}
                 ref={ref}
                 disabled={isLoading || disabled}
+                onClick={handleClick}
                 {...props}
             >
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

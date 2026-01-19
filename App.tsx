@@ -29,6 +29,7 @@ const Reports = React.lazy(() => import('./Reports').then(module => ({ default: 
 const FuelMap = React.lazy(() => import('./FuelMap').then(module => ({ default: module.FuelMap })));
 const ChartsPage = React.lazy(() => import('@/src/features/charts/ChartsPage').then(module => ({ default: module.ChartsPage })));
 const StationAnalysis = React.lazy(() => import('@/src/features/analytics').then(module => ({ default: module.StationAnalysis })));
+const PredictiveInsights = React.lazy(() => import('@/src/features/insights').then(module => ({ default: module.PredictiveInsights })));
 
 
 
@@ -413,7 +414,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200 flex flex-col">
       {/* Header */}
-      <header className="bg-white dark:bg-gray-800 shadow-sm sticky top-0 z-10">
+      <header className="bg-white dark:bg-gray-800 shadow-sm sticky top-0 z-30">
         <div className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <div className="bg-primary-600 p-2 rounded-lg shadow-lg">
@@ -568,6 +569,17 @@ export default function App() {
             {/* Analytics Section */}
             <React.Suspense fallback={<div className="h-64 bg-gray-100 dark:bg-gray-800 rounded-xl animate-pulse"></div>}>
               <StationAnalysis fuelPurchases={fuelPurchases} />
+            </React.Suspense>
+
+            {/* Predictive Insights */}
+            <React.Suspense fallback={<div className="h-48 bg-gray-100 dark:bg-gray-800 rounded-xl animate-pulse"></div>}>
+              <PredictiveInsights
+                logs={logs}
+                purchases={fuelPurchases}
+                maintenanceItems={maintenanceItems}
+                currentOdometer={lastOdometer}
+                monthlyBudget={0}
+              />
             </React.Suspense>
 
             {/* AI Predictions */}
