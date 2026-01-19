@@ -105,8 +105,7 @@ export const AIPredictions: React.FC<AIPredictionsProps> = ({ logs, purchases = 
         setFeedback(null);
         try {
             const genAI = new GoogleGenerativeAI(activeKey);
-            // gemini-1.5-flash is currently the most stable widely available model
-            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+            const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
             const prompt = `
                 Araç verilerini analiz et ve sürücüye tek cümlelik, samimi, emojili (max 2) bir geri bildirim ver.
@@ -127,11 +126,11 @@ export const AIPredictions: React.FC<AIPredictionsProps> = ({ logs, purchases = 
             } else if (errorMsg.includes("API key")) {
                 setAiMessage(`🔑 API Anahtarı Hatası: Anahtar geçersiz veya yetkisiz.`);
             } else if (errorMsg.includes("model")) {
-                setAiMessage(`🤖 Model Hatası: Bu modele şu an erişilemiyor.`);
+                setAiMessage(`🤖 Model Hatası: ${errorMsg.substring(0, 100)}`);
             } else if (errorMsg.includes("fetch") || errorMsg.includes("network")) {
-                setAiMessage(`🌐 Ağ Hatası: İnternet bağlantınızı kontrol edin.`);
+                setAiMessage(`🌐 Ağ Hatası: İnternet veya API erişim sorunu.`);
             } else {
-                setAiMessage(`😔 Bağlantı Hatası: Tekrar denenebilir.`);
+                setAiMessage(`😔 Bağlantı Hatası: ${errorMsg.substring(0, 70)}`);
             }
         } finally {
             setIsLoadingAi(false);
