@@ -20,6 +20,8 @@ import { Car, LayoutDashboard, History, FileText, Moon, Sun, Settings, Wrench, P
 import { PwaReloadPrompt } from './PwaReloadPrompt';
 import { SuccessPopup } from './SuccessPopup';
 import { PageLoader } from './src/components/PageLoader';
+import { useSmartNudges } from './src/hooks/useSmartNudges';
+import { SmartNudgeBanner } from './src/components/SmartNudgeBanner';
 
 // Lazy Loaded Components (Code Splitting)
 const Charts = React.lazy(() => import('./Charts').then(module => ({ default: module.Charts })));
@@ -398,6 +400,16 @@ export default function App() {
     return [...maintAlerts, ...partAlerts].sort((a, b) => a.urgency - b.urgency);
   }, [maintenanceItems, vehicleParts, lastOdometer]);
 
+  // Smart Nudges
+  const smartNudges = useSmartNudges({
+    logs,
+    purchases: fuelPurchases,
+    maintenanceItems,
+    vehicleParts,
+    currentOdometer: lastOdometer,
+    monthlyBudget: 0 // TODO: Get from settings
+  });
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200 flex flex-col">
       {/* Header */}
@@ -508,6 +520,19 @@ export default function App() {
 
         {activeTab === 'dashboard' && (
           <div className="space-y-6 animate-in fade-in duration-500">
+            {/* Smart Nudges Banner */}
+            {smartNudges.length > 0 && (
+              <SmartNudgeBanner
+                nudges={smartNudges}
+                onAction={(handler) => {
+                  if (handler === 'addLog') setShowEntryModal(true);
+                  else if (handler === 'addFuel') setShowFuelPurchaseModal(true);
+                  else if (handler === 'maintenance') setActiveTab('maintenance');
+                }}
+                onDismiss={(id) => console.log('Dismissed:', id)}
+              />
+            )}
+
             {/* Year Filter Tabs - En Üst */}
             <div className="flex justify-center">
               <div className="inline-flex rounded-lg bg-gray-100 dark:bg-gray-800 p-1">
