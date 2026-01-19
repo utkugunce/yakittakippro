@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { FuelPurchase } from './FuelPurchaseForm';
+import { FuelPurchase } from './types';
 import { Trash2, Fuel, Filter, X, Calendar, Pencil, MapPin, Droplets, Coins } from 'lucide-react';
 
 interface FuelPurchaseHistoryProps {
@@ -73,8 +73,8 @@ export const FuelPurchaseHistory: React.FC<FuelPurchaseHistoryProps> = ({
                 <button
                     onClick={() => setShowFilters(!showFilters)}
                     className={`p-2 rounded-lg transition-colors ${showFilters || hasFilters
-                            ? 'bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600'
-                            : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
+                        ? 'bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600'
+                        : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
                         }`}
                 >
                     <Filter className="w-5 h-5" />

@@ -17,8 +17,7 @@ import {
   Cell
 } from 'recharts';
 import { Activity, Eye, EyeOff, PieChart as PieChartIcon } from 'lucide-react';
-import { DailyLog } from './types';
-import { FuelPurchase } from './FuelPurchaseForm';
+import { DailyLog, FuelPurchase } from './types';
 
 interface ChartsProps {
   logs: DailyLog[];

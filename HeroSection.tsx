@@ -28,11 +28,17 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
     // Calculate stats
     const stats = useMemo(() => {
+        const now = new Date();
+        const startOfWeek = new Date(now);
+        // getDay() returns 0 for Sunday, 1 for Monday, etc.
+        const day = now.getDay();
+        const diff = (day + 6) % 7; // Distance to Monday
+        startOfWeek.setDate(now.getDate() - diff);
+        startOfWeek.setHours(0, 0, 0, 0);
+
         const thisWeekLogs = logs.filter(l => {
             const logDate = new Date(l.date);
-            const weekAgo = new Date();
-            weekAgo.setDate(weekAgo.getDate() - 7);
-            return logDate >= weekAgo;
+            return logDate >= startOfWeek;
         });
 
         const weeklyKm = thisWeekLogs.reduce((sum, l) => sum + l.distance, 0);

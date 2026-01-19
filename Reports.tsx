@@ -1,11 +1,10 @@
 import React, { useMemo, useState } from 'react';
-import { DailyLog, MaintenanceItem, VehiclePart } from './types';
+import { DailyLog, MaintenanceItem, VehiclePart, FuelPurchase } from './types';
 import { FileText, TrendingUp, TrendingDown, Calendar, Award, BarChart3, Fuel, Route, Coins, ArrowUpRight, ArrowDownRight, Download, FileSpreadsheet, Table } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 
-import { FuelPurchase } from './FuelPurchaseForm';
 
 // New Analytics Imports
 import {

@@ -1,6 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { DailyLog } from './types';
-import { FuelPurchase } from './FuelPurchaseForm';
+import { DailyLog, FuelPurchase } from './types';
 import {
     TrendingUp, TrendingDown, Minus, Calendar, Fuel, Route, Wallet,
     ChevronDown, ChevronUp, Droplets, Activity, Target, BarChart3

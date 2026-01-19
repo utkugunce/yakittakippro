@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useCallback } from 'react';
 import { GoogleMap, useJsApiLoader, Marker, InfoWindow } from '@react-google-maps/api';
 import { DailyLog } from './types';
-import { FuelPurchase } from './FuelPurchaseForm';
+import { FuelPurchase } from './types';
 import { Fuel, Calendar, Gauge, Droplets, Coins, Map, AlertTriangle } from 'lucide-react';
 
 interface FuelMapProps {
