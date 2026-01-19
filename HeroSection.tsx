@@ -67,11 +67,15 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 <div className="grid grid-cols-2 gap-3 my-5">
                     <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3">
                         <div className="text-xs text-white/60 uppercase font-medium mb-1">Bu Hafta</div>
-                        <div className="text-xl font-bold">{stats.weeklyKm.toFixed(0)} km</div>
+                        <div className="text-xl font-bold">
+                            {stats.weeklyKm > 0 ? `${stats.weeklyKm.toFixed(0)} km` : '-'}
+                        </div>
                     </div>
                     <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3">
                         <div className="text-xs text-white/60 uppercase font-medium mb-1">Ort. Tüketim</div>
-                        <div className="text-xl font-bold">{stats.weeklyAvgConsumption.toFixed(1)} L/100</div>
+                        <div className="text-xl font-bold">
+                            {stats.weeklyAvgConsumption > 0 ? `${stats.weeklyAvgConsumption.toFixed(1)} L/100` : '-'}
+                        </div>
                     </div>
                 </div>
 

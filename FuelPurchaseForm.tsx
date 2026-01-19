@@ -28,39 +28,14 @@ export const FuelPurchaseForm: React.FC<FuelPurchaseFormProps> = ({ onAdd, onUpd
     const [notes, setNotes] = useState<string>('');
     const [city, setCity] = useState<string>('');
     const [error, setError] = useState<string | null>(null);
-
-    // Reverse Geocoding to get City
-    useEffect(() => {
-        if (location && addLocation) {
-            const fetchCity = async () => {
-                try {
-                    const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
-                    if (!apiKey) return;
-
-                    const response = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${location.latitude},${location.longitude}&key=${apiKey}&language=tr`);
-                    const data = await response.json();
-
-                    if (data.results && data.results.length > 0) {
-                        const cityResult = data.results.find((r: any) => r.types.includes('administrative_area_level_1')) ||
-                            data.results.find((r: any) => r.types.includes('locality'));
-
-                        if (cityResult) {
-                            // Extract just the name (e.g. "İstanbul" from "İstanbul, Türkiye")
-                            const addressComp = cityResult.address_components.find((c: any) => c.types.includes('administrative_area_level_1') || c.types.includes('locality'));
-                            if (addressComp) {
-                                setCity(addressComp.long_name);
-                            }
-                        }
-                    }
-                } catch (error) {
-                    console.error("Geocoding error:", error);
-                }
-            };
-            fetchCity();
-        } else {
-            setCity('');
-        }
-    }, [location, addLocation]);
+    const [calcMode, setCalcMode] = useState<'liters' | 'total'>('liters');
+    const [addLocation, setAddLocation] = useState(false);
+    const [locationMode, setLocationMode] = useState<'gps' | 'manual' | 'map'>('gps');
+    const [location, setLocation] = useState<{ latitude: number; longitude: number } | null>(null);
+    const [manualLat, setManualLat] = useState<string>('');
+    const [manualLng, setManualLng] = useState<string>('');
+    const [gpsLoading, setGpsLoading] = useState(false);
+    const [showMapPicker, setShowMapPicker] = useState(false);
 
     // Filter stations based on search and sort by usage frequency
     const filteredStations = useMemo(() => {
@@ -80,12 +55,11 @@ export const FuelPurchaseForm: React.FC<FuelPurchaseFormProps> = ({ onAdd, onUpd
         const sortedStations = allStations.sort((a, b) => {
             const freqA = frequency[a] || 0;
             const freqB = frequency[b] || 0;
-            if (freqA !== freqB) return freqB - freqA; // Higher freq comes first
-            // If frequencies equal (e.g. 0), keep default list order or alphabetically for others
+            if (freqA !== freqB) return freqB - freqA;
             const indexA = FUEL_STATIONS.indexOf(a);
             const indexB = FUEL_STATIONS.indexOf(b);
-            if (indexA !== -1 && indexB !== -1) return indexA - indexB; // Keep default order
-            if (indexA !== -1) return -1; // Default stations prioritized over custom 0-freq
+            if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+            if (indexA !== -1) return -1;
             if (indexB !== -1) return 1;
             return a.localeCompare(b);
         });
@@ -94,17 +68,37 @@ export const FuelPurchaseForm: React.FC<FuelPurchaseFormProps> = ({ onAdd, onUpd
         return sortedStations.filter(s => s.toLowerCase().includes(stationSearch.toLowerCase()));
     }, [stationSearch, purchaseHistory]);
 
-    // Calculation mode: 'auto' calculates total, 'manual' allows direct input
-    const [calcMode, setCalcMode] = useState<'liters' | 'total'>('liters');
+    // Reverse Geocoding to get City
+    useEffect(() => {
+        if (location && addLocation) {
+            const fetchCity = async () => {
+                try {
+                    const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+                    if (!apiKey) return;
 
-    // Location
-    const [addLocation, setAddLocation] = useState(false);
-    const [locationMode, setLocationMode] = useState<'gps' | 'manual' | 'map'>('gps');
-    const [location, setLocation] = useState<{ latitude: number; longitude: number } | null>(null);
-    const [manualLat, setManualLat] = useState<string>('');
-    const [manualLng, setManualLng] = useState<string>('');
-    const [gpsLoading, setGpsLoading] = useState(false);
-    const [showMapPicker, setShowMapPicker] = useState(false);
+                    const response = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${location.latitude},${location.longitude}&key=${apiKey}&language=tr`);
+                    const data = await response.json();
+
+                    if (data.results && data.results.length > 0) {
+                        const cityResult = data.results.find((r: any) => r.types.includes('administrative_area_level_1')) ||
+                            data.results.find((r: any) => r.types.includes('locality'));
+
+                        if (cityResult) {
+                            const addressComp = cityResult.address_components.find((c: any) => c.types.includes('administrative_area_level_1') || c.types.includes('locality'));
+                            if (addressComp) {
+                                setCity(addressComp.long_name);
+                            }
+                        }
+                    }
+                } catch (error) {
+                    console.error("Geocoding error:", error);
+                }
+            };
+            fetchCity();
+        } else {
+            setCity('');
+        }
+    }, [location, addLocation]);
 
     // Pre-fill last fuel price disabled by user request
     // useEffect(() => {
