@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Fuel, Calendar, Coins, Droplets, MapPin, Calculator, PlusCircle, Eraser, AlertCircle, GaugeCircle, Map, Search } from 'lucide-react';
 import { LocationPicker } from './LocationPicker';
 import { FuelPurchase } from './types';
+import { Input } from './src/components/ui/Input';
 
 interface FuelPurchaseFormProps {
     onAdd: (purchase: FuelPurchase) => void;
@@ -236,34 +237,25 @@ export const FuelPurchaseForm: React.FC<FuelPurchaseFormProps> = ({ onAdd, onUpd
 
             <form onSubmit={handleSubmit} className="space-y-5">
                 {/* Date and Time */}
+                {/* Date and Time */}
                 <div className="grid grid-cols-2 gap-4">
-                    <div>
-                        <label className={labelClasses}>Tarih</label>
-                        <div className="relative">
-                            <Calendar className="absolute left-3 top-3.5 w-5 h-5 text-gray-500" />
-                            <input
-                                type="date"
-                                required
-                                aria-label="Tarih"
-                                value={date}
-                                onChange={(e) => setDate(e.target.value)}
-                                className={inputBaseClasses}
-                            />
-                        </div>
-                    </div>
-                    <div>
-                        <label className={labelClasses}>Saat</label>
-                        <div className="relative">
-                            <input
-                                type="time"
-                                required
-                                aria-label="Saat"
-                                value={time}
-                                onChange={(e) => setTime(e.target.value)}
-                                className={inputBaseClasses.replace('pl-10', 'pl-4')} // Less padding as no icon
-                            />
-                        </div>
-                    </div>
+                    <Input
+                        label="Tarih"
+                        type="date"
+                        icon={Calendar}
+                        required
+                        aria-label="Tarih"
+                        value={date}
+                        onChange={(e) => setDate(e.target.value)}
+                    />
+                    <Input
+                        label="Saat"
+                        type="time"
+                        required
+                        aria-label="Saat"
+                        value={time}
+                        onChange={(e) => setTime(e.target.value)}
+                    />
                 </div>
 
                 {/* Fuel Station Search & Select */}
@@ -354,68 +346,51 @@ export const FuelPurchaseForm: React.FC<FuelPurchaseFormProps> = ({ onAdd, onUpd
                 </div>
 
                 {/* Liters */}
-                <div>
-                    <label className={labelClasses}>
-                        Alınan Litre {calcMode === 'total' && <span className="text-gray-400">(Otomatik)</span>}
-                    </label>
-                    <div className="relative">
-                        <Droplets className="absolute left-3 top-3.5 w-5 h-5 text-gray-500" />
-                        <input
-                            type="number"
-                            step="0.01"
-                            required
-                            placeholder="Örn: 45.5"
-                            value={liters}
-                            onChange={(e) => {
-                                setLiters(e.target.value);
-                                if (calcMode !== 'liters') setCalcMode('liters');
-                            }}
-                            className={`${inputBaseClasses} ${calcMode === 'total' ? 'bg-gray-600/50' : ''}`}
-                        />
-                    </div>
-                </div>
+                <Input
+                    label="Alınan Litre"
+                    helperText={calcMode === 'total' ? "(Otomatik)" : undefined}
+                    type="number"
+                    step="0.01"
+                    required
+                    placeholder="Örn: 45.5"
+                    value={liters}
+                    onChange={(e) => {
+                        setLiters(e.target.value);
+                        if (calcMode !== 'liters') setCalcMode('liters');
+                    }}
+                    icon={Droplets}
+                    className={calcMode === 'total' ? 'bg-gray-600/50' : ''}
+                />
 
                 {/* Price Per Liter */}
-                <div>
-                    <label className={labelClasses}>Litre Fiyatı (TL/L)</label>
-                    <div className="relative">
-                        <Coins className="absolute left-3 top-3.5 w-5 h-5 text-gray-500" />
-                        <input
-                            type="number"
-                            step="0.01"
-                            required
-                            placeholder="Örn: 42.50"
-                            value={pricePerLiter}
-                            onChange={(e) => setPricePerLiter(e.target.value)}
-                            className={inputBaseClasses}
-                        />
-                    </div>
-                    {lastFuelPrice > 0 && (
-                        <p className="text-xs text-gray-400 mt-1">Son fiyat: ₺{lastFuelPrice.toFixed(2)}</p>
-                    )}
-                </div>
+                <Input
+                    label="Litre Fiyatı (TL/L)"
+                    type="number"
+                    step="0.01"
+                    required
+                    placeholder="Örn: 42.50"
+                    value={pricePerLiter}
+                    onChange={(e) => setPricePerLiter(e.target.value)}
+                    icon={Coins}
+                    helperText={lastFuelPrice > 0 ? `Son fiyat: ₺${lastFuelPrice.toFixed(2)}` : undefined}
+                />
 
                 {/* Total Amount */}
-                <div>
-                    <label className={labelClasses}>
-                        Toplam Tutar (TL) {calcMode === 'liters' && <span className="text-gray-400">(Otomatik)</span>}
-                    </label>
-                    <div className="relative">
-                        <Calculator className="absolute left-3 top-3.5 w-5 h-5 text-gray-500" />
-                        <input
-                            type="number"
-                            step="0.01"
-                            required
-                            placeholder="Örn: 1933.75"
-                            value={totalAmount}
-                            onChange={(e) => {
-                                setTotalAmount(e.target.value);
-                                if (calcMode !== 'total') setCalcMode('total');
-                            }}
-                            className={`${inputBaseClasses} ${calcMode === 'liters' ? 'bg-gray-600/50' : ''}`}
-                        />
-                    </div>
-                </div>
+                <Input
+                    label="Toplam Tutar (TL)"
+                    helperText={calcMode === 'liters' ? "(Otomatik)" : undefined}
+                    type="number"
+                    step="0.01"
+                    required
+                    placeholder="Örn: 1933.75"
+                    value={totalAmount}
+                    onChange={(e) => {
+                        setTotalAmount(e.target.value);
+                        if (calcMode !== 'total') setCalcMode('total');
+                    }}
+                    icon={Calculator}
+                    className={calcMode === 'liters' ? 'bg-gray-600/50' : ''}
+                />
 
                 {/* Summary Card */}
                 {parseFloat(liters) > 0 && parseFloat(totalAmount) > 0 && (
@@ -434,20 +409,15 @@ export const FuelPurchaseForm: React.FC<FuelPurchaseFormProps> = ({ onAdd, onUpd
                 )}
 
                 {/* Odometer (Optional) */}
-                <div>
-                    <label className={labelClasses}>Güncel KM (Opsiyonel)</label>
-                    <div className="relative">
-                        <GaugeCircle className="absolute left-3 top-3.5 w-5 h-5 text-gray-500" />
-                        <input
-                            type="number"
-                            step="1"
-                            placeholder={lastOdometer > 0 ? `Son: ${lastOdometer.toLocaleString('tr-TR')} km` : 'Örn: 52000'}
-                            value={odometer}
-                            onChange={(e) => setOdometer(e.target.value)}
-                            className={inputBaseClasses}
-                        />
-                    </div>
-                </div>
+                <Input
+                    label="Güncel KM (Opsiyonel)"
+                    type="number"
+                    step="1"
+                    placeholder={lastOdometer > 0 ? `Son: ${lastOdometer.toLocaleString('tr-TR')} km` : 'Örn: 52000'}
+                    value={odometer}
+                    onChange={(e) => setOdometer(e.target.value)}
+                    icon={GaugeCircle}
+                />
 
                 {/* Notes (Optional) */}
                 <div>
