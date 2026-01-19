@@ -105,7 +105,7 @@ export const AIPredictions: React.FC<AIPredictionsProps> = ({ logs, purchases = 
         setFeedback(null);
         try {
             const genAI = new GoogleGenerativeAI(activeKey);
-            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+            const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
             const prompt = `
                 Araç verilerini analiz et ve sürücüye tek cümlelik, samimi, emojili (max 2) bir geri bildirim ver.
