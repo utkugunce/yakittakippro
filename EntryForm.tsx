@@ -4,6 +4,7 @@ import { PlusCircle, Fuel, Gauge, Calculator, Calendar, AlertCircle, Coins, Eras
 import { ExcelImport } from './ExcelImport';
 import { PhotoScanner } from './PhotoScanner';
 import { VoiceEntry } from './VoiceEntry';
+import { Input } from './src/components/ui/Input';
 
 interface EntryFormProps {
   logs: DailyLog[];
@@ -246,6 +247,7 @@ export const EntryForm: React.FC<EntryFormProps> = ({ logs, onAdd, onUpdate, onI
             onClick={() => setShowVoiceEntry(true)}
             className="flex items-center px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg shadow-sm transition-all"
             title="Sesle Giriş"
+            aria-label="Sesle Giriş Başlat"
           >
             <Mic className="w-4 h-4" />
           </button>
@@ -297,112 +299,74 @@ export const EntryForm: React.FC<EntryFormProps> = ({ logs, onAdd, onUpdate, onI
       )}
 
       <form onSubmit={handleSubmit} className="space-y-5">
-        <div>
-          <label className={labelClasses}>Tarih</label>
-          <div className="relative">
-            <Calendar className="absolute left-3 top-3.5 w-5 h-5 text-gray-500" />
-            <input
-              type="date"
-              required
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              title="Tarih Seçimi"
-              aria-label="Tarih Seçimi"
-              className={inputBaseClasses}
-            />
-          </div>
-        </div>
+        <Input
+          label="Tarih"
+          type="date"
+          required
+          value={date}
+          onChange={(e) => setDate(e.target.value)}
+          title="Tarih Seçimi"
+          aria-label="Tarih Seçimi"
+          icon={Calendar}
+        />
 
-        <div>
-          <label className={labelClasses}>Güncel KM</label>
-          <div className="relative">
-            <Gauge className="absolute left-3 top-3.5 w-5 h-5 text-gray-500" />
-            <input
-              type="number"
-              step="0.1"
-              required
-              placeholder={`Örn: ${lastOdometer > 0 ? lastOdometer + 50 : 12500}`}
-              value={currentOdometer}
-              onChange={(e) => setCurrentOdometer(e.target.value)}
-              className={`${inputBaseClasses} ${odoError ? 'border-red-500 focus:ring-red-500' : ''}`}
-            />
-          </div>
-          {odoError && (
-            <p className="text-xs text-red-500 mt-1 font-medium flex items-center">
-              <AlertCircle className="w-3 h-3 mr-1" /> {odoError}
-            </p>
-          )}
-          {!odoError && lastOdometer > 0 && (
-            <p className="text-xs text-gray-400 text-right mt-1">Son Kayıt: {lastOdometer.toLocaleString('tr-TR')} km</p>
-          )}
-        </div>
+        <Input
+          label="Güncel KM"
+          type="number"
+          step="0.1"
+          required
+          placeholder={`Örn: ${lastOdometer > 0 ? lastOdometer + 50 : 12500}`}
+          value={currentOdometer}
+          onChange={(e) => setCurrentOdometer(e.target.value)}
+          icon={Gauge}
+          error={odoError || undefined}
+          helperText={!odoError && lastOdometer > 0 ? `Son Kayıt: ${lastOdometer.toLocaleString('tr-TR')} km` : undefined}
+        />
 
-        <div>
-          <label className={labelClasses}>Yapılan Kilometre</label>
-          <div className="relative">
-            <Calculator className="absolute left-3 top-3.5 w-5 h-5 text-gray-500" />
-            <input
-              type="number"
-              step="0.1"
-              required
-              placeholder="0.0"
-              value={dailyDistance}
-              onChange={(e) => setDailyDistance(e.target.value)}
-              className={inputBaseClasses}
-            />
-          </div>
-        </div>
+        <Input
+          label="Yapılan Kilometre"
+          type="number"
+          step="0.1"
+          required
+          placeholder="0.0"
+          value={dailyDistance}
+          onChange={(e) => setDailyDistance(e.target.value)}
+          icon={Calculator}
+        />
 
-        <div>
-          <label className={labelClasses}>Ort. Hız (km/h)</label>
-          <div className="relative">
-            <Gauge className="absolute left-3 top-3.5 w-5 h-5 text-gray-500" />
-            <input
-              type="number"
-              step="0.1"
-              placeholder="Örn: 45"
-              value={avgSpeed}
-              onChange={(e) => setAvgSpeed(e.target.value)}
-              className={inputBaseClasses}
-            />
-          </div>
-          <p className="text-xs text-gray-400 mt-1">*Opsiyonel - Fotoğraftan otomatik alınabilir</p>
-        </div>
+        <Input
+          label="Ort. Hız (km/h)"
+          helperText="*Opsiyonel - Fotoğraftan otomatik alınabilir"
+          type="number"
+          step="0.1"
+          placeholder="Örn: 45"
+          value={avgSpeed}
+          onChange={(e) => setAvgSpeed(e.target.value)}
+          icon={Gauge}
+        />
 
-        <div>
-          <label className={labelClasses}>Ort. Tüketim (L/100km)</label>
-          <div className="relative">
-            <Fuel className="absolute left-3 top-3.5 w-5 h-5 text-gray-500" />
-            <input
-              type="number"
-              step="0.1"
-              required
-              placeholder="Örn: 6.5"
-              value={avgConsumption}
-              onChange={(e) => setAvgConsumption(e.target.value)}
-              className={inputBaseClasses}
-            />
-          </div>
-        </div>
+        <Input
+          label="Ort. Tüketim (L/100km)"
+          type="number"
+          step="0.1"
+          required
+          placeholder="Örn: 6.5"
+          value={avgConsumption}
+          onChange={(e) => setAvgConsumption(e.target.value)}
+          icon={Fuel}
+        />
 
-        <div>
-          <label className={labelClasses}>Yakıt Fiyatı (TL/L)</label>
-          <div className="relative">
-            <Coins className="absolute left-3 top-3.5 w-5 h-5 text-gray-500" />
-            <input
-              type="number"
-              step="0.01"
-              required
-              placeholder="0.00"
-              value={fuelPrice}
-              onChange={(e) => setFuelPrice(e.target.value)}
-              className={inputBaseClasses}
-            />
-          </div>
-          <p className="text-xs text-gray-400 mt-1">
-            *Ortalama veya güncel pompa fiyatı
-          </p>
-        </div>
+        <Input
+          label="Yakıt Fiyatı (TL/L)"
+          helperText="*Ortalama veya güncel pompa fiyatı"
+          type="number"
+          step="0.01"
+          required
+          placeholder="0.00"
+          value={fuelPrice}
+          onChange={(e) => setFuelPrice(e.target.value)}
+          icon={Coins}
+        />
 
 
 
