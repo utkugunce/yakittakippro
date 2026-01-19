@@ -1,6 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import { DailyLog } from './types';
 import { Trash2, Fuel, Filter, X, Calendar, Pencil } from 'lucide-react';
+import { LogHistoryStatsBar } from './src/components/LogHistoryStatsBar';
+import { LogHistoryTips } from './src/components/LogHistoryTips';
+import { LogHistoryStreakBadge } from './src/components/LogHistoryStreakBadge';
 
 interface LogHistoryProps {
   logs: DailyLog[];
@@ -36,6 +39,24 @@ export const LogHistory: React.FC<LogHistoryProps> = ({ logs, onDelete, onEdit }
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()); // Newest first
   }, [logs, minKm, maxKm, startDate, endDate]);
 
+  // Calculate streak for badge
+  const streak = React.useMemo(() => {
+    if (!logs.length) return 0;
+    const dates = Array.from(new Set(logs.map(l => l.date))).sort();
+    let maxStreak = 0, currentStreak = 0;
+    for (let i = 0; i < dates.length; i++) {
+      if (i === 0) currentStreak = 1;
+      else {
+        const prev = new Date(dates[i - 1]);
+        const curr = new Date(dates[i]);
+        const diff = Math.round((curr.getTime() - prev.getTime()) / (1000 * 60 * 60 * 24));
+        if (diff === 1) currentStreak++;
+        else currentStreak = 1;
+      }
+      maxStreak = Math.max(maxStreak, currentStreak);
+    }
+    return maxStreak;
+  }, [logs]);
   const clearFilters = () => {
     setMinKm('');
     setMaxKm('');
@@ -47,14 +68,18 @@ export const LogHistory: React.FC<LogHistoryProps> = ({ logs, onDelete, onEdit }
 
   if (logs.length === 0) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-8 text-center border border-gray-100 dark:border-gray-700">
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-8 text-center border border-gray-100 dark:border-gray-700 animate-fadeIn">
         <p className="text-gray-500 dark:text-gray-400">Henüz kayıt bulunmamaktadır.</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 animate-fadeIn">
+      {/* Gamification/Stats Section */}
+      <LogHistoryStatsBar logs={logs} />
+      <LogHistoryStreakBadge streak={streak} />
+      <LogHistoryTips />
       {/* Filter Section */}
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4">
         <div className="flex items-center space-x-2 mb-4 text-gray-700 dark:text-gray-300">
