@@ -1,6 +1,5 @@
 import React, { useMemo } from 'react';
-import { DailyLog } from '../../../types';
-import { FuelPurchase } from '../../../FuelPurchaseForm';
+import { DailyLog, FuelPurchase } from '../../types';
 import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
     PieChart, Pie, Cell, Legend

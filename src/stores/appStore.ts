@@ -21,45 +21,15 @@ interface AppState {
   activeTab: 'dashboard' | 'history' | 'reports' | 'maintenance' | 'settings';
   yearFilter: '2026' | '2025' | 'all';
   historySubTab: 'logs' | 'fuel';
-
-  // Settings & Sync
-  monthlyBudget: number;
-  notificationsEnabled: boolean;
-  lastNotificationCheck: string | null;
-  autoSync: boolean;
-  lastSyncTime: string | null;
-  geminiApiKey: string | null;
-
-  // Actions - Logs
-  addLog: (log: DailyLog) => void;
-  deleteLog: (id: string) => void;
-  updateLog: (log: DailyLog) => void;
-  importLogs: (logs: DailyLog[]) => void;
-  clearLogs: () => void;
-
-  // Actions - Fuel Purchases
-  addFuelPurchase: (purchase: FuelPurchase) => void;
-  deleteFuelPurchase: (id: string) => void;
-  updateFuelPurchase: (purchase: FuelPurchase) => void;
-
-  // Actions - Maintenance
-  addMaintenance: (item: MaintenanceItem) => void;
-  deleteMaintenance: (id: string) => void;
-  updateMaintenance: (id: string, lastKm: number, intervalKm?: number) => void;
-
-  // Actions - Parts
-  addPart: (part: VehiclePart) => void;
-  deletePart: (id: string) => void;
-  togglePart: (id: string) => void;
-
-  // Actions - Vehicles
-  setSelectedVehicleId: (id: string | null) => void;
-  setVehicles: (vehicles: Vehicle[]) => void;
+  activeModal: 'entry' | 'fuel' | null;
+  editingItem: any | null; // Generic for log or fuel purchase being edited
 
   // Actions - UI
   setActiveTab: (tab: AppState['activeTab']) => void;
   setYearFilter: (filter: AppState['yearFilter']) => void;
   setHistorySubTab: (tab: AppState['historySubTab']) => void;
+  openModal: (modal: 'entry' | 'fuel', item?: any) => void;
+  closeModal: () => void;
 
   // Actions - Settings
   setMonthlyBudget: (budget: number) => void;
@@ -93,6 +63,8 @@ export const useAppStore = create<AppState>()(
       activeTab: 'dashboard',
       yearFilter: 'all',
       historySubTab: 'logs',
+      activeModal: null,
+      editingItem: null,
 
       // Initial Settings (Migration from separate localStorage keys)
       monthlyBudget: parseFloat(localStorage.getItem('monthly_budget') || '0'),
@@ -161,6 +133,8 @@ export const useAppStore = create<AppState>()(
       setActiveTab: (tab) => set({ activeTab: tab }),
       setYearFilter: (filter) => set({ yearFilter: filter }),
       setHistorySubTab: (tab) => set({ historySubTab: tab }),
+      openModal: (modal, item) => set({ activeModal: modal, editingItem: item || null }),
+      closeModal: () => set({ activeModal: null, editingItem: null }),
 
       // Settings Actions
       setMonthlyBudget: (budget) => set({ monthlyBudget: budget }),

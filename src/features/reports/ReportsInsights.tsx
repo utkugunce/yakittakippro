@@ -1,6 +1,5 @@
 import React, { useMemo } from 'react';
-import { DailyLog } from '../../../types';
-import { FuelPurchase } from '../../../FuelPurchaseForm';
+import { DailyLog, FuelPurchase } from '../../types';
 import { Lightbulb, TrendingUp, Target, Wallet, Fuel, Calendar, ArrowRight } from 'lucide-react';
 
 interface InsightsProps {

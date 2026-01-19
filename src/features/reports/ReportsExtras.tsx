@@ -1,6 +1,5 @@
 import React, { useMemo, useRef } from 'react';
-import { DailyLog } from '../../../types';
-import { FuelPurchase } from '../../../FuelPurchaseForm';
+import { DailyLog, FuelPurchase } from '../../types';
 import { X, Calendar, Route, Fuel, Wallet, Share2, Download, Image, Copy, Check } from 'lucide-react';
 import html2canvas from 'html2canvas';
 

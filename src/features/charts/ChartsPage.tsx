@@ -1,41 +1,35 @@
 import React, { useState, useMemo } from 'react';
-import { DailyLog } from '@/types';
-import { FuelPurchase } from '@/FuelPurchaseForm';
-import { Charts } from '@/Charts';
+import { Charts } from '../analytics/ChartsPage';
 import { BarChart3, Sparkles } from 'lucide-react';
 import { QuickStatsBar } from './QuickStatsBar';
 import { TimeRangeSelector, TimeRange, filterByTimeRange } from './TimeRangeSelector';
 import { ChartAchievements } from './ChartAchievements';
 import { ComparisonMode } from './ComparisonMode';
 import { InsightBadges } from './InsightBadges';
+import { useAppStore } from '../../stores/appStore';
 
-interface ChartsPageProps {
-    logs: DailyLog[];
-    purchases: FuelPurchase[];
-    yearFilter: '2026' | '2025' | 'all';
-}
-
-export const ChartsPage: React.FC<ChartsPageProps> = ({ logs, purchases, yearFilter }) => {
+export const ChartsPage: React.FC = () => {
+    const { logs, fuelPurchases: purchases, yearFilter } = useAppStore();
     const [timeRange, setTimeRange] = useState<TimeRange>('30d');
-    
+
     // Filter by year first, then by time range
     const yearFilteredLogs = useMemo(() => {
         if (yearFilter === 'all') return logs;
         return logs.filter(l => new Date(l.date).getFullYear().toString() === yearFilter);
     }, [logs, yearFilter]);
-    
+
     const yearFilteredPurchases = useMemo(() => {
         if (yearFilter === 'all') return purchases;
         return purchases.filter(p => new Date(p.date).getFullYear().toString() === yearFilter);
     }, [purchases, yearFilter]);
-    
-    const filteredLogs = useMemo(() => 
+
+    const filteredLogs = useMemo(() =>
         filterByTimeRange(yearFilteredLogs, timeRange),
-    [yearFilteredLogs, timeRange]);
-    
-    const filteredPurchases = useMemo(() => 
+        [yearFilteredLogs, timeRange]);
+
+    const filteredPurchases = useMemo(() =>
         filterByTimeRange(yearFilteredPurchases, timeRange),
-    [yearFilteredPurchases, timeRange]);
+        [yearFilteredPurchases, timeRange]);
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
@@ -44,7 +38,7 @@ export const ChartsPage: React.FC<ChartsPageProps> = ({ logs, purchases, yearFil
                 {/* Background decorations */}
                 <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2" />
                 <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2" />
-                
+
                 <div className="relative z-10">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
                         <div className="flex items-center space-x-3">
@@ -62,7 +56,7 @@ export const ChartsPage: React.FC<ChartsPageProps> = ({ logs, purchases, yearFil
                             </div>
                         </div>
                     </div>
-                    
+
                     <TimeRangeSelector value={timeRange} onChange={setTimeRange} />
                 </div>
             </div>
