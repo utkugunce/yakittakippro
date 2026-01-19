@@ -589,7 +589,7 @@ export const FuelPurchaseForm: React.FC<FuelPurchaseFormProps> = ({ onAdd, onUpd
                 </div>
 
                 {/* Action Buttons */}
-                <div className="flex gap-4 pt-4 sticky bottom-0 bg-white dark:bg-gray-800 p-4 -mx-4 -mb-4 z-10 border-t dark:border-gray-700">
+                <div className="flex gap-4 pt-4 mt-4 border-t dark:border-gray-700">
                     <Button
                         type="button"
                         onClick={handleClear}
