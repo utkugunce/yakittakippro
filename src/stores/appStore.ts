@@ -178,29 +178,68 @@ export const useAppStore = create<AppState>()(
       setLastSyncTime: (date) => set({ lastSyncTime: date }),
       setGeminiApiKey: (key) => set({ geminiApiKey: key }),
 
-      // Hydration from legacy localStorage
+      // Hydration from legacy localStorage - merges with current state
       hydrate: () => {
         try {
+          const state = get();
+
+          // Merge logs - avoid duplicates by ID
           const savedLogs = localStorage.getItem(LOCAL_STORAGE_KEY);
-          if (savedLogs) set({ logs: JSON.parse(savedLogs) });
-
-          const savedMaintenance = localStorage.getItem(MAINTENANCE_STORAGE_KEY);
-          if (savedMaintenance) set({ maintenanceItems: JSON.parse(savedMaintenance) });
-
-          const savedVehicles = localStorage.getItem(VEHICLES_STORAGE_KEY);
-          if (savedVehicles) {
-            const parsed = JSON.parse(savedVehicles);
-            set({
-              vehicles: parsed.length > 0 ? parsed : [defaultVehicle],
-              selectedVehicleId: parsed.length > 0 ? parsed[0].id : 'default'
-            });
+          if (savedLogs) {
+            const legacyLogs = JSON.parse(savedLogs) as DailyLog[];
+            const existingIds = new Set(state.logs.map(l => l.id));
+            const newLogs = legacyLogs.filter(l => !existingIds.has(l.id));
+            if (newLogs.length > 0) {
+              set({ logs: [...state.logs, ...newLogs] });
+            }
           }
 
-          const savedParts = localStorage.getItem(PARTS_STORAGE_KEY);
-          if (savedParts) set({ vehicleParts: JSON.parse(savedParts) });
+          // Merge maintenance items
+          const savedMaintenance = localStorage.getItem(MAINTENANCE_STORAGE_KEY);
+          if (savedMaintenance) {
+            const legacyMaint = JSON.parse(savedMaintenance) as MaintenanceItem[];
+            const existingIds = new Set(state.maintenanceItems.map(m => m.id));
+            const newItems = legacyMaint.filter(m => !existingIds.has(m.id));
+            if (newItems.length > 0) {
+              set({ maintenanceItems: [...state.maintenanceItems, ...newItems] });
+            }
+          }
 
+          // Set vehicles if current is default
+          const savedVehicles = localStorage.getItem(VEHICLES_STORAGE_KEY);
+          if (savedVehicles && state.vehicles.length <= 1 && state.vehicles[0]?.id === 'default') {
+            const parsed = JSON.parse(savedVehicles) as Vehicle[];
+            if (parsed.length > 0) {
+              set({
+                vehicles: parsed,
+                selectedVehicleId: parsed[0].id
+              });
+            }
+          }
+
+          // Merge parts
+          const savedParts = localStorage.getItem(PARTS_STORAGE_KEY);
+          if (savedParts) {
+            const legacyParts = JSON.parse(savedParts) as VehiclePart[];
+            const existingIds = new Set(state.vehicleParts.map(p => p.id));
+            const newParts = legacyParts.filter(p => !existingIds.has(p.id));
+            if (newParts.length > 0) {
+              set({ vehicleParts: [...state.vehicleParts, ...newParts] });
+            }
+          }
+
+          // Merge fuel purchases
           const savedFuelPurchases = localStorage.getItem(FUEL_PURCHASES_STORAGE_KEY);
-          if (savedFuelPurchases) set({ fuelPurchases: JSON.parse(savedFuelPurchases) });
+          if (savedFuelPurchases) {
+            const legacyPurchases = JSON.parse(savedFuelPurchases) as FuelPurchase[];
+            const existingIds = new Set(state.fuelPurchases.map(p => p.id));
+            const newPurchases = legacyPurchases.filter(p => !existingIds.has(p.id));
+            if (newPurchases.length > 0) {
+              set({ fuelPurchases: [...state.fuelPurchases, ...newPurchases] });
+            }
+          }
+
+          console.log('[AppStore] Hydration complete. Logs:', get().logs.length);
         } catch (e) {
           console.error('Failed to hydrate store', e);
         }
