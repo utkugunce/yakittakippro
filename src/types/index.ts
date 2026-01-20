@@ -22,6 +22,9 @@ export interface DailyLog {
   costPerKm: number;         // KM Başına Maliyet (TL/km)
 }
 
+// Theme accent color type
+export type AccentColor = 'blue' | 'green' | 'purple' | 'orange' | 'red' | 'pink';
+
 export interface Vehicle {
   id: string;
   name: string;              // Araç adı (örn: "Aile Arabası")

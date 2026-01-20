@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
 import * as XLSX from 'xlsx';
-import { DailyLog } from './types';
+import { DailyLog } from '../../../types';
 import { FileSpreadsheet, Loader2, Download, Upload, Check, ArrowRight, X } from 'lucide-react';
 
 interface ExcelImportProps {
