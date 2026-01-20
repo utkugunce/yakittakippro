@@ -63,6 +63,9 @@ export default function App() {
 
   // Derived state for legacy prop passing
   const lastOdometer = logs.length > 0 ? Math.max(...logs.map(l => l.currentOdometer)) : 0;
+  const lastFuelPrice = logs.length > 0
+    ? logs.reduce((prev, curr) => new Date(prev.date) > new Date(curr.date) ? prev : curr).fuelPrice
+    : 0;
 
   return (
     <AppLayout
@@ -127,8 +130,9 @@ export default function App() {
               onAdd={(log) => { addLog(log); closeModal(); setShowSuccessPopup(true); }}
               onUpdate={(log) => { updateLog(log); closeModal(); }}
               onImport={(l) => { importLogs(l); closeModal(); }}
-              onClose={closeModal}
-              initialData={editingItem}
+              lastOdometer={lastOdometer}
+              lastFuelPrice={lastFuelPrice}
+              editingLog={editingItem}
             />
           </div>
         </div>
