@@ -41,7 +41,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             return logDate >= startOfWeek;
         });
 
-        const weeklyKm = thisWeekLogs.reduce((sum, l) => sum + l.distance, 0);
+        const weeklyKm = thisWeekLogs.reduce((sum, l) => sum + l.dailyDistance, 0);
         const weeklyAvgConsumption = thisWeekLogs.length > 0
             ? thisWeekLogs.reduce((sum, l) => sum + l.avgConsumption, 0) / thisWeekLogs.length
             : 0;
