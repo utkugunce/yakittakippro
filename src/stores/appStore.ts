@@ -22,7 +22,41 @@ interface AppState {
   yearFilter: '2026' | '2025' | 'all';
   historySubTab: 'logs' | 'fuel';
   activeModal: 'entry' | 'fuel' | null;
-  editingItem: any | null; // Generic for log or fuel purchase being edited
+  editingItem: any | null;
+
+  // Settings State
+  monthlyBudget: number;
+  notificationsEnabled: boolean;
+  lastNotificationCheck: string | null;
+  autoSync: boolean;
+  lastSyncTime: string | null;
+  geminiApiKey: string | null;
+
+  // Actions - Logs
+  addLog: (log: DailyLog) => void;
+  deleteLog: (id: string) => void;
+  updateLog: (log: DailyLog) => void;
+  importLogs: (logs: DailyLog[]) => void;
+  clearLogs: () => void;
+
+  // Actions - Fuel Purchases
+  addFuelPurchase: (purchase: FuelPurchase) => void;
+  deleteFuelPurchase: (id: string) => void;
+  updateFuelPurchase: (purchase: FuelPurchase) => void;
+
+  // Actions - Maintenance
+  addMaintenance: (item: MaintenanceItem) => void;
+  deleteMaintenance: (id: string) => void;
+  updateMaintenance: (id: string, lastKm: number, intervalKm?: number) => void;
+
+  // Actions - Parts
+  addPart: (part: VehiclePart) => void;
+  deletePart: (id: string) => void;
+  togglePart: (id: string) => void;
+
+  // Actions - Vehicles
+  setSelectedVehicleId: (id: string | null) => void;
+  setVehicles: (vehicles: Vehicle[]) => void;
 
   // Actions - UI
   setActiveTab: (tab: AppState['activeTab']) => void;
