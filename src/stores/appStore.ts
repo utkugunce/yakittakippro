@@ -178,9 +178,13 @@ export const useAppStore = create<AppState>()(
       setLastSyncTime: (date) => set({ lastSyncTime: date }),
       setGeminiApiKey: (key) => set({ geminiApiKey: key }),
 
-      // Hydration from legacy localStorage - merges with current state
-      hydrate: () => {
+      // Hydration - first loads Zustand persist data, then merges legacy localStorage
+      hydrate: async () => {
         try {
+          // Step 1: Rehydrate from Zustand's persist storage
+          await useAppStore.persist.rehydrate();
+          console.log('[AppStore] Persist rehydrated. Logs:', get().logs.length);
+
           const state = get();
 
           // Merge logs - avoid duplicates by ID
@@ -247,6 +251,7 @@ export const useAppStore = create<AppState>()(
     }),
     {
       name: 'yakit-takip-store',
+      skipHydration: true, // Manual hydration for iOS Safari compatibility
       partialize: (state) => ({
         logs: state.logs,
         fuelPurchases: state.fuelPurchases,
