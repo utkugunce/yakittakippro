@@ -122,10 +122,7 @@ export const QuickSummaryCards: React.FC<QuickSummaryCardsProps> = ({ logs, purc
 
           <div
             key={card.label}
-            className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${card.gradient} p-4 text-white shadow-lg transform transition-all duration-300 hover:scale-[1.02] hover:shadow-xl animate-slide-up`}
-            style={{
-              animationDelay: `${index * 0.1}s`,
-            }}
+            className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${card.gradient} p-4 text-white shadow-lg transform transition-all duration-300 hover:scale-[1.02] hover:shadow-xl animate-slide-up delay-[${Math.round(index * 100)}ms]`}
           >
             {/* Background decoration */}
             <div className="absolute -right-4 -top-4 h-20 w-20 rounded-full bg-white/10" />
