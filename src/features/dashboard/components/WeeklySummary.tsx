@@ -208,8 +208,8 @@ export const WeeklySummary: React.FC<WeeklySummaryProps> = ({ logs, fuelPurchase
                             <div key={i} className="flex flex-col items-center flex-1 group">
                                 <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-t-sm h-full relative overflow-hidden">
                                     <div
-                                        className="absolute bottom-0 left-0 right-0 bg-violet-500 dark:bg-violet-400 transition-all duration-500 rounded-t-sm group-hover:bg-violet-600"
-                                        style={{ height: `${(d.cost / summary.maxDailyCost) * 100}%` }}
+                                        className="absolute bottom-0 left-0 right-0 bg-violet-500 dark:bg-violet-400 transition-all duration-500 rounded-t-sm group-hover:bg-violet-600 h-[var(--height)]"
+                                        style={{ '--height': `${(d.cost / summary.maxDailyCost) * 100}%` } as any}
                                     />
                                 </div>
                                 <span className="text-[9px] text-gray-400 mt-1">{d.day}</span>
@@ -252,8 +252,8 @@ export const WeeklySummary: React.FC<WeeklySummaryProps> = ({ logs, fuelPurchase
                             </div>
                             <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                                 <div
-                                    className="h-full bg-gradient-to-r from-purple-400 to-fuchsia-500 rounded-full"
-                                    style={{ width: `${Math.min((summary.thisMonth.cost / monthlyProjection) * 100, 100)}%` }}
+                                    className="h-full bg-gradient-to-r from-purple-400 to-fuchsia-500 rounded-full w-[var(--width)]"
+                                    style={{ '--width': `${Math.min((summary.thisMonth.cost / monthlyProjection) * 100, 100)}%` } as any}
                                 />
                             </div>
                         </div>
