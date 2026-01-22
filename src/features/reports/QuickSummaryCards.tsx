@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Wallet, Car, Fuel, Zap, TrendingUp, TrendingDown } from 'lucide-react';
+import { Wallet, Car, Fuel, Zap, TrendingUp, TrendingDown, Gauge } from 'lucide-react';
 import { DailyLog, FuelPurchase } from '@/types';
 
 interface QuickSummaryCardsProps {
@@ -26,23 +26,34 @@ export const QuickSummaryCards: React.FC<QuickSummaryCardsProps> = ({ logs, purc
       return d >= lastMonth && d <= lastMonthEnd;
     });
 
-    const totalCost = thisMonthLogs.reduce((s, l) => s + l.dailyCost, 0) + 
-                      thisMonthPurchases.reduce((s, p) => s + p.totalAmount, 0);
-    const lastTotalCost = lastMonthLogs.reduce((s, l) => s + l.dailyCost, 0) + 
-                          lastMonthPurchases.reduce((s, p) => s + p.totalAmount, 0);
+    const totalCost = thisMonthLogs.reduce((s, l) => s + l.dailyCost, 0) +
+      thisMonthPurchases.reduce((s, p) => s + p.totalAmount, 0);
+    const lastTotalCost = lastMonthLogs.reduce((s, l) => s + l.dailyCost, 0) +
+      lastMonthPurchases.reduce((s, p) => s + p.totalAmount, 0);
 
     const totalKm = thisMonthLogs.reduce((s, l) => s + l.dailyDistance, 0);
     const lastTotalKm = lastMonthLogs.reduce((s, l) => s + l.dailyDistance, 0);
 
     const totalFuel = thisMonthLogs.reduce((s, l) => s + l.dailyFuelConsumed, 0) +
-                      thisMonthPurchases.reduce((s, p) => s + p.liters, 0);
+      thisMonthPurchases.reduce((s, p) => s + p.liters, 0);
     const lastTotalFuel = lastMonthLogs.reduce((s, l) => s + l.dailyFuelConsumed, 0) +
-                          lastMonthPurchases.reduce((s, p) => s + p.liters, 0);
+      lastMonthPurchases.reduce((s, p) => s + p.liters, 0);
 
     const avgConsumption = totalKm > 0 ? (totalFuel / totalKm) * 100 : 0;
     const lastAvgConsumption = lastTotalKm > 0 ? (lastTotalFuel / lastTotalKm) * 100 : 0;
 
-    const getChange = (curr: number, prev: number) => 
+    // Average Speed Calculation
+    const thisMonthSpeedLogs = thisMonthLogs.filter(l => l.avgSpeed && l.avgSpeed > 0);
+    const thisMonthAvgSpeed = thisMonthSpeedLogs.length > 0
+      ? thisMonthSpeedLogs.reduce((s, l) => s + (l.avgSpeed || 0), 0) / thisMonthSpeedLogs.length
+      : 0;
+
+    const lastMonthSpeedLogs = lastMonthLogs.filter(l => l.avgSpeed && l.avgSpeed > 0);
+    const lastMonthAvgSpeed = lastMonthSpeedLogs.length > 0
+      ? lastMonthSpeedLogs.reduce((s, l) => s + (l.avgSpeed || 0), 0) / lastMonthSpeedLogs.length
+      : 0;
+
+    const getChange = (curr: number, prev: number) =>
       prev > 0 ? ((curr - prev) / prev) * 100 : 0;
 
     return {
@@ -50,6 +61,7 @@ export const QuickSummaryCards: React.FC<QuickSummaryCardsProps> = ({ logs, purc
       km: { value: totalKm, change: getChange(totalKm, lastTotalKm) },
       fuel: { value: totalFuel, change: getChange(totalFuel, lastTotalFuel) },
       consumption: { value: avgConsumption, change: getChange(avgConsumption, lastAvgConsumption) },
+      speed: { value: thisMonthAvgSpeed, change: getChange(thisMonthAvgSpeed, lastMonthAvgSpeed) },
     };
   }, [logs, purchases]);
 
@@ -90,13 +102,22 @@ export const QuickSummaryCards: React.FC<QuickSummaryCardsProps> = ({ logs, purc
       gradient: 'from-emerald-500 to-teal-600',
       iconBg: 'bg-emerald-400/20',
     },
+    {
+      icon: Gauge,
+      label: 'Ort. Hız',
+      value: `${stats.speed.value.toFixed(0)} km/h`,
+      change: stats.speed.change,
+      invertChange: false,
+      gradient: 'from-violet-500 to-purple-600',
+      iconBg: 'bg-violet-400/20',
+    },
   ];
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+    <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
       {cards.map((card, index) => {
         const isGood = card.invertChange ? card.change < 0 : card.change > 0;
-        
+
         return (
           <div
             key={card.label}
@@ -108,15 +129,15 @@ export const QuickSummaryCards: React.FC<QuickSummaryCardsProps> = ({ logs, purc
             {/* Background decoration */}
             <div className="absolute -right-4 -top-4 h-20 w-20 rounded-full bg-white/10" />
             <div className="absolute -right-2 -bottom-4 h-14 w-14 rounded-full bg-white/5" />
-            
+
             <div className="relative">
               <div className={`inline-flex p-2 rounded-xl ${card.iconBg} mb-2`}>
                 <card.icon className="w-4 h-4" />
               </div>
-              
+
               <p className="text-[10px] uppercase tracking-wide text-white/70 mb-0.5">{card.label}</p>
               <p className="text-lg font-bold">{card.value}</p>
-              
+
               {Math.abs(card.change) > 0.5 && (
                 <div className="flex items-center mt-1.5 text-[10px]">
                   {isGood ? (
@@ -134,7 +155,7 @@ export const QuickSummaryCards: React.FC<QuickSummaryCardsProps> = ({ logs, purc
           </div>
         );
       })}
-      
+
       <style>{`
         @keyframes slideUp {
           from {

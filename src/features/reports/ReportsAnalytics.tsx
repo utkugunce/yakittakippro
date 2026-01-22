@@ -4,7 +4,7 @@ import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
     PieChart, Pie, Cell, Legend
 } from 'recharts';
-import { Calendar, Sun, Snowflake, Fuel, TrendingDown, AlertTriangle, Zap } from 'lucide-react';
+import { Calendar, Sun, Snowflake, Fuel, TrendingDown, AlertTriangle, Zap, Gauge } from 'lucide-react';
 
 interface AnalyticsProps {
     logs: DailyLog[];
@@ -349,6 +349,87 @@ export const AnomalyDetection: React.FC<AnalyticsProps> = ({ logs, purchases }) 
                         </div>
                     </div>
                 ))}
+            </div>
+        </div>
+    );
+};
+
+// Hız ve Verimlilik Analizi
+export const SpeedEfficiencyAnalysis: React.FC<AnalyticsProps> = ({ logs }) => {
+    const data = useMemo(() => {
+        // Hız aralıkları (km/h)
+        const ranges = [
+            { min: 0, max: 50, label: '0-50', count: 0, totalCons: 0 },
+            { min: 50, max: 90, label: '50-90', count: 0, totalCons: 0 },
+            { min: 90, max: 120, label: '90-120', count: 0, totalCons: 0 },
+            { min: 120, max: 999, label: '120+', count: 0, totalCons: 0 },
+        ];
+
+        logs.forEach(log => {
+            if (log.avgSpeed && log.avgSpeed > 0 && log.avgConsumption > 0) {
+                const range = ranges.find(r => log.avgSpeed! >= r.min && log.avgSpeed! < r.max);
+                if (range) {
+                    range.count++;
+                    range.totalCons += log.avgConsumption;
+                }
+            }
+        });
+
+        return ranges
+            .filter(r => r.count > 0)
+            .map(r => ({
+                name: r.label,
+                consumption: Number((r.totalCons / r.count).toFixed(1)),
+                count: r.count
+            }));
+    }, [logs]);
+
+    if (data.length < 2) return null;
+
+    // En verimli hız aralığını bul
+    const bestRange = data.reduce((prev, curr) => curr.consumption < prev.consumption ? curr : prev, data[0]);
+
+    return (
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-4 sm:p-6 border border-gray-100 dark:border-gray-700">
+            <div className="flex items-center space-x-2 mb-4">
+                <div className="p-2 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
+                    <Gauge className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                </div>
+                <div>
+                    <h3 className="text-base sm:text-lg font-bold text-gray-800 dark:text-white">Hız ve Verimlilik</h3>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Ortalama hıza göre yakıt tüketimi</p>
+                </div>
+            </div>
+
+            <div className="h-[200px] w-full mb-4">
+                <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={data}>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} strokeOpacity={0.1} />
+                        <XAxis
+                            dataKey="name"
+                            tick={{ fontSize: 11 }}
+                            axisLine={false}
+                            tickLine={false}
+                            label={{ value: 'Hız (km/h)', position: 'insideBottom', offset: -5, fontSize: 10, fill: '#888' }}
+                        />
+                        <YAxis hide />
+                        <Tooltip
+                            contentStyle={{ backgroundColor: '#1f2937', color: '#fff', borderRadius: '8px', border: 'none' }}
+                            formatter={(value: number) => [`${value} L/100km`, 'Tüketim']}
+                        />
+                        <Bar dataKey="consumption" fill="#3b82f6" radius={[4, 4, 0, 0]} barSize={40}>
+                            {data.map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={entry.name === bestRange.name ? '#10b981' : '#3b82f6'} />
+                            ))}
+                        </Bar>
+                    </BarChart>
+                </ResponsiveContainer>
+            </div>
+
+            <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-xs text-blue-800 dark:text-blue-200">
+                <p>
+                    <span className="font-bold">Öneri:</span> Aracınız en verimli tüketimi <span className="font-bold">{bestRange.name} km/h</span> hız aralığında ({bestRange.consumption} L/100km) yapıyor.
+                </p>
             </div>
         </div>
     );

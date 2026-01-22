@@ -12,6 +12,7 @@ import {
   SeasonalAnalysis,
   StationPriceComparison,
   AnomalyDetection,
+  SpeedEfficiencyAnalysis,
   SavingsInsights,
   YearEndProjection,
   ReportsFilters,
@@ -449,6 +450,7 @@ export const Reports: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <DayOfWeekAnalysis logs={filteredLogs} purchases={filteredPurchases} dateRange={dateRange || undefined} />
         <StationPriceComparison logs={filteredLogs} purchases={filteredPurchases} />
+        <SpeedEfficiencyAnalysis logs={filteredLogs} purchases={filteredPurchases} />
       </div>
 
       {/* Seasonal Analysis */}
