@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { DailyLog, FuelPurchase } from '../../../types';
 import {
     TrendingUp, TrendingDown, Minus, Calendar, Fuel, Route, Wallet,
-    ChevronDown, ChevronUp, Droplets, Activity, Target, BarChart3
+    ChevronDown, ChevronUp, Droplets, Activity, Target, BarChart3, ArrowRight
 } from 'lucide-react';
 
 interface WeeklySummaryProps {
@@ -64,24 +64,45 @@ export const WeeklySummary: React.FC<WeeklySummaryProps> = ({ logs, fuelPurchase
             const logCost = logArr.reduce((sum, l) => sum + l.dailyCost, 0);
             const purchaseCost = purchaseArr.reduce((sum, p) => sum + p.totalAmount, 0);
             const purchaseFuel = purchaseArr.reduce((sum, p) => sum + p.liters, 0);
+            const distance = logArr.reduce((sum, l) => sum + l.dailyDistance, 0);
 
             return {
-                distance: logArr.reduce((sum, l) => sum + l.dailyDistance, 0),
-                cost: logCost, // Sadece günlük kayıtlar
+                distance,
+                cost: logCost + purchaseCost, // Include purchases in weekly cost for wallet tracking
                 fuel: logArr.reduce((sum, l) => sum + l.dailyFuelConsumed, 0) + purchaseFuel,
                 logCount: logArr.length,
                 purchaseCount: purchaseArr.length,
                 avgConsumption: logArr.length > 0
                     ? logArr.reduce((sum, l) => sum + l.avgConsumption, 0) / logArr.length
-                    : 0
+                    : 0,
+                costPerKm: distance > 0 ? (logCost + purchaseCost) / distance : 0
             };
         };
+
+        // Last 7 Days Trend
+        const last7Days = [];
+        for (let i = 6; i >= 0; i--) {
+            const d = new Date(today);
+            d.setDate(today.getDate() - i);
+            const dayLogs = filterLogsByRange(d, d);
+            const dayPurchases = filterPurchasesByRange(d, d);
+            const cost = dayLogs.reduce((s, l) => s + l.dailyCost, 0) + dayPurchases.reduce((s, p) => s + p.totalAmount, 0);
+
+            last7Days.push({
+                day: d.toLocaleDateString('tr-TR', { weekday: 'short' }),
+                cost
+            });
+        }
+
+        const maxDailyCost = Math.max(...last7Days.map(d => d.cost), 1); // Avoid 0 division
 
         return {
             thisWeek: calcTotals(thisWeekLogs, thisWeekPurchases),
             lastWeek: calcTotals(lastWeekLogs, lastWeekPurchases),
             thisMonth: calcTotals(thisMonthLogs, thisMonthPurchases),
-            lastMonth: calcTotals(lastMonthLogs, lastMonthPurchases)
+            lastMonth: calcTotals(lastMonthLogs, lastMonthPurchases),
+            trend: last7Days,
+            maxDailyCost
         };
     }, [logs, fuelPurchases]);
 
@@ -93,8 +114,6 @@ export const WeeklySummary: React.FC<WeeklySummaryProps> = ({ logs, fuelPurchase
     const renderChange = (current: number, previous: number, inverse: boolean = false) => {
         const change = getChangePercent(current, previous);
         const isUp = change > 0;
-        const isDown = change < 0;
-
         // inverse: artış kötü (maliyet gibi), azalış iyi
         let color = 'text-gray-400';
         if (Math.abs(change) >= 1) {
@@ -110,7 +129,7 @@ export const WeeklySummary: React.FC<WeeklySummaryProps> = ({ logs, fuelPurchase
         }
 
         return (
-            <span className={`flex items-center text-xs font-bold ${color}`}>
+            <span className={`flex items-center text-[10px] font-bold ${color} bg-white/50 dark:bg-black/20 px-1.5 py-0.5 rounded ml-1.5`}>
                 {isUp ? <TrendingUp className="w-3 h-3 mr-0.5" /> : <TrendingDown className="w-3 h-3 mr-0.5" />}
                 {Math.abs(change).toFixed(0)}%
             </span>
@@ -118,11 +137,11 @@ export const WeeklySummary: React.FC<WeeklySummaryProps> = ({ logs, fuelPurchase
     };
 
     // Calculate averages
-    const weeklyAvgPerDay = summary.thisWeek.logCount > 0
+    const weeklyAvgPerDay = summary.thisWeek.logCount > 0 || summary.thisWeek.purchaseCount > 0
         ? summary.thisWeek.cost / 7
         : 0;
 
-    const monthlyAvgPerDay = summary.thisMonth.logCount > 0
+    const monthlyAvgPerDay = summary.thisMonth.logCount > 0 || summary.thisMonth.purchaseCount > 0
         ? summary.thisMonth.cost / new Date().getDate()
         : 0;
 
@@ -135,22 +154,22 @@ export const WeeklySummary: React.FC<WeeklySummaryProps> = ({ logs, fuelPurchase
     return (
         <div className="bg-gradient-to-br from-violet-500/10 via-purple-500/10 to-fuchsia-500/10 dark:from-violet-900/30 dark:via-purple-900/30 dark:to-fuchsia-900/30 rounded-2xl border border-violet-200/50 dark:border-violet-700/50 overflow-hidden backdrop-blur-sm shadow-lg">
             {/* Header */}
-            <div
-                className="p-4 flex items-center justify-between cursor-pointer hover:bg-white/20 dark:hover:bg-black/10 transition-colors"
-                onClick={() => setIsExpanded(!isExpanded)}
-            >
+            <div className="p-4 flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                     <div className="w-10 h-10 bg-gradient-to-br from-violet-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
                         <BarChart3 className="w-5 h-5 text-white" />
                     </div>
                     <div>
-                        <h3 className="text-base font-bold text-gray-800 dark:text-white">Haftalık & Aylık Özet</h3>
+                        <h3 className="text-base font-bold text-gray-800 dark:text-white">Finansal Özet</h3>
                         <p className="text-xs text-gray-500 dark:text-gray-400">
-                            {summary.thisWeek.logCount + summary.thisWeek.purchaseCount} kayıt bu hafta
+                            Haftalık ve aylık analiz
                         </p>
                     </div>
                 </div>
-                <button className="p-2 rounded-lg hover:bg-white/30 dark:hover:bg-black/20 transition-colors">
+                <button
+                    onClick={() => setIsExpanded(!isExpanded)}
+                    className="p-2 rounded-lg hover:bg-white/30 dark:hover:bg-black/20 transition-colors"
+                >
                     {isExpanded ? (
                         <ChevronUp className="w-5 h-5 text-gray-500 dark:text-gray-400" />
                     ) : (
@@ -159,77 +178,94 @@ export const WeeklySummary: React.FC<WeeklySummaryProps> = ({ logs, fuelPurchase
                 </button>
             </div>
 
-            {/* Summary Cards - Always Visible */}
-            <div className="px-3 sm:px-4 pb-4 grid grid-cols-2 gap-2 sm:gap-3">
-                {/* This Week Card */}
-                <div className="bg-white/60 dark:bg-gray-800/60 rounded-xl p-3 sm:p-4 backdrop-blur-sm border border-white/20 dark:border-gray-700/30 min-w-0">
-                    <div className="flex items-center justify-between mb-2 sm:mb-3">
-                        <span className="text-[10px] sm:text-xs font-semibold text-violet-600 dark:text-violet-400 uppercase tracking-wide">Bu Hafta</span>
-                        <Calendar className="w-3 h-3 sm:w-4 sm:h-4 text-violet-500 flex-shrink-0" />
-                    </div>
-                    <div className="space-y-1.5 sm:space-y-2">
-                        <div className="flex items-center justify-between gap-1">
-                            <span className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 flex items-center flex-shrink-0">
-                                <Route className="w-3 h-3 mr-1 text-blue-500" />
-                            </span>
-                            <span className="text-xs sm:text-sm font-bold text-gray-800 dark:text-white truncate">
-                                {summary.thisWeek.distance.toLocaleString('tr-TR')} km
-                            </span>
-                        </div>
-                        <div className="flex items-center justify-between gap-1">
-                            <span className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 flex items-center flex-shrink-0">
-                                <Wallet className="w-3 h-3 mr-1 text-emerald-500" />
-                            </span>
-                            <div className="flex items-center gap-1 min-w-0">
-                                <span className="text-xs sm:text-sm font-bold text-gray-800 dark:text-white truncate">
-                                    ₺{summary.thisWeek.cost.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}
-                                </span>
-                                {renderChange(summary.thisWeek.cost, summary.lastWeek.cost, true)}
+            {/* Summary Cards */}
+            <div className="px-3 sm:px-4 pb-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+
+                {/* This Week - Re-designed with chart */}
+                <div className="bg-white/60 dark:bg-gray-800/60 rounded-xl p-3 sm:p-4 backdrop-blur-sm border border-white/20 dark:border-gray-700/30 min-w-0 flex flex-col justify-between">
+                    <div className="flex items-start justify-between mb-3">
+                        <div>
+                            <span className="text-[10px] font-semibold text-violet-600 dark:text-violet-400 uppercase tracking-wide block mb-1">HAFTALIK HARCAMA</span>
+                            <div className="flex items-baseline">
+                                <span className="text-xl font-bold text-gray-800 dark:text-white">₺{summary.thisWeek.cost.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}</span>
+                                {summary.lastWeek.cost > 0 && renderChange(summary.thisWeek.cost, summary.lastWeek.cost, true)}
                             </div>
                         </div>
-                        <div className="flex items-center justify-between gap-1">
-                            <span className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 flex items-center flex-shrink-0">
-                                <Droplets className="w-3 h-3 mr-1 text-cyan-500" />
-                            </span>
-                            <span className="text-xs sm:text-sm font-bold text-gray-800 dark:text-white truncate">
-                                {summary.thisWeek.fuel.toFixed(1)} L
-                            </span>
+                        <div className="text-right">
+                            <div className="flex items-center justify-end text-xs text-gray-500 dark:text-gray-400 mb-0.5">
+                                <Route className="w-3 h-3 mr-1" />
+                                {summary.thisWeek.distance} km
+                            </div>
+                            <div className="flex items-center justify-end text-xs font-medium text-gray-600 dark:text-gray-300">
+                                {summary.thisWeek.costPerKm.toFixed(2)} TL/km
+                            </div>
                         </div>
+                    </div>
+
+                    {/* Mini Bar Chart */}
+                    <div className="flex items-end justify-between h-12 gap-1 mt-2">
+                        {summary.trend.map((d, i) => (
+                            <div key={i} className="flex flex-col items-center flex-1 group">
+                                <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-t-sm h-full relative overflow-hidden">
+                                    <div
+                                        className="absolute bottom-0 left-0 right-0 bg-violet-500 dark:bg-violet-400 transition-all duration-500 rounded-t-sm group-hover:bg-violet-600"
+                                        style={{ height: `${(d.cost / summary.maxDailyCost) * 100}%` }}
+                                    />
+                                </div>
+                                <span className="text-[9px] text-gray-400 mt-1">{d.day}</span>
+                                {/* Tooltip */}
+                                <div className="hidden group-hover:block absolute bottom-16 bg-gray-900 text-white text-xs px-2 py-1 rounded shadow-lg z-10">
+                                    ₺{d.cost}
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 </div>
 
-                {/* This Month Card */}
+                {/* This Month */}
                 <div className="bg-white/60 dark:bg-gray-800/60 rounded-xl p-3 sm:p-4 backdrop-blur-sm border border-white/20 dark:border-gray-700/30 min-w-0">
-                    <div className="flex items-center justify-between mb-2 sm:mb-3">
-                        <span className="text-[10px] sm:text-xs font-semibold text-purple-600 dark:text-purple-400 uppercase tracking-wide">Bu Ay</span>
-                        <Calendar className="w-3 h-3 sm:w-4 sm:h-4 text-purple-500 flex-shrink-0" />
-                    </div>
-                    <div className="space-y-1.5 sm:space-y-2">
-                        <div className="flex items-center justify-between gap-1">
-                            <span className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 flex items-center flex-shrink-0">
-                                <Route className="w-3 h-3 mr-1 text-blue-500" />
-                            </span>
-                            <span className="text-xs sm:text-sm font-bold text-gray-800 dark:text-white truncate">
-                                {summary.thisMonth.distance.toLocaleString('tr-TR')} km
-                            </span>
-                        </div>
-                        <div className="flex items-center justify-between gap-1">
-                            <span className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 flex items-center flex-shrink-0">
-                                <Wallet className="w-3 h-3 mr-1 text-emerald-500" />
-                            </span>
-                            <div className="flex items-center gap-1 min-w-0">
-                                <span className="text-xs sm:text-sm font-bold text-gray-800 dark:text-white truncate">
-                                    ₺{summary.thisMonth.cost.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}
-                                </span>
-                                {renderChange(summary.thisMonth.cost, summary.lastMonth.cost, true)}
+                    <div className="flex items-start justify-between mb-4">
+                        <div>
+                            <span className="text-[10px] font-semibold text-purple-600 dark:text-purple-400 uppercase tracking-wide block mb-1">AYLIK HARCAMA</span>
+                            <div className="flex items-baseline">
+                                <span className="text-xl font-bold text-gray-800 dark:text-white">₺{summary.thisMonth.cost.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}</span>
+                                {summary.lastMonth.cost > 0 && renderChange(summary.thisMonth.cost, summary.lastMonth.cost, true)}
                             </div>
                         </div>
-                        <div className="flex items-center justify-between gap-1">
-                            <span className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 flex items-center flex-shrink-0">
-                                <Droplets className="w-3 h-3 mr-1 text-cyan-500" />
+                        <div className="text-right">
+                            <div className="flex items-center justify-end text-xs text-gray-500 dark:text-gray-400 mb-0.5">
+                                <Route className="w-3 h-3 mr-1" />
+                                {summary.thisMonth.distance} km
+                            </div>
+                            <div className="flex items-center justify-end text-xs font-medium text-gray-600 dark:text-gray-300">
+                                {summary.thisMonth.costPerKm.toFixed(2)} TL/km
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="space-y-3">
+                        {/* Projection Bar */}
+                        <div>
+                            <div className="flex justify-between text-xs mb-1">
+                                <span className="text-gray-500 dark:text-gray-400">Ay Sonu Tahmini</span>
+                                <span className="font-bold text-gray-700 dark:text-gray-200">₺{monthlyProjection.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}</span>
+                            </div>
+                            <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                                <div
+                                    className="h-full bg-gradient-to-r from-purple-400 to-fuchsia-500 rounded-full"
+                                    style={{ width: `${Math.min((summary.thisMonth.cost / monthlyProjection) * 100, 100)}%` }}
+                                />
+                            </div>
+                        </div>
+
+                        {/* Efficiency Stat */}
+                        <div className="flex items-center justify-between p-2 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+                            <span className="text-xs text-purple-700 dark:text-purple-300 flex items-center">
+                                <Fuel className="w-3 h-3 mr-1.5" />
+                                Ort. Tüketim
                             </span>
-                            <span className="text-xs sm:text-sm font-bold text-gray-800 dark:text-white truncate">
-                                {summary.thisMonth.fuel.toFixed(1)} L
+                            <span className="text-sm font-bold text-purple-800 dark:text-purple-200">
+                                {summary.thisMonth.avgConsumption.toFixed(1)} L
                             </span>
                         </div>
                     </div>
@@ -238,130 +274,42 @@ export const WeeklySummary: React.FC<WeeklySummaryProps> = ({ logs, fuelPurchase
 
             {/* Expanded Details */}
             {isExpanded && (
-                <div className="px-3 sm:px-4 pb-4 space-y-3 sm:space-y-4 animate-in slide-in-from-top duration-300">
-                    {/* Comparison Stats */}
-                    <div className="bg-white/40 dark:bg-gray-800/40 rounded-xl p-3 sm:p-4 backdrop-blur-sm">
-                        <h4 className="text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 sm:mb-3 flex items-center">
-                            <Activity className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2 text-violet-500" />
-                            Detaylı Karşılaştırma
-                        </h4>
-                        <div className="grid grid-cols-2 gap-2 sm:gap-4">
-                            {/* Weekly Comparison */}
-                            <div className="space-y-1.5 sm:space-y-2 min-w-0">
-                                <p className="text-[10px] sm:text-xs font-medium text-gray-500 dark:text-gray-400">Haftalık</p>
-                                <div className="space-y-1">
-                                    <div className="flex justify-between items-center text-[10px] sm:text-xs gap-1">
-                                        <span className="text-gray-600 dark:text-gray-400 truncate">Geçen:</span>
-                                        <span className="font-medium text-gray-700 dark:text-gray-300 truncate">
-                                            ₺{summary.lastWeek.cost.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}
-                                        </span>
-                                    </div>
-                                    <div className="flex justify-between items-center text-[10px] sm:text-xs gap-1">
-                                        <span className="text-gray-600 dark:text-gray-400 truncate">Bu:</span>
-                                        <span className="font-medium text-gray-700 dark:text-gray-300 truncate">
-                                            ₺{summary.thisWeek.cost.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}
-                                        </span>
-                                    </div>
-                                    <div className="flex justify-between items-center text-[10px] sm:text-xs pt-1 border-t border-gray-200 dark:border-gray-700 gap-1">
-                                        <span className="text-gray-600 dark:text-gray-400">Fark:</span>
-                                        <span className={`font-bold truncate ${summary.thisWeek.cost > summary.lastWeek.cost ? 'text-red-500' : 'text-emerald-500'}`}>
-                                            {summary.thisWeek.cost > summary.lastWeek.cost ? '+' : ''}
-                                            ₺{(summary.thisWeek.cost - summary.lastWeek.cost).toLocaleString('tr-TR', { maximumFractionDigits: 0 })}
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
+                <div className="px-3 sm:px-4 pb-4 animate-in slide-in-from-top duration-300 border-t border-gray-100 dark:border-gray-800 pt-3 mt-1">
+                    <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Detaylı Karşılaştırma</h4>
 
-                            {/* Monthly Comparison */}
-                            <div className="space-y-1.5 sm:space-y-2 min-w-0">
-                                <p className="text-[10px] sm:text-xs font-medium text-gray-500 dark:text-gray-400">Aylık</p>
-                                <div className="space-y-1">
-                                    <div className="flex justify-between items-center text-[10px] sm:text-xs gap-1">
-                                        <span className="text-gray-600 dark:text-gray-400 truncate">Geçen:</span>
-                                        <span className="font-medium text-gray-700 dark:text-gray-300 truncate">
-                                            ₺{summary.lastMonth.cost.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}
-                                        </span>
-                                    </div>
-                                    <div className="flex justify-between items-center text-[10px] sm:text-xs gap-1">
-                                        <span className="text-gray-600 dark:text-gray-400 truncate">Bu:</span>
-                                        <span className="font-medium text-gray-700 dark:text-gray-300 truncate">
-                                            ₺{summary.thisMonth.cost.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}
-                                        </span>
-                                    </div>
-                                    <div className="flex justify-between items-center text-[10px] sm:text-xs pt-1 border-t border-gray-200 dark:border-gray-700 gap-1">
-                                        <span className="text-gray-600 dark:text-gray-400">Fark:</span>
-                                        <span className={`font-bold truncate ${summary.thisMonth.cost > summary.lastMonth.cost ? 'text-red-500' : 'text-emerald-500'}`}>
-                                            {summary.thisMonth.cost > summary.lastMonth.cost ? '+' : ''}
-                                            ₺{(summary.thisMonth.cost - summary.lastMonth.cost).toLocaleString('tr-TR', { maximumFractionDigits: 0 })}
-                                        </span>
-                                    </div>
-                                </div>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div className="space-y-2">
+                            <p className="font-medium text-gray-700 dark:text-gray-300">Geçen Hafta</p>
+                            <div className="flex justify-between text-gray-600 dark:text-gray-400 text-xs">
+                                <span>Harcama</span>
+                                <span>₺{summary.lastWeek.cost}</span>
+                            </div>
+                            <div className="flex justify-between text-gray-600 dark:text-gray-400 text-xs">
+                                <span>Mesafe</span>
+                                <span>{summary.lastWeek.distance} km</span>
+                            </div>
+                            <div className="flex justify-between text-gray-600 dark:text-gray-400 text-xs">
+                                <span>Maliyet/Km</span>
+                                <span>{summary.lastWeek.costPerKm.toFixed(2)} TL</span>
+                            </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <p className="font-medium text-gray-700 dark:text-gray-300">Geçen Ay</p>
+                            <div className="flex justify-between text-gray-600 dark:text-gray-400 text-xs">
+                                <span>Harcama</span>
+                                <span>₺{summary.lastMonth.cost}</span>
+                            </div>
+                            <div className="flex justify-between text-gray-600 dark:text-gray-400 text-xs">
+                                <span>Mesafe</span>
+                                <span>{summary.lastMonth.distance} km</span>
+                            </div>
+                            <div className="flex justify-between text-gray-600 dark:text-gray-400 text-xs">
+                                <span>Maliyet/Km</span>
+                                <span>{summary.lastMonth.costPerKm.toFixed(2)} TL</span>
                             </div>
                         </div>
                     </div>
-
-                    {/* Projections */}
-                    <div className="bg-gradient-to-r from-amber-500/10 to-orange-500/10 dark:from-amber-900/20 dark:to-orange-900/20 rounded-xl p-3 sm:p-4 border border-amber-200/50 dark:border-amber-700/50">
-                        <h4 className="text-xs sm:text-sm font-semibold text-amber-700 dark:text-amber-400 mb-2 sm:mb-3 flex items-center">
-                            <Target className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
-                            Ay Sonu Tahmini
-                        </h4>
-                        <div className="grid grid-cols-2 gap-2 sm:gap-4">
-                            <div className="min-w-0">
-                                <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 mb-0.5 sm:mb-1">Günlük Ort.</p>
-                                <p className="text-sm sm:text-lg font-bold text-gray-800 dark:text-white truncate">
-                                    ₺{monthlyAvgPerDay.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}
-                                </p>
-                            </div>
-                            <div className="min-w-0">
-                                <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 mb-0.5 sm:mb-1">Ay Sonu</p>
-                                <p className="text-sm sm:text-lg font-bold text-amber-600 dark:text-amber-400 truncate">
-                                    ₺{monthlyProjection.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}
-                                </p>
-                            </div>
-                        </div>
-                        {summary.lastMonth.cost > 0 && (
-                            <div className="mt-2 sm:mt-3 pt-2 sm:pt-3 border-t border-amber-200/50 dark:border-amber-700/50">
-                                <div className="flex items-center justify-between text-[10px] sm:text-xs gap-1">
-                                    <span className="text-gray-600 dark:text-gray-400 truncate">Geçen aya göre:</span>
-                                    <span className={`font-bold ${monthlyProjection > summary.lastMonth.cost ? 'text-red-500' : 'text-emerald-500'}`}>
-                                        {monthlyProjection > summary.lastMonth.cost ? '+' : ''}
-                                        {((monthlyProjection - summary.lastMonth.cost) / summary.lastMonth.cost * 100).toFixed(0)}%
-                                    </span>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Fuel Efficiency */}
-                    {(summary.thisWeek.avgConsumption > 0 || summary.thisMonth.avgConsumption > 0) && (
-                        <div className="bg-gradient-to-r from-cyan-500/10 to-blue-500/10 dark:from-cyan-900/20 dark:to-blue-900/20 rounded-xl p-4 border border-cyan-200/50 dark:border-cyan-700/50">
-                            <h4 className="text-sm font-semibold text-cyan-700 dark:text-cyan-400 mb-3 flex items-center">
-                                <Fuel className="w-4 h-4 mr-2" />
-                                Yakıt Verimliliği
-                            </h4>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Haftalık Ort. Tüketim</p>
-                                    <div className="flex items-center space-x-2">
-                                        <p className="text-lg font-bold text-gray-800 dark:text-white">
-                                            {summary.thisWeek.avgConsumption.toFixed(1)} L/100km
-                                        </p>
-                                        {summary.lastWeek.avgConsumption > 0 && renderChange(summary.thisWeek.avgConsumption, summary.lastWeek.avgConsumption, true)}
-                                    </div>
-                                </div>
-                                <div>
-                                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Aylık Ort. Tüketim</p>
-                                    <div className="flex items-center space-x-2">
-                                        <p className="text-lg font-bold text-gray-800 dark:text-white">
-                                            {summary.thisMonth.avgConsumption.toFixed(1)} L/100km
-                                        </p>
-                                        {summary.lastMonth.avgConsumption > 0 && renderChange(summary.thisMonth.avgConsumption, summary.lastMonth.avgConsumption, true)}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    )}
                 </div>
             )}
         </div>
