@@ -119,11 +119,12 @@ export const QuickSummaryCards: React.FC<QuickSummaryCardsProps> = ({ logs, purc
         const isGood = card.invertChange ? card.change < 0 : card.change > 0;
 
         return (
+
           <div
             key={card.label}
-            className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${card.gradient} p-4 text-white shadow-lg transform transition-all duration-300 hover:scale-[1.02] hover:shadow-xl`}
+            className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${card.gradient} p-4 text-white shadow-lg transform transition-all duration-300 hover:scale-[1.02] hover:shadow-xl animate-slide-up`}
             style={{
-              animation: `slideUp 0.5s ease-out ${index * 0.1}s both`,
+              animationDelay: `${index * 0.1}s`,
             }}
           >
             {/* Background decoration */}
@@ -156,18 +157,7 @@ export const QuickSummaryCards: React.FC<QuickSummaryCardsProps> = ({ logs, purc
         );
       })}
 
-      <style>{`
-        @keyframes slideUp {
-          from {
-            opacity: 0;
-            transform: translateY(16px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-      `}</style>
+
     </div>
   );
 };
