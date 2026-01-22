@@ -1,5 +1,5 @@
 import React from 'react';
-import { TrendingUp, TrendingDown, Calendar, Award, Flame } from 'lucide-react';
+import { TrendingUp, TrendingDown, Calendar, Award, Flame, Wallet } from 'lucide-react';
 import { DailyLog } from '@/types';
 
 interface LogHistoryStatsBarProps {
@@ -13,6 +13,8 @@ export const LogHistoryStatsBar: React.FC<LogHistoryStatsBarProps> = ({ logs }) 
   const totalKm = logs.reduce((sum, l) => sum + l.dailyDistance, 0);
   const longestTrip = logs.reduce((max, l) => l.dailyDistance > max ? l.dailyDistance : max, 0);
   const bestDay = logs.reduce((best, l) => l.avgConsumption < best.avgConsumption ? l : best, logs[0]);
+  const totalCost = logs.reduce((sum, l) => sum + l.dailyCost, 0); // Sadece yakıt değil, toplam harcama
+
   const streak = (() => {
     const dates = Array.from(new Set(logs.map(l => l.date))).sort();
     let maxStreak = 0, currentStreak = 0;
@@ -44,6 +46,12 @@ export const LogHistoryStatsBar: React.FC<LogHistoryStatsBarProps> = ({ logs }) 
       gradient: 'from-emerald-500 to-teal-600',
     },
     {
+      icon: Wallet,
+      label: 'Toplam Harcama',
+      value: `₺${totalCost.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}`,
+      gradient: 'from-rose-500 to-pink-600',
+    },
+    {
       icon: Award,
       label: 'En Uzun Yol',
       value: `${longestTrip.toLocaleString('tr-TR')} km`,
@@ -64,12 +72,12 @@ export const LogHistoryStatsBar: React.FC<LogHistoryStatsBarProps> = ({ logs }) 
   ];
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-4">
+    <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3 mb-4">
       {stats.map((stat, i) => (
         <div
           key={stat.label}
-          className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${stat.gradient} p-4 text-white shadow-lg`}
-          style={{ animation: `slideUp 0.5s ease-out ${i * 0.08}s both` }}
+          className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${stat.gradient} p-4 text-white shadow-lg animate-slide-up`}
+          style={{ animationDelay: `${i * 0.08}s` }}
         >
           <div className="absolute -right-4 -top-4 h-16 w-16 rounded-full bg-white/10" />
           <div className="absolute -right-2 -bottom-4 h-10 w-10 rounded-full bg-white/5" />
@@ -82,12 +90,6 @@ export const LogHistoryStatsBar: React.FC<LogHistoryStatsBarProps> = ({ logs }) 
           </div>
         </div>
       ))}
-      <style>{`
-        @keyframes slideUp {
-          from { opacity: 0; transform: translateY(16px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-      `}</style>
     </div>
   );
 };
