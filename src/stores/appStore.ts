@@ -115,7 +115,7 @@ export const useAppStore = create<AppState>()(
         logs: state.logs.map(l => l.id === log.id ? log : l)
       })),
       importLogs: (logs) => set({ logs }),
-      importLogs: (logs) => set({ logs }),
+
       clearLogs: () => set({ logs: [], maintenanceItems: [], fuelPurchases: [], vehicleParts: [] }),
 
       // Fuel Purchase Actions
