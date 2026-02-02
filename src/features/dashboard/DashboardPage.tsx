@@ -1,4 +1,7 @@
 import React, { Suspense, useMemo } from 'react';
+import { GamificationCard } from '../gamification/components/GamificationCard';
+import { BadgeList } from '../gamification/components/BadgeList';
+import { StreakWidget } from '../gamification/components/StreakWidget';
 import { DailyLog, MaintenanceItem, DashboardStats, Vehicle, FuelPurchase, VehiclePart } from '../../types';
 import { DashboardStatsCard } from './components/DashboardStatsCard';
 import { HeroSection } from './components/HeroSection';
@@ -157,7 +160,8 @@ export const DashboardPage: React.FC = () => {
             )}
 
             {/* Year Filter Tabs */}
-            <div className="flex justify-center">
+            <div className="flex justify-center items-center gap-4">
+                <StreakWidget />
                 <div className="inline-flex rounded-lg bg-gray-100 dark:bg-gray-800 p-1">
                     {(['2026', '2025', 'all'] as const).map((year) => (
                         <button
@@ -183,7 +187,11 @@ export const DashboardPage: React.FC = () => {
                 onAddEntry={() => openModal('entry')}
             />
 
+            <GamificationCard />
+
             <DashboardStatsCard stats={stats} alerts={activeAlerts} currentOdometer={lastOdometer} />
+
+            <BadgeList />
 
             {/* Weekly/Monthly Summary */}
             <WeeklySummary logs={logs} fuelPurchases={fuelPurchases} />

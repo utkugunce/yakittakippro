@@ -4,6 +4,7 @@ import { LocationPicker } from './LocationPicker';
 import { FuelPurchase } from '../../../types';
 import { Input } from '../../../components/ui/Input';
 import { Button } from '../../../components/ui/Button';
+import { useGamificationStore } from '../../gamification/store/gamificationStore';
 
 interface FuelPurchaseFormProps {
     onAdd: (purchase: FuelPurchase) => void;
@@ -200,6 +201,14 @@ export const FuelPurchaseForm: React.FC<FuelPurchaseFormProps> = ({ onAdd, onUpd
             onUpdate(purchase);
         } else {
             onAdd(purchase);
+
+            // Gamification Trigger
+            const { addXp, checkBadges } = useGamificationStore.getState();
+            addXp(50); // Base XP for fuel log
+            if (purchaseHistory.length === 0) {
+                useGamificationStore.getState().unlockBadge('first_log');
+            }
+            checkBadges('LOG_COUNT', purchaseHistory.length + 1);
         }
         handleClear();
     };
@@ -302,7 +311,7 @@ export const FuelPurchaseForm: React.FC<FuelPurchaseFormProps> = ({ onAdd, onUpd
                                         setStation(brand === station ? '' : brand);
                                         setStationSearch('');
                                     }}
-                                    className={`px-3 py-2 rounded-lg text-xs font-bold transition-all border ${station === brand
+                                    className={`px-4 py-3 rounded-lg text-sm font-bold transition-all border min-h-[44px] touch-manipulation flex items-center ${station === brand
                                         ? 'bg-emerald-600 text-white border-emerald-600 shadow-md transform scale-105'
                                         : 'bg-[#333333] dark:bg-gray-700 text-gray-300 border-transparent hover:bg-gray-600'
                                         }`}
@@ -320,7 +329,7 @@ export const FuelPurchaseForm: React.FC<FuelPurchaseFormProps> = ({ onAdd, onUpd
                         <button
                             type="button"
                             onClick={() => setCalcMode('liters')}
-                            className={`px-4 py-2 text-sm font-medium rounded-md transition-all ${calcMode === 'liters'
+                            className={`px-5 py-3 text-sm font-medium rounded-md transition-all min-h-[44px] ${calcMode === 'liters'
                                 ? 'bg-white dark:bg-gray-600 text-emerald-600 dark:text-emerald-400 shadow-sm'
                                 : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
                                 }`}
@@ -330,7 +339,7 @@ export const FuelPurchaseForm: React.FC<FuelPurchaseFormProps> = ({ onAdd, onUpd
                         <button
                             type="button"
                             onClick={() => setCalcMode('total')}
-                            className={`px-4 py-2 text-sm font-medium rounded-md transition-all ${calcMode === 'total'
+                            className={`px-5 py-3 text-sm font-medium rounded-md transition-all min-h-[44px] ${calcMode === 'total'
                                 ? 'bg-white dark:bg-gray-600 text-emerald-600 dark:text-emerald-400 shadow-sm'
                                 : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
                                 }`}
@@ -345,6 +354,7 @@ export const FuelPurchaseForm: React.FC<FuelPurchaseFormProps> = ({ onAdd, onUpd
                     label="Alınan Litre"
                     helperText={calcMode === 'total' ? "(Otomatik)" : undefined}
                     type="number"
+                    inputMode="decimal"
                     step="0.01"
                     required
                     placeholder="Örn: 45.5"
@@ -361,6 +371,7 @@ export const FuelPurchaseForm: React.FC<FuelPurchaseFormProps> = ({ onAdd, onUpd
                 <Input
                     label="Litre Fiyatı (TL/L)"
                     type="number"
+                    inputMode="decimal"
                     step="0.01"
                     required
                     placeholder="Örn: 42.50"
@@ -375,6 +386,7 @@ export const FuelPurchaseForm: React.FC<FuelPurchaseFormProps> = ({ onAdd, onUpd
                     label="Toplam Tutar (TL)"
                     helperText={calcMode === 'liters' ? "(Otomatik)" : undefined}
                     type="number"
+                    inputMode="decimal"
                     step="0.01"
                     required
                     placeholder="Örn: 1933.75"
@@ -407,6 +419,7 @@ export const FuelPurchaseForm: React.FC<FuelPurchaseFormProps> = ({ onAdd, onUpd
                 <Input
                     label="Güncel KM (Opsiyonel)"
                     type="number"
+                    inputMode="numeric"
                     step="1"
                     placeholder={lastOdometer > 0 ? `Son: ${lastOdometer.toLocaleString('tr-TR')} km` : 'Örn: 52000'}
                     value={odometer}

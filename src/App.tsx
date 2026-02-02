@@ -39,6 +39,11 @@ export default function App() {
   useEffect(() => {
     hydrate();
 
+    // Gamification Check
+    import('./features/gamification/store/gamificationStore').then(({ useGamificationStore }) => {
+      useGamificationStore.getState().updateStreak();
+    });
+
     // Theme initialization
     const savedTheme = localStorage.getItem(THEME_STORAGE_KEY);
     if (savedTheme === 'dark') {

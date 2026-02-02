@@ -4,6 +4,7 @@ import { Wrench, Plus, Trash2, AlertTriangle, CheckCircle, AlertCircle, Circle, 
 import { MaintenanceHeaderGradient } from './components/MaintenanceHeaderGradient';
 import { MaintenanceStatsBar } from './components/MaintenanceStatsBar';
 import { MaintenanceTips } from './components/MaintenanceTips';
+import { AddMaintenanceModal } from './AddMaintenanceModal';
 import { useAppStore } from '../../stores/appStore';
 
 export const Maintenance: React.FC = () => {
@@ -11,10 +12,9 @@ export const Maintenance: React.FC = () => {
         maintenanceItems: items,
         vehicleParts: parts,
         logs,
-        addMaintenance: onAdd,
+        maintenanceItems, // Keep unused if needed for stats or remove
         deleteMaintenance: onDelete,
         updateMaintenance: onUpdate,
-        addPart: onAddPart,
         deletePart: onDeletePart,
         togglePart: onTogglePart
     } = useAppStore();
@@ -24,70 +24,8 @@ export const Maintenance: React.FC = () => {
     const [subTab, setSubTab] = useState<'scheduled' | 'parts'>('scheduled');
     const [showAddForm, setShowAddForm] = useState(false);
 
-    // --- Scheduled Maintenance Form State ---
-    const [title, setTitle] = useState('');
-    const [maintenanceType, setMaintenanceType] = useState<'km' | 'date' | 'both'>('km');
-    const [intervalKm, setIntervalKm] = useState('');
-    const [lastKm, setLastKm] = useState('');
-    const [dueDate, setDueDate] = useState('');
-
-    // --- Part Form State ---
-    const [partType, setPartType] = useState<PartType>('tire');
-    const [partName, setPartName] = useState('');
-    const [installKm, setInstallKm] = useState('');
-    const [installDate, setInstallDate] = useState(new Date().toISOString().split('T')[0]);
-    const [lifespanKm, setLifespanKm] = useState('');
-
-
-    const handleDetailsSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-
-        if (subTab === 'scheduled') {
-            if (!title) return;
-
-            let newItem: MaintenanceItem = {
-                id: crypto.randomUUID(),
-                title,
-                type: maintenanceType,
-                status: 'ok'
-            };
-
-            if (maintenanceType === 'km' || maintenanceType === 'both') {
-                if (!intervalKm || !lastKm) return;
-                const interval = parseInt(intervalKm);
-                const last = parseInt(lastKm);
-                newItem.intervalKm = interval;
-                newItem.lastMaintenanceKm = last;
-                newItem.nextDueKm = last + interval;
-                newItem.notifyBeforeKm = 1000;
-            }
-
-            if (maintenanceType === 'date' || maintenanceType === 'both') {
-                if (!dueDate) return;
-                newItem.dueDate = dueDate;
-                newItem.notifyBeforeDays = 30;
-            }
-
-            onAdd(newItem);
-            setTitle(''); setIntervalKm(''); setLastKm(''); setDueDate('');
-        } else {
-            // Add Part
-            if (!partName || !installKm) return;
-
-            const newPart: VehiclePart = {
-                id: crypto.randomUUID(),
-                type: partType,
-                name: partName,
-                installDate,
-                installKm: parseInt(installKm),
-                lifespanKm: lifespanKm ? parseInt(lifespanKm) : undefined,
-                isActive: partType === 'tire' ? true : true, // Default active
-                notes: ''
-            };
-            onAddPart(newPart);
-            setPartName(''); setInstallKm(''); setLifespanKm('');
-        }
-        setShowAddForm(false);
+    const handleAddClick = () => {
+        setShowAddForm(true);
     };
 
     const calculateStatus = (item: MaintenanceItem) => {
@@ -146,12 +84,7 @@ export const Maintenance: React.FC = () => {
         }
     };
 
-    // Helper: auto-fill install KM with current Odometer
-    const handleAddClick = () => {
-        setLastKm(currentOdometer.toString());
-        setInstallKm(currentOdometer.toString());
-        setShowAddForm(!showAddForm);
-    };
+
 
     return (
         <div className="space-y-6 animate-fadeIn">
@@ -180,88 +113,21 @@ export const Maintenance: React.FC = () => {
             {/* Add Button */}
             <button
                 onClick={handleAddClick}
-                className="w-full py-3 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl text-gray-500 hover:border-primary-500 hover:text-primary-600 dark:text-gray-400 dark:hover:text-primary-400 font-bold transition-all flex items-center justify-center"
+                className="w-full py-4 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl text-gray-500 hover:border-primary-500 hover:text-primary-600 dark:text-gray-400 dark:hover:text-primary-400 font-bold transition-all flex items-center justify-center group active:scale-98"
             >
-                <Plus className="w-5 h-5 mr-2" />
-                {subTab === 'scheduled' ? 'Yeni Bakım Hatırlatıcısı' : 'Yeni Parça Ekle'}
+                <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mr-3 group-hover:bg-primary-50 dark:group-hover:bg-primary-900/20 transition-colors">
+                    <Plus className="w-5 h-5 group-hover:text-primary-600 dark:group-hover:text-primary-400" />
+                </div>
+                {subTab === 'scheduled' ? 'Yeni Hatırlatıcı Ekle' : 'Yeni Parça Ekle'}
             </button>
 
-            {/* Form */}
-            {showAddForm && (
-                <form onSubmit={handleDetailsSubmit} className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 space-y-4 animate-in slide-in-from-top-2">
-                    {subTab === 'scheduled' ? (
-                        <>
-                            {/* Existing Scheduled Maintenance Form Logic */}
-                            <div className="flex rounded-lg bg-gray-100 dark:bg-gray-700 p-1 mb-2">
-                                <button type="button" onClick={() => setMaintenanceType('km')} className={`flex-1 py-1.5 text-xs font-bold rounded ${maintenanceType === 'km' ? 'bg-white dark:bg-gray-600 shadow-sm' : ''}`}>KM Bazlı</button>
-                                <button type="button" onClick={() => setMaintenanceType('date')} className={`flex-1 py-1.5 text-xs font-bold rounded ${maintenanceType === 'date' ? 'bg-white dark:bg-gray-600 shadow-sm' : ''}`}>Tarih Bazlı</button>
-                                <button type="button" onClick={() => setMaintenanceType('both')} className={`flex-1 py-1.5 text-xs font-bold rounded ${maintenanceType === 'both' ? 'bg-white dark:bg-gray-600 shadow-sm' : ''}`}>Her İkisi</button>
-                            </div>
-                            <div className="flex flex-wrap gap-2 mb-2">
-                                {['Periyodik Bakım', 'Muayene', 'Kasko', 'Trafik Sigortası'].map((suggestion) => (
-                                    <button
-                                        key={suggestion}
-                                        type="button"
-                                        onClick={() => {
-                                            setTitle(suggestion);
-                                            // Auto-select 'date' for insurance/inspection
-                                            if (suggestion === 'Kasko' || suggestion === 'Trafik Sigortası' || suggestion === 'Muayene') {
-                                                setMaintenanceType('date');
-                                            } else {
-                                                setMaintenanceType('km');
-                                            }
-                                        }}
-                                        className="px-2 py-1 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-xs text-gray-700 dark:text-gray-300 transition-colors"
-                                    >
-                                        {suggestion}
-                                    </button>
-                                ))}
-                            </div>
-                            <input type="text" placeholder="Bakım Adı (Örn: Yağ Değişimi)" value={title} onChange={e => setTitle(e.target.value)} className="w-full p-2 rounded-lg border dark:bg-gray-700 dark:border-gray-600" required />
-
-                            {(maintenanceType === 'km' || maintenanceType === 'both') && (
-                                <div className="grid grid-cols-2 gap-2">
-                                    <input type="number" placeholder="Periyot (KM)" value={intervalKm} onChange={e => setIntervalKm(e.target.value)} className="w-full p-2 rounded-lg border dark:bg-gray-700 dark:border-gray-600" required />
-                                    <input type="number" placeholder="Son Yapılan KM" value={lastKm} onChange={e => setLastKm(e.target.value)} className="w-full p-2 rounded-lg border dark:bg-gray-700 dark:border-gray-600" required />
-                                </div>
-                            )}
-
-                            {(maintenanceType === 'date' || maintenanceType === 'both') && (
-                                <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} className="w-full p-2 rounded-lg border dark:bg-gray-700 dark:border-gray-600" required />
-                            )}
-                        </>
-                    ) : (
-                        <>
-                            {/* Part Entry Form */}
-                            <label className="block text-xs font-bold text-gray-500 uppercase">Parça Türü</label>
-                            <div className="flex gap-2 overflow-x-auto pb-1">
-                                {(['tire', 'battery', 'pad', 'wiper', 'other'] as const).map(t => (
-                                    <button
-                                        key={t} type="button"
-                                        onClick={() => setPartType(t)}
-                                        className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap border ${partType === t ? 'bg-primary-100 border-primary-200 text-primary-700 dark:bg-gray-800 dark:border-primary-500 dark:text-primary-300' : 'bg-gray-50 border-gray-200 text-gray-600 dark:bg-gray-700 dark:border-gray-600'}`}
-                                    >
-                                        {t === 'tire' ? 'Lastik' : t === 'battery' ? 'Akü' : t === 'pad' ? 'Balata' : t === 'wiper' ? 'Silecek' : 'Diğer'}
-                                    </button>
-                                ))}
-                            </div>
-                            <input type="text" placeholder="Parça Adı (Örn: Michelin Alpin 6)" value={partName} onChange={e => setPartName(e.target.value)} className="w-full p-2 rounded-lg border dark:bg-gray-700 dark:border-gray-600" required />
-                            <div className="grid grid-cols-2 gap-2">
-                                <div>
-                                    <label className="text-xs text-gray-500">Takılma KM</label>
-                                    <input type="number" value={installKm} onChange={e => setInstallKm(e.target.value)} className="w-full p-2 rounded-lg border dark:bg-gray-700 dark:border-gray-600" required />
-                                </div>
-                                <div>
-                                    <label className="text-xs text-gray-500">Takılma Tarihi</label>
-                                    <input type="date" value={installDate} onChange={e => setInstallDate(e.target.value)} className="w-full p-2 rounded-lg border dark:bg-gray-700 dark:border-gray-600" required />
-                                </div>
-                            </div>
-                            <input type="number" placeholder="Beklenen Ömür (KM) - Opsiyonel" value={lifespanKm} onChange={e => setLifespanKm(e.target.value)} className="w-full p-2 rounded-lg border dark:bg-gray-700 dark:border-gray-600" />
-                        </>
-                    )}
-                    <button type="submit" className="w-full bg-primary-600 text-white font-bold py-2 rounded-lg">Kaydet</button>
-                </form>
-            )}
+            {/* Modal */}
+            <AddMaintenanceModal
+                isOpen={showAddForm}
+                onClose={() => setShowAddForm(false)}
+                activeTab={subTab}
+                currentOdometer={currentOdometer}
+            />
 
             {/* Content List */}
             <div className="space-y-3">
