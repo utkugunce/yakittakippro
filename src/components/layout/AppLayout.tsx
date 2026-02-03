@@ -4,7 +4,6 @@ import { Car, LayoutDashboard, History, BarChart3, Wrench, FileText, Settings, S
 import { Vehicle } from '../../types';
 import { typography, textStyles } from '../../design-system/typography';
 import { OfflineIndicator } from '../ui/OfflineIndicator';
-import { OnboardingTour } from '../ui/OnboardingTour';
 
 interface AppLayoutProps {
     children: React.ReactNode;

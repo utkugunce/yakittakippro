@@ -12,6 +12,10 @@ import {
   BrandCharts
 } from './components';
 
+import { CorrelationChart } from '../charts/components/advanced/CorrelationChart';
+import { MonthlyCostChart } from '../charts/components/advanced/MonthlyCostChart';
+import { EfficiencyTrendChart } from '../charts/components/advanced/EfficiencyTrendChart';
+
 interface ChartsProps {
   logs: DailyLog[];
   purchases?: FuelPurchase[];
@@ -68,6 +72,43 @@ export const Charts: React.FC<ChartsProps> = ({ logs, purchases = [] }) => {
 
       {/* Brand Analysis Charts */}
       <BrandCharts logs={logs} purchases={purchases} />
+
+      {/* Advanced Analytics Section */}
+      <div className="pt-6 border-t border-gray-200 dark:border-gray-800">
+        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+          <Activity className="w-6 h-6 text-purple-600" />
+          Gelişmiş Analizler
+        </h2>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <ChartCard
+            title="Hız vs Tüketim Analizi"
+            subtitle="Daha hızlı gitmek ne kadar yaktırıyor?"
+            icon={<Activity className="w-5 h-5 text-purple-600" />}
+            iconBgColor="bg-purple-100 dark:bg-purple-900/30"
+          >
+            <CorrelationChart logs={logs} />
+          </ChartCard>
+
+          <ChartCard
+            title="Verimlilik Trendi"
+            subtitle="Zamanla sürüş alışkanlığınızın değişimi"
+            icon={<Activity className="w-5 h-5 text-orange-600" />}
+            iconBgColor="bg-orange-100 dark:bg-orange-900/30"
+          >
+            <EfficiencyTrendChart logs={logs} />
+          </ChartCard>
+        </div>
+
+        <div className="mt-6">
+          <ChartCard
+            title="Detaylı Maliyet Dağılımı"
+            subtitle="Aylık Yakıt Giderleriniz"
+          >
+            <MonthlyCostChart purchases={purchases} />
+          </ChartCard>
+        </div>
+      </div>
     </div>
   );
 };
