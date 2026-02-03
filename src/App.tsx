@@ -19,6 +19,7 @@ import { Maintenance } from './features/maintenance/MaintenancePage';
 const ChartsPage = React.lazy(() => import('./features/charts/ChartsPage').then(module => ({ default: module.ChartsPage })));
 const Reports = React.lazy(() => import('./features/analytics/ReportsPage').then(module => ({ default: module.Reports })));
 const FuelMap = React.lazy(() => import('./features/fuel/components/FuelMap').then(module => ({ default: module.FuelMap })));
+const Glovebox = React.lazy(() => import('./features/glovebox/GloveboxPage').then(module => ({ default: module.GloveboxPage })));
 
 const THEME_STORAGE_KEY = 'yakit_takip_theme_v1';
 
@@ -103,6 +104,12 @@ export default function App() {
               <FuelMap />
               <Reports />
             </div>
+          </React.Suspense>
+        } />
+
+        <Route path="glovebox" element={
+          <React.Suspense fallback={<PageLoader />}>
+            <Glovebox />
           </React.Suspense>
         } />
 

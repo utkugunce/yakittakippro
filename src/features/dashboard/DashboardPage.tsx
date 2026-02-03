@@ -9,6 +9,7 @@ import { SmartNudgeBanner } from '../../components/SmartNudgeBanner';
 import { useSmartNudges } from '../../hooks/useSmartNudges';
 import { useAppStore } from '../../stores/appStore';
 import { useNavigate } from 'react-router-dom';
+import { SmartInsightsWidget } from './components/SmartInsightsWidget';
 
 export const DashboardPage: React.FC = () => {
     const navigate = useNavigate();
@@ -140,6 +141,11 @@ export const DashboardPage: React.FC = () => {
                     ))}
                 </div>
             </div>
+
+            {/* Smart AI Insights */}
+            <Suspense fallback={<div className="h-32 bg-gray-100 dark:bg-gray-800 rounded-xl animate-pulse" />}>
+                <SmartInsightsWidget />
+            </Suspense>
 
             {/* Stats Card */}
             <DashboardStatsCard stats={stats} currentOdometer={lastOdometer} />

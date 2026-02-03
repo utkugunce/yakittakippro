@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Fuel, Calendar, Coins, Droplets, MapPin, Calculator, PlusCircle, Eraser, AlertCircle, GaugeCircle, Map, Search } from 'lucide-react';
+import { Fuel, Calendar, Coins, Droplets, MapPin, Calculator, PlusCircle, Eraser, AlertCircle, GaugeCircle, Map, Search, Camera } from 'lucide-react';
 import { LocationPicker } from './LocationPicker';
 import { FuelPurchase } from '../../../types';
 import { Input } from '../../../components/ui/Input';
 import { Button } from '../../../components/ui/Button';
 import { useGamificationStore } from '../../gamification/store/gamificationStore';
+import { OCRScanner } from './OCRScanner';
+import { ExtractedReceiptData } from '../utils/receiptParser';
 
 interface FuelPurchaseFormProps {
     onAdd: (purchase: FuelPurchase) => void;
@@ -37,6 +39,7 @@ export const FuelPurchaseForm: React.FC<FuelPurchaseFormProps> = ({ onAdd, onUpd
     const [manualLng, setManualLng] = useState<string>('');
     const [gpsLoading, setGpsLoading] = useState(false);
     const [showMapPicker, setShowMapPicker] = useState(false);
+    const [isScannerOpen, setIsScannerOpen] = useState(false);
 
     // Filter stations based on search and sort by usage frequency
     const filteredStations = useMemo(() => {
@@ -213,6 +216,19 @@ export const FuelPurchaseForm: React.FC<FuelPurchaseFormProps> = ({ onAdd, onUpd
         handleClear();
     };
 
+    // OCR Handler
+    const handleScanComplete = (data: ExtractedReceiptData) => {
+        if (data.date) setDate(data.date);
+        if (data.totalAmount) setTotalAmount(data.totalAmount.toString().replace('.', ','));
+        if (data.liters) setLiters(data.liters.toString().replace('.', ','));
+        if (data.pricePerLiter) setPricePerLiter(data.pricePerLiter.toString().replace('.', ','));
+        if (data.station) {
+            setStation(data.station);
+            setStationSearch(data.station);
+        }
+        setIsScannerOpen(false);
+    };
+
     const inputBaseClasses = "w-full pl-10 pr-4 py-3 min-h-[48px] bg-[#333333] dark:bg-gray-700 text-gray-100 placeholder-gray-500 border border-transparent rounded-lg focus:ring-2 focus:ring-primary-500 outline-none transition-all [color-scheme:dark] appearance-none";
     const labelClasses = "text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1 block";
 
@@ -229,7 +245,23 @@ export const FuelPurchaseForm: React.FC<FuelPurchaseFormProps> = ({ onAdd, onUpd
                         <p className="text-xs text-gray-500 dark:text-gray-400">Yakıt doldurma bilgilerini girin</p>
                     </div>
                 </div>
+                <button
+                    type="button"
+                    onClick={() => setIsScannerOpen(true)}
+                    className="flex items-center gap-2 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
+                >
+                    <Camera className="w-4 h-4" />
+                    <span>Fiş Tara</span>
+                </button>
             </div>
+
+            {/* OCR Scanner Modal */}
+            {isScannerOpen && (
+                <OCRScanner
+                    onScanComplete={handleScanComplete}
+                    onClose={() => setIsScannerOpen(false)}
+                />
+            )}
 
             {/* Error Display */}
             {error && (

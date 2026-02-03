@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { DailyLog, MaintenanceItem, Vehicle, VehiclePart, FuelPurchase } from '../types';
+import { DailyLog, MaintenanceItem, Vehicle, VehiclePart, FuelPurchase, VehicleDocument } from '../types';
 
 const LOCAL_STORAGE_KEY = 'yakit_takip_logs_v1';
 const MAINTENANCE_STORAGE_KEY = 'yakit_takip_maintenance_v1';
@@ -15,6 +15,7 @@ interface AppState {
   maintenanceItems: MaintenanceItem[];
   vehicles: Vehicle[];
   vehicleParts: VehiclePart[];
+  documents: VehicleDocument[];
   selectedVehicleId: string | null;
 
   // UI State
@@ -58,6 +59,11 @@ interface AppState {
   setSelectedVehicleId: (id: string | null) => void;
   setVehicles: (vehicles: Vehicle[]) => void;
 
+  // Actions - Documents
+  addDocument: (doc: VehicleDocument) => void;
+  deleteDocument: (id: string) => void;
+  updateDocument: (doc: VehicleDocument) => void;
+
   // Actions - UI
   setActiveTab: (tab: AppState['activeTab']) => void;
   setYearFilter: (filter: AppState['yearFilter']) => void;
@@ -93,6 +99,7 @@ export const useAppStore = create<AppState>()(
       maintenanceItems: [],
       vehicles: [defaultVehicle],
       vehicleParts: [],
+      documents: [],
       selectedVehicleId: 'default',
       activeTab: 'dashboard',
       yearFilter: 'all',
@@ -179,6 +186,16 @@ export const useAppStore = create<AppState>()(
       setLastSyncTime: (date) => set({ lastSyncTime: date }),
       setGeminiApiKey: (key) => set({ geminiApiKey: key }),
 
+
+      // Document Actions
+      addDocument: (doc) => set((state) => ({ documents: [...state.documents, doc] })),
+      deleteDocument: (id) => set((state) => ({
+        documents: state.documents.filter(d => d.id !== id)
+      })),
+      updateDocument: (doc) => set((state) => ({
+        documents: state.documents.map(d => d.id === doc.id ? doc : d)
+      })),
+
       // Hydration - first loads Zustand persist data, then merges legacy localStorage
       hydrate: async () => {
         try {
@@ -260,6 +277,7 @@ export const useAppStore = create<AppState>()(
         vehicles: state.vehicles,
         vehicleParts: state.vehicleParts,
         selectedVehicleId: state.selectedVehicleId,
+        documents: state.documents, // Persist documents
         monthlyBudget: state.monthlyBudget,
         notificationsEnabled: state.notificationsEnabled,
         lastNotificationCheck: state.lastNotificationCheck,

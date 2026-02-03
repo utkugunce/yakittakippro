@@ -153,6 +153,16 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
                         <span>Bakım</span>
                     </NavLink>
                     <NavLink
+                        to="/glovebox"
+                        className={({ isActive }) => `flex-1 flex items-center justify-center py-2.5 rounded-lg transition-all ${isActive
+                            ? `bg-white dark:bg-gray-700 text-blue-700 dark:text-blue-300 shadow-sm ${typography.navItemActive}`
+                            : `text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 ${typography.navItem}`
+                            }`}
+                    >
+                        <FileText className="w-4 h-4 mr-2" />
+                        <span>Cüzdan</span>
+                    </NavLink>
+                    <NavLink
                         to="/reports"
                         className={({ isActive }) => `flex-1 flex items-center justify-center py-2.5 rounded-lg transition-all ${isActive
                             ? `bg-white dark:bg-gray-700 text-blue-700 dark:text-blue-300 shadow-sm ${typography.navItemActive}`
@@ -281,6 +291,11 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
                             <NavLink to="/maintenance" onClick={() => setShowMobileMenu(false)} className={({ isActive }) => `flex items-center p-3 rounded-xl transition-colors ${isActive ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300' : 'hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200'}`}>
                                 <div className="bg-blue-100 dark:bg-blue-900/30 p-2 rounded-lg mr-3"><Wrench className="w-5 h-5 text-blue-600 dark:text-blue-400" /></div>
                                 <span className="font-medium">Bakım & Parçalar</span>
+                            </NavLink>
+
+                            <NavLink to="/glovebox" onClick={() => setShowMobileMenu(false)} className={({ isActive }) => `flex items-center p-3 rounded-xl transition-colors ${isActive ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300' : 'hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200'}`}>
+                                <div className="bg-orange-100 dark:bg-orange-900/30 p-2 rounded-lg mr-3"><FileText className="w-5 h-5 text-orange-600 dark:text-orange-400" /></div>
+                                <span className="font-medium">Araç Cüzdanı</span>
                             </NavLink>
 
                             <NavLink to="/reports" onClick={() => setShowMobileMenu(false)} className={({ isActive }) => `flex items-center p-3 rounded-xl transition-colors ${isActive ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300' : 'hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200'}`}>

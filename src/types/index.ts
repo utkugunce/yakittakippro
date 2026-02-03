@@ -112,3 +112,14 @@ export interface GamificationStats {
   longestStreak: number;
   badges: Badge[];
 }
+
+// Digital Glovebox Types
+export interface VehicleDocument {
+  id: string;
+  type: 'license' | 'insurance' | 'inspection' | 'other';
+  title: string;
+  expiryDate?: string;
+  photoUrl?: string; // Base64 or URL
+  notes?: string;
+  createdAt: string;
+}
