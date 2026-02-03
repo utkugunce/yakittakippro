@@ -279,40 +279,127 @@ export const WeeklySummary: React.FC<WeeklySummaryProps> = ({ logs, fuelPurchase
 
             {/* Expanded Details */}
             {isExpanded && (
-                <div className="px-3 sm:px-4 pb-4 animate-in slide-in-from-top duration-300 border-t border-gray-100 dark:border-gray-800 pt-3 mt-1">
-                    <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Detaylı Karşılaştırma</h4>
+                <div className="px-3 sm:px-4 pb-4 animate-in slide-in-from-top duration-300 border-t border-gray-100 dark:border-gray-800 pt-4 mt-1">
+                    <div className="flex items-center gap-2 mb-4">
+                        <div className="w-1 h-4 bg-gradient-to-b from-violet-500 to-purple-500 rounded-full" />
+                        <h4 className="text-sm font-bold text-gray-700 dark:text-gray-300">Detaylı Karşılaştırma</h4>
+                    </div>
 
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                        <div className="space-y-2">
-                            <p className="font-medium text-gray-700 dark:text-gray-300">Geçen Hafta</p>
-                            <div className="flex justify-between text-gray-600 dark:text-gray-400 text-xs">
-                                <span>Harcama</span>
-                                <span>₺{summary.lastWeek.cost.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}</span>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {/* Last Week Card */}
+                        <div className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-cyan-50 to-teal-50 dark:from-blue-900/20 dark:via-cyan-900/20 dark:to-teal-900/20 rounded-xl p-4 border border-blue-100 dark:border-blue-800/30">
+                            <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-blue-400/20 to-transparent rounded-full -translate-y-1/2 translate-x-1/2" />
+
+                            <div className="flex items-center gap-2 mb-3">
+                                <div className="p-1.5 bg-blue-500/20 rounded-lg">
+                                    <Calendar className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                                </div>
+                                <span className="text-sm font-bold text-blue-700 dark:text-blue-300">Geçen Hafta</span>
                             </div>
-                            <div className="flex justify-between text-gray-600 dark:text-gray-400 text-xs">
-                                <span>Mesafe</span>
-                                <span>{summary.lastWeek.distance} km</span>
-                            </div>
-                            <div className="flex justify-between text-gray-600 dark:text-gray-400 text-xs">
-                                <span>Maliyet/Km</span>
-                                <span>{summary.lastWeek.costPerKm.toFixed(2)} TL</span>
+
+                            <div className="space-y-3">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-1.5">
+                                        <Wallet className="w-3.5 h-3.5 text-gray-400" />
+                                        <span className="text-xs text-gray-600 dark:text-gray-400">Harcama</span>
+                                    </div>
+                                    <span className="text-sm font-bold text-gray-800 dark:text-white">
+                                        ₺{summary.lastWeek.cost.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}
+                                    </span>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-1.5">
+                                        <Route className="w-3.5 h-3.5 text-gray-400" />
+                                        <span className="text-xs text-gray-600 dark:text-gray-400">Mesafe</span>
+                                    </div>
+                                    <span className="text-sm font-bold text-gray-800 dark:text-white">
+                                        {summary.lastWeek.distance.toLocaleString('tr-TR')} km
+                                    </span>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-1.5">
+                                        <Activity className="w-3.5 h-3.5 text-gray-400" />
+                                        <span className="text-xs text-gray-600 dark:text-gray-400">Maliyet/Km</span>
+                                    </div>
+                                    <span className="text-sm font-bold text-gray-800 dark:text-white">
+                                        {summary.lastWeek.costPerKm.toFixed(2)} ₺
+                                    </span>
+                                </div>
+                                {/* Progress bar */}
+                                <div className="pt-2">
+                                    <div className="h-1.5 bg-gray-200 dark:bg-gray-600 rounded-full overflow-hidden">
+                                        <div
+                                            className="h-full bg-gradient-to-r from-blue-400 to-cyan-400 rounded-full transition-all duration-500"
+                                            style={{ width: `${Math.min((summary.lastWeek.cost / Math.max(summary.thisWeek.cost, summary.lastWeek.cost)) * 100, 100)}%` }}
+                                        />
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
-                        <div className="space-y-2">
-                            <p className="font-medium text-gray-700 dark:text-gray-300">Geçen Ay</p>
-                            <div className="flex justify-between text-gray-600 dark:text-gray-400 text-xs">
-                                <span>Harcama</span>
-                                <span>₺{summary.lastMonth.cost.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}</span>
+                        {/* Last Month Card */}
+                        <div className="relative overflow-hidden bg-gradient-to-br from-purple-50 via-fuchsia-50 to-pink-50 dark:from-purple-900/20 dark:via-fuchsia-900/20 dark:to-pink-900/20 rounded-xl p-4 border border-purple-100 dark:border-purple-800/30">
+                            <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-purple-400/20 to-transparent rounded-full -translate-y-1/2 translate-x-1/2" />
+
+                            <div className="flex items-center gap-2 mb-3">
+                                <div className="p-1.5 bg-purple-500/20 rounded-lg">
+                                    <Calendar className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                                </div>
+                                <span className="text-sm font-bold text-purple-700 dark:text-purple-300">Geçen Ay</span>
                             </div>
-                            <div className="flex justify-between text-gray-600 dark:text-gray-400 text-xs">
-                                <span>Mesafe</span>
-                                <span>{summary.lastMonth.distance} km</span>
+
+                            <div className="space-y-3">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-1.5">
+                                        <Wallet className="w-3.5 h-3.5 text-gray-400" />
+                                        <span className="text-xs text-gray-600 dark:text-gray-400">Harcama</span>
+                                    </div>
+                                    <span className="text-sm font-bold text-gray-800 dark:text-white">
+                                        ₺{summary.lastMonth.cost.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}
+                                    </span>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-1.5">
+                                        <Route className="w-3.5 h-3.5 text-gray-400" />
+                                        <span className="text-xs text-gray-600 dark:text-gray-400">Mesafe</span>
+                                    </div>
+                                    <span className="text-sm font-bold text-gray-800 dark:text-white">
+                                        {summary.lastMonth.distance.toLocaleString('tr-TR')} km
+                                    </span>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-1.5">
+                                        <Activity className="w-3.5 h-3.5 text-gray-400" />
+                                        <span className="text-xs text-gray-600 dark:text-gray-400">Maliyet/Km</span>
+                                    </div>
+                                    <span className="text-sm font-bold text-gray-800 dark:text-white">
+                                        {summary.lastMonth.costPerKm.toFixed(2)} ₺
+                                    </span>
+                                </div>
+                                {/* Progress bar */}
+                                <div className="pt-2">
+                                    <div className="h-1.5 bg-gray-200 dark:bg-gray-600 rounded-full overflow-hidden">
+                                        <div
+                                            className="h-full bg-gradient-to-r from-purple-400 to-fuchsia-400 rounded-full transition-all duration-500"
+                                            style={{ width: `${Math.min((summary.lastMonth.cost / Math.max(summary.thisMonth.cost, summary.lastMonth.cost)) * 100, 100)}%` }}
+                                        />
+                                    </div>
+                                </div>
                             </div>
-                            <div className="flex justify-between text-gray-600 dark:text-gray-400 text-xs">
-                                <span>Maliyet/Km</span>
-                                <span>{summary.lastMonth.costPerKm.toFixed(2)} TL</span>
-                            </div>
+                        </div>
+                    </div>
+
+                    {/* Comparison Summary */}
+                    <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl border border-gray-100 dark:border-gray-600">
+                        <div className="flex items-center justify-between text-xs">
+                            <span className="text-gray-500 dark:text-gray-400">Haftalık değişim:</span>
+                            <span className={`font-bold flex items-center gap-1 ${summary.thisWeek.cost > summary.lastWeek.cost ? 'text-red-500' : 'text-emerald-500'}`}>
+                                {summary.thisWeek.cost > summary.lastWeek.cost ? (
+                                    <><TrendingUp className="w-3.5 h-3.5" /> +{((summary.thisWeek.cost - summary.lastWeek.cost) / Math.max(summary.lastWeek.cost, 1) * 100).toFixed(0)}%</>
+                                ) : (
+                                    <><TrendingDown className="w-3.5 h-3.5" /> {((summary.thisWeek.cost - summary.lastWeek.cost) / Math.max(summary.lastWeek.cost, 1) * 100).toFixed(0)}%</>
+                                )}
+                            </span>
                         </div>
                     </div>
                 </div>
