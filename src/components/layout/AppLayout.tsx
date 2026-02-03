@@ -49,7 +49,6 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200 flex flex-col">
             <OfflineIndicator />
-            <OnboardingTour />
             {/* Header */}
             <header className="bg-white dark:bg-gray-800 shadow-sm sticky top-0 z-30">
                 <div className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
