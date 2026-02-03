@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { TrendingUp, TrendingDown, Target, AlertTriangle, Lightbulb, Fuel, Wrench, Bell, AlertCircle, X } from 'lucide-react';
+import { TrendingUp, TrendingDown, Target, AlertTriangle, Lightbulb, Fuel, Wrench, Bell, AlertCircle, X, ChevronDown, ChevronUp } from 'lucide-react';
 import { DailyLog, FuelPurchase, MaintenanceItem, VehiclePart } from '../../types';
 
 interface InsightsPanelProps {
@@ -32,6 +32,7 @@ export const PredictiveInsights: React.FC<InsightsPanelProps> = ({
     monthlyBudget = 0
 }) => {
     const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set());
+    const [isExpanded, setIsExpanded] = useState(true);
 
     const dismissItem = (id: string) => {
         setDismissedIds(prev => new Set(prev).add(id));
@@ -230,65 +231,81 @@ export const PredictiveInsights: React.FC<InsightsPanelProps> = ({
     }
 
     return (
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-5">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
             {/* Header */}
-            <div className="flex items-center gap-2 mb-4">
-                <div className="p-2 bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900/30 dark:to-purple-900/30 rounded-lg">
-                    <Bell className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+            <div className="p-4 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                    <div className="p-2 bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900/30 dark:to-purple-900/30 rounded-lg">
+                        <Bell className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                    </div>
+                    <div>
+                        <h3 className="text-lg font-bold text-gray-800 dark:text-white">Bildirim Merkezi</h3>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                            {visibleInsights.length} bildirim
+                        </p>
+                    </div>
                 </div>
-                <div>
-                    <h3 className="text-lg font-bold text-gray-800 dark:text-white">Bildirim Merkezi</h3>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Uyarılar, öngörüler ve ipuçları</p>
-                </div>
+                <button
+                    onClick={() => setIsExpanded(!isExpanded)}
+                    className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                >
+                    {isExpanded ? (
+                        <ChevronUp className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                    ) : (
+                        <ChevronDown className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                    )}
+                </button>
             </div>
 
             {/* Insights List */}
-            <div className="space-y-3">
-                {visibleInsights.slice(0, 6).map((insight) => {
-                    const Icon = insight.icon;
-                    return (
-                        <div
-                            key={insight.id}
-                            className={`p-4 rounded-xl ${insight.bgColor} transition-all hover:scale-[1.01]`}
-                        >
-                            <div className="flex items-start gap-3">
-                                <div className={`p-2 rounded-lg bg-white/60 dark:bg-gray-800/60 ${insight.iconColor} shrink-0`}>
-                                    <Icon className="w-4 h-4" />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <h4 className="font-semibold text-sm text-gray-800 dark:text-white mb-0.5">
-                                        {insight.title}
-                                    </h4>
-                                    <p className="text-sm text-gray-600 dark:text-gray-300 leading-snug">
-                                        {insight.message}
-                                    </p>
-                                    {insight.details && (
-                                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1.5 leading-relaxed">
-                                            {insight.details}
+            {isExpanded && (
+                <div className="px-4 pb-4 space-y-3">
+                    {visibleInsights.slice(0, 6).map((insight) => {
+                        const Icon = insight.icon;
+                        return (
+                            <div
+                                key={insight.id}
+                                className={`p-4 rounded-xl ${insight.bgColor} transition-all hover:scale-[1.01]`}
+                            >
+                                <div className="flex items-start gap-3">
+                                    <div className={`p-2 rounded-lg bg-white/60 dark:bg-gray-800/60 ${insight.iconColor} shrink-0`}>
+                                        <Icon className="w-4 h-4" />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <h4 className="font-semibold text-sm text-gray-800 dark:text-white mb-0.5">
+                                            {insight.title}
+                                        </h4>
+                                        <p className="text-sm text-gray-600 dark:text-gray-300 leading-snug">
+                                            {insight.message}
                                         </p>
+                                        {insight.details && (
+                                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1.5 leading-relaxed">
+                                                {insight.details}
+                                            </p>
+                                        )}
+                                    </div>
+                                    {insight.dismissible && (
+                                        <button
+                                            onClick={() => dismissItem(insight.id)}
+                                            className="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition-colors shrink-0"
+                                            title="Kapat"
+                                        >
+                                            <X className="w-4 h-4 text-gray-400" />
+                                        </button>
                                     )}
                                 </div>
-                                {insight.dismissible && (
-                                    <button
-                                        onClick={() => dismissItem(insight.id)}
-                                        className="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition-colors shrink-0"
-                                        title="Kapat"
-                                    >
-                                        <X className="w-4 h-4 text-gray-400" />
-                                    </button>
-                                )}
                             </div>
-                        </div>
-                    );
-                })}
-            </div>
+                        );
+                    })}
 
-            {/* Show more if needed */}
-            {visibleInsights.length > 6 && (
-                <div className="mt-3 text-center">
-                    <span className="text-xs text-gray-400">
-                        +{visibleInsights.length - 6} daha fazla bildirim
-                    </span>
+                    {/* Show more if needed */}
+                    {visibleInsights.length > 6 && (
+                        <div className="mt-3 text-center">
+                            <span className="text-xs text-gray-400">
+                                +{visibleInsights.length - 6} daha fazla bildirim
+                            </span>
+                        </div>
+                    )}
                 </div>
             )}
         </div>
