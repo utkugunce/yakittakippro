@@ -114,6 +114,15 @@ export const DashboardPage: React.FC = () => {
                 />
             )}
 
+            {/* Hero Section Preview */}
+            <HeroSection
+                logs={filteredLogs}
+                fuelPurchases={fuelPurchases}
+                vehicle={vehicles.find(v => v.id === selectedVehicleId)}
+                onAddFuel={() => openModal('fuel')}
+                onAddEntry={() => openModal('entry')}
+            />
+
             {/* Year Filter Tabs */}
             <div className="flex justify-center items-center gap-4">
                 <div className="inline-flex rounded-lg bg-gray-100 dark:bg-gray-800 p-1">
@@ -131,15 +140,6 @@ export const DashboardPage: React.FC = () => {
                     ))}
                 </div>
             </div>
-
-            {/* Hero Section Preview */}
-            <HeroSection
-                logs={filteredLogs}
-                fuelPurchases={fuelPurchases}
-                vehicle={vehicles.find(v => v.id === selectedVehicleId)}
-                onAddFuel={() => openModal('fuel')}
-                onAddEntry={() => openModal('entry')}
-            />
 
             {/* Stats Card */}
             <DashboardStatsCard stats={stats} currentOdometer={lastOdometer} />

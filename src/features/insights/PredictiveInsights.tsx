@@ -265,7 +265,7 @@ export const PredictiveInsights: React.FC<InsightsPanelProps> = ({
                         return (
                             <div
                                 key={insight.id}
-                                className={`p-4 rounded-xl ${insight.bgColor} transition-all hover:scale-[1.01]`}
+                                className={`${insight.type === 'tip' ? 'p-3' : 'p-4'} rounded-xl ${insight.bgColor} transition-all hover:scale-[1.01]`}
                             >
                                 <div className="flex items-start gap-3">
                                     <div className={`p-2 rounded-lg bg-white/60 dark:bg-gray-800/60 ${insight.iconColor} shrink-0`}>
