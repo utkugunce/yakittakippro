@@ -68,7 +68,7 @@ export const DashboardStatsCard: React.FC<Props> = ({ stats, alerts, currentOdom
 
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
         {/* Total Distance */}
-        <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 transition-colors">
+        <div className="bg-white dark:bg-gray-800 p-3 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 transition-colors">
           <div className="flex items-center space-x-2 text-primary-600 dark:text-primary-400 mb-2">
             <Navigation className="w-4 h-4" />
             <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Toplam Yol</h3>
@@ -77,7 +77,7 @@ export const DashboardStatsCard: React.FC<Props> = ({ stats, alerts, currentOdom
         </div>
 
         {/* Total Cost */}
-        <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 transition-colors">
+        <div className="bg-white dark:bg-gray-800 p-3 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 transition-colors">
           <div className="flex items-center space-x-2 text-green-600 dark:text-green-400 mb-2">
             <Wallet className="w-4 h-4" />
             <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Toplam Harcama</h3>
@@ -86,7 +86,7 @@ export const DashboardStatsCard: React.FC<Props> = ({ stats, alerts, currentOdom
         </div>
 
         {/* Total Fuel */}
-        <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 transition-colors">
+        <div className="bg-white dark:bg-gray-800 p-3 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 transition-colors">
           <div className="flex items-center space-x-2 text-blue-600 dark:text-blue-400 mb-2">
             <Fuel className="w-4 h-4" />
             <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Toplam Yakıt</h3>
@@ -95,7 +95,7 @@ export const DashboardStatsCard: React.FC<Props> = ({ stats, alerts, currentOdom
         </div>
 
         {/* Cost Per Km */}
-        <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 transition-colors">
+        <div className="bg-white dark:bg-gray-800 p-3 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 transition-colors">
           <div className="flex items-center space-x-2 text-purple-600 dark:text-purple-400 mb-2">
             <TrendingUp className="w-4 h-4" />
             <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">KM Başına</h3>
@@ -104,7 +104,7 @@ export const DashboardStatsCard: React.FC<Props> = ({ stats, alerts, currentOdom
         </div>
 
         {/* Average Consumption */}
-        <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 transition-colors">
+        <div className="bg-white dark:bg-gray-800 p-3 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 transition-colors">
           <div className="flex items-center space-x-2 text-orange-600 dark:text-orange-400 mb-2">
             <Fuel className="w-4 h-4" />
             <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Ort. Tüketim</h3>
@@ -113,7 +113,7 @@ export const DashboardStatsCard: React.FC<Props> = ({ stats, alerts, currentOdom
         </div>
 
         {/* Last Fuel Price */}
-        <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 transition-colors">
+        <div className="bg-white dark:bg-gray-800 p-3 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 transition-colors">
           <div className="flex items-center space-x-2 text-amber-600 dark:text-amber-500 mb-2">
             <Droplets className="w-4 h-4" />
             <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Son Benzin</h3>

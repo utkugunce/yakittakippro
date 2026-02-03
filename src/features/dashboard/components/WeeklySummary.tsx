@@ -282,7 +282,7 @@ export const WeeklySummary: React.FC<WeeklySummaryProps> = ({ logs, fuelPurchase
                             <p className="font-medium text-gray-700 dark:text-gray-300">Geçen Hafta</p>
                             <div className="flex justify-between text-gray-600 dark:text-gray-400 text-xs">
                                 <span>Harcama</span>
-                                <span>₺{summary.lastWeek.cost}</span>
+                                <span>₺{summary.lastWeek.cost.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}</span>
                             </div>
                             <div className="flex justify-between text-gray-600 dark:text-gray-400 text-xs">
                                 <span>Mesafe</span>
@@ -298,7 +298,7 @@ export const WeeklySummary: React.FC<WeeklySummaryProps> = ({ logs, fuelPurchase
                             <p className="font-medium text-gray-700 dark:text-gray-300">Geçen Ay</p>
                             <div className="flex justify-between text-gray-600 dark:text-gray-400 text-xs">
                                 <span>Harcama</span>
-                                <span>₺{summary.lastMonth.cost}</span>
+                                <span>₺{summary.lastMonth.cost.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}</span>
                             </div>
                             <div className="flex justify-between text-gray-600 dark:text-gray-400 text-xs">
                                 <span>Mesafe</span>
