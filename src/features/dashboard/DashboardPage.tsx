@@ -1,8 +1,5 @@
-import React, { Suspense, useMemo } from 'react';
-import { GamificationCard } from '../gamification/components/GamificationCard';
-import { BadgeList } from '../gamification/components/BadgeList';
-import { StreakWidget } from '../gamification/components/StreakWidget';
-import { DailyLog, MaintenanceItem, DashboardStats, Vehicle, FuelPurchase, VehiclePart } from '../../types';
+import React, { Suspense, useMemo, useState } from 'react';
+import { DailyLog, MaintenanceItem, DashboardStats } from '../../types';
 import { DashboardStatsCard } from './components/DashboardStatsCard';
 import { HeroSection } from './components/HeroSection';
 import { WeeklySummary } from './components/WeeklySummary';
@@ -12,13 +9,18 @@ import { SmartNudgeBanner } from '../../components/SmartNudgeBanner';
 import { useSmartNudges } from '../../hooks/useSmartNudges';
 import { useAppStore } from '../../stores/appStore';
 import { useNavigate } from 'react-router-dom';
+import { AlertCircle, AlertTriangle, X, Lightbulb } from 'lucide-react';
 
 export const DashboardPage: React.FC = () => {
     const navigate = useNavigate();
     const {
         logs, fuelPurchases, maintenanceItems, vehicleParts, vehicles, selectedVehicleId,
-        yearFilter, setYearFilter, addLog, addFuelPurchase, openModal
+        yearFilter, setYearFilter, openModal
     } = useAppStore();
+
+    // Dismissed alerts state
+    const [dismissedAlerts, setDismissedAlerts] = useState<Set<string>>(new Set());
+    const [dismissedTip, setDismissedTip] = useState(false);
 
     // Filter logs by selected vehicle
     const filteredLogs = useMemo(() => {
@@ -134,6 +136,9 @@ export const DashboardPage: React.FC = () => {
         return [...maintAlerts, ...partAlerts].sort((a, b) => a.urgency - b.urgency);
     }, [maintenanceItems, vehicleParts, lastOdometer]);
 
+    // Filter out dismissed alerts
+    const visibleAlerts = activeAlerts.filter(a => !dismissedAlerts.has(a.id));
+
     // Smart Nudges
     const smartNudges = useSmartNudges({
         logs,
@@ -144,8 +149,110 @@ export const DashboardPage: React.FC = () => {
         monthlyBudget: 0
     });
 
+    // Daily tip
+    const dailyTips = [
+        "Lastik basıncını düzenli kontrol etmek yakıt tüketimini %3'e kadar azaltabilir.",
+        "Ani fren ve hızlanmalardan kaçınmak hem güvenlik hem de tasarruf sağlar.",
+        "Klima kullanımı yakıt tüketimini yaklaşık %10 artırır.",
+        "Düzenli bakım araç ömrünü uzatır ve beklenmedik masrafları önler.",
+        "Sabit hızda sürüş en verimli yakıt tüketimini sağlar."
+    ];
+    const todayTip = dailyTips[new Date().getDay() % dailyTips.length];
+
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
+            {/* 1. Akıllı Öneriler (Smart Insights) - MOVED TO TOP */}
+            <Suspense fallback={<div className="h-48 bg-gray-100 dark:bg-gray-800 rounded-xl animate-pulse" />}>
+                <PredictiveInsights
+                    logs={logs}
+                    purchases={fuelPurchases}
+                    maintenanceItems={maintenanceItems}
+                    currentOdometer={lastOdometer}
+                    monthlyBudget={0}
+                />
+            </Suspense>
+
+            {/* 2. Maintenance Alerts with Close Button - MOVED ABOVE TIP */}
+            {visibleAlerts.length > 0 && (
+                <div className="grid grid-cols-1 gap-3">
+                    {visibleAlerts.map(alert => {
+                        let remainingText = '';
+                        let isCritical = false;
+                        let targetText = '';
+
+                        if (alert.type === 'date' && alert.dueDate) {
+                            const days = Math.ceil((new Date(alert.dueDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+                            isCritical = days < 0;
+                            remainingText = isCritical ? `${Math.abs(days)} gün geçti!` : `${days} gün kaldı.`;
+                            targetText = `Tarih: ${new Date(alert.dueDate).toLocaleDateString('tr-TR')}`;
+                        } else if (alert.type === 'both' && alert.dueDate && alert.nextDueKm) {
+                            const days = Math.ceil((new Date(alert.dueDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+                            const km = alert.nextDueKm - lastOdometer;
+                            const daysUrgency = days * 100;
+
+                            if (days < 0 || (km >= 0 && daysUrgency < km)) {
+                                isCritical = days < 0;
+                                remainingText = isCritical ? `${Math.abs(days)} gün geçti!` : `${days} gün kaldı.`;
+                                targetText = `Tarih: ${new Date(alert.dueDate).toLocaleDateString('tr-TR')}`;
+                            } else {
+                                isCritical = km < 0;
+                                remainingText = isCritical ? `${Math.abs(km).toLocaleString()} km gecikti!` : `${km.toLocaleString()} km kaldı.`;
+                                targetText = `Hedef: ${alert.nextDueKm.toLocaleString()} km`;
+                            }
+                        } else {
+                            const remaining = (alert.nextDueKm || 0) - lastOdometer;
+                            isCritical = remaining < 0;
+                            remainingText = isCritical ? `${Math.abs(remaining).toLocaleString()} km gecikti!` : `${remaining.toLocaleString()} km kaldı.`;
+                            targetText = `Hedef: ${(alert.nextDueKm || 0).toLocaleString()} km`;
+                        }
+
+                        return (
+                            <div key={alert.id} className={`p-4 rounded-xl border flex items-center justify-between ${isCritical ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-700 dark:text-red-300' : 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-300'}`}>
+                                <div className="flex items-center space-x-3 flex-1 min-w-0">
+                                    {isCritical ? <AlertCircle className="w-6 h-6 shrink-0" /> : <AlertTriangle className="w-6 h-6 shrink-0" />}
+                                    <div className="min-w-0">
+                                        <h4 className="font-bold text-sm uppercase truncate">{alert.title} Bakımı</h4>
+                                        <p className="text-sm">{remainingText}</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-2 ml-2">
+                                    <span className="text-xs font-bold px-3 py-1 bg-white/50 dark:bg-black/20 rounded-full whitespace-nowrap hidden sm:inline">
+                                        {targetText}
+                                    </span>
+                                    <button
+                                        onClick={() => setDismissedAlerts(prev => new Set(prev).add(alert.id))}
+                                        className="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
+                                        title="Kapat"
+                                    >
+                                        <X className="w-4 h-4" />
+                                    </button>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            )}
+
+            {/* 3. Daily Tip - with close button */}
+            {!dismissedTip && (
+                <div className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 border border-emerald-200 dark:border-emerald-800 rounded-xl p-4 flex items-start gap-3">
+                    <div className="p-2 bg-emerald-100 dark:bg-emerald-800/30 rounded-lg shrink-0">
+                        <Lightbulb className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                        <h4 className="font-bold text-sm text-emerald-800 dark:text-emerald-300 mb-1">Günün İpucu</h4>
+                        <p className="text-sm text-emerald-700 dark:text-emerald-400">{todayTip}</p>
+                    </div>
+                    <button
+                        onClick={() => setDismissedTip(true)}
+                        className="p-1.5 rounded-full hover:bg-emerald-200/50 dark:hover:bg-emerald-800/50 transition-colors shrink-0"
+                        title="Kapat"
+                    >
+                        <X className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                    </button>
+                </div>
+            )}
+
             {/* Smart Nudges Banner */}
             {smartNudges.length > 0 && (
                 <SmartNudgeBanner
@@ -161,7 +268,6 @@ export const DashboardPage: React.FC = () => {
 
             {/* Year Filter Tabs */}
             <div className="flex justify-center items-center gap-4">
-                <StreakWidget />
                 <div className="inline-flex rounded-lg bg-gray-100 dark:bg-gray-800 p-1">
                     {(['2026', '2025', 'all'] as const).map((year) => (
                         <button
@@ -187,29 +293,15 @@ export const DashboardPage: React.FC = () => {
                 onAddEntry={() => openModal('entry')}
             />
 
-            <GamificationCard />
-
-            <DashboardStatsCard stats={stats} alerts={activeAlerts} currentOdometer={lastOdometer} />
-
-            <BadgeList />
+            {/* Stats Card - without alerts (moved above) */}
+            <DashboardStatsCard stats={stats} currentOdometer={lastOdometer} />
 
             {/* Weekly/Monthly Summary */}
             <WeeklySummary logs={logs} fuelPurchases={fuelPurchases} />
 
             {/* Analytics Section */}
-            <Suspense fallback={<div className="h-64 bg-gray-100 dark:bg-gray-800 rounded-xl animate-pulse"></div>}>
+            <Suspense fallback={<div className="h-64 bg-gray-100 dark:bg-gray-800 rounded-xl animate-pulse" />}>
                 <StationAnalysis fuelPurchases={fuelPurchases} />
-            </Suspense>
-
-            {/* Predictive Insights */}
-            <Suspense fallback={<div className="h-48 bg-gray-100 dark:bg-gray-800 rounded-xl animate-pulse"></div>}>
-                <PredictiveInsights
-                    logs={logs}
-                    purchases={fuelPurchases}
-                    maintenanceItems={maintenanceItems}
-                    currentOdometer={lastOdometer}
-                    monthlyBudget={0}
-                />
             </Suspense>
         </div>
     );

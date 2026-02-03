@@ -52,7 +52,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
     const GreetingIcon = greeting.icon;
 
     return (
-        <div className="relative overflow-hidden bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 rounded-2xl p-6 text-white shadow-xl">
+        <div className="relative overflow-hidden bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 rounded-2xl p-4 text-white shadow-xl">
             {/* Decorative elements */}
             <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl" />
             <div className="absolute bottom-0 left-0 w-48 h-48 bg-purple-400/20 rounded-full translate-y-1/2 -translate-x-1/2 blur-2xl" />
@@ -70,7 +70,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 </div>
 
                 {/* Quick Stats */}
-                <div className="grid grid-cols-2 gap-3 my-5">
+                <div className="grid grid-cols-2 gap-3 my-3">
                     <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3">
                         <div className="text-xs text-white/60 uppercase font-medium mb-1">Bu Hafta</div>
                         <div className="text-xl font-bold">

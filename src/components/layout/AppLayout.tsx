@@ -121,7 +121,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
                             }`}
                     >
                         <LayoutDashboard className="w-4 h-4 mr-2" />
-                        <span>Panel & Giriş</span>
+                        <span>Anasayfa & Giriş</span>
                     </NavLink>
                     <NavLink
                         to="/charts"
@@ -188,7 +188,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
                             {({ isActive }) => (
                                 <>
                                     <LayoutDashboard className={`w-6 h-6 transition-all duration-300 ${isActive ? '-translate-y-0.5' : ''}`} />
-                                    <span className="text-[10px] font-medium">Panel</span>
+                                    <span className="text-[10px] font-medium">Anasayfa</span>
                                 </>
                             )}
                         </NavLink>
