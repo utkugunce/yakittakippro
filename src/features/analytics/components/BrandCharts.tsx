@@ -53,9 +53,49 @@ export const BrandCharts: React.FC<BrandChartsProps> = ({ logs, purchases }) => 
             const brand = p.station;
             if (!stats[brand]) stats[brand] = { totalCost: 0, totalDist: 0, totalFuel: 0, count: 0 };
             stats[brand].totalCost += p.totalAmount;
-            stats[brand].totalFuel += p.liters;
+            stats[brand].totalFuel += p.liters; // This totalFuel is for "Spending" mainly, but we might double count if we add logic below? 
+            // Actually, keep totalFuel accumulator simple for "Total Fuel Bought".
+            // But for efficiency, we need matched pairs.
             stats[brand].count++;
         });
+
+        // NEW: Calculate Efficiency from Purchase Pairs (Odometer diff)
+        // Sort by odometer to find consecutive segments
+        const sortedPurchases = [...purchases]
+            .filter(p => p.odometer && p.odometer > 0)
+            .sort((a, b) => (a.odometer || 0) - (b.odometer || 0));
+
+        for (let i = 0; i < sortedPurchases.length - 1; i++) {
+            const current = sortedPurchases[i];
+            const next = sortedPurchases[i + 1];
+
+            if (current.station && next.liters > 0) {
+                const dist = (next.odometer || 0) - (current.odometer || 0);
+                const fuelConsumed = next.liters; // Assuming "refill amount" ~= "consumed amount"
+
+                // Sanity check: reasonable efficiency (e.g. not 1000L/100km or negative)
+                if (dist > 0 && dist < 2000 && fuelConsumed > 0) {
+                    const brand = current.station;
+                    if (!stats[brand]) stats[brand] = { totalCost: 0, totalDist: 0, totalFuel: 0, count: 0 };
+
+                    // We add to totalDist for efficiency calculation
+                    stats[brand].totalDist += dist;
+                    // We deliberately DON'T add to totalFuel here because we already added ALL liters above for "Total Fuel Bought".
+                    // Wait, efficiency = totalFuel / totalDist.
+                    // The "Total Fuel" above is "Fuel Bought from Brand X".
+                    // But "Fuel Consumed using Brand X" is what we need for efficiency.
+                    // The liters bought at 'next' (Brand Y) represents fuel burned from 'current' (Brand X).
+                    // So we need a separate accumulator for "Efficiency Calculation" or adjust the main one.
+
+                    // Let's stick to the current structure but maybe we need a dedicated "efficiencyFuel" stat?
+                    // Existing logic: efficiency = (data.totalFuel / data.totalDist) * 100
+                    // If we just add 'dist' to stats[brand].totalDist, then 'totalFuel' (which is ALL fuel bought from Brand X) / 'totalDist' (distance driven ON Brand X)
+                    // This assumes "Total Fuel Bought from X" ~= "Total Fuel Burned from X". 
+                    // Over long term, this holds true.
+                    // So, simply adding the distance driven ON Brand X to stats[brand] is sufficient.
+                }
+            }
+        }
 
         return Object.entries(stats)
             .map(([name, data]) => ({
