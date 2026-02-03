@@ -204,21 +204,26 @@ export const WeeklySummary: React.FC<WeeklySummaryProps> = ({ logs, fuelPurchase
 
                     {/* Mini Bar Chart */}
                     <div className="flex items-end justify-between h-12 gap-1 mt-2">
-                        {summary.trend.map((d, i) => (
-                            <div key={i} className="flex flex-col items-center flex-1 group">
-                                <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-t-sm h-full relative overflow-hidden">
-                                    <div
-                                        className="absolute bottom-0 left-0 right-0 bg-violet-500 dark:bg-violet-400 transition-all duration-500 rounded-t-sm group-hover:bg-violet-600 h-[var(--height)]"
-                                        style={{ '--height': `${(d.cost / summary.maxDailyCost) * 100}%` } as any}
-                                    />
+                        {summary.trend.map((d, i) => {
+                            const heightPercent = summary.maxDailyCost > 0 ? (d.cost / summary.maxDailyCost) * 100 : 0;
+                            return (
+                                <div key={i} className="flex flex-col items-center flex-1 group relative">
+                                    <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-t-sm h-full relative overflow-hidden">
+                                        <div
+                                            className="absolute bottom-0 left-0 right-0 bg-violet-500 dark:bg-violet-400 transition-all duration-500 rounded-t-sm group-hover:bg-violet-600"
+                                            style={{ height: `${Math.max(heightPercent, d.cost > 0 ? 5 : 0)}%` }}
+                                        />
+                                    </div>
+                                    <span className="text-[9px] text-gray-400 mt-1">{d.day}</span>
+                                    {/* Tooltip on hover */}
+                                    {d.cost > 0 && (
+                                        <div className="hidden group-hover:block absolute -top-8 bg-gray-900 text-white text-xs px-2 py-1 rounded shadow-lg z-10 whitespace-nowrap">
+                                            ₺{d.cost.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}
+                                        </div>
+                                    )}
                                 </div>
-                                <span className="text-[9px] text-gray-400 mt-1">{d.day}</span>
-                                {/* Tooltip */}
-                                <div className="hidden group-hover:block absolute bottom-16 bg-gray-900 text-white text-xs px-2 py-1 rounded shadow-lg z-10">
-                                    ₺{d.cost}
-                                </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 </div>
 
