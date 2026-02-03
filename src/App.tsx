@@ -157,7 +157,7 @@ export default function App() {
               onAdd={(purchase) => { addFuelPurchase(purchase); closeModal(); setShowSuccessPopup(true); }}
               onUpdate={(purchase) => { updateFuelPurchase(purchase); closeModal(); }}
               onClose={closeModal}
-              initialData={editingItem}
+              editingPurchase={editingItem}
               lastOdometer={lastOdometer}
             />
           </div>
