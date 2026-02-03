@@ -27,22 +27,31 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
     const currentOdometer = logs.length > 0 ? Math.max(...logs.map(l => l.currentOdometer)) : 0;
 
     return (
-        <div className="animate-in fade-in duration-500 space-y-6">
-            <ThemeSettings
-                isDarkMode={isDarkMode}
-                onToggleTheme={onToggleTheme}
-                currentAccent={accentColor}
-                onChangeAccent={onChangeAccent}
-            />
-            <CloudSync
-                logs={logs}
-                maintenanceItems={maintenanceItems}
-                vehicles={vehicles}
-                onImportLogs={importLogs}
-                onImportMaintenance={(items) => items.forEach(addMaintenance)}
-                onImportVehicles={setVehicles}
-            />
-            <NotificationSettings maintenanceItems={maintenanceItems} currentOdometer={currentOdometer} />
+        <div className="max-w-4xl mx-auto space-y-6 animate-in fade-in duration-500 pb-12">
+
+            {/* Theme & Sync */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <ThemeSettings
+                    isDarkMode={isDarkMode}
+                    onToggleTheme={onToggleTheme}
+                    currentAccent={accentColor}
+                    onChangeAccent={onChangeAccent}
+                />
+
+                <div className="space-y-6">
+                    <CloudSync
+                        logs={logs}
+                        maintenanceItems={maintenanceItems}
+                        vehicles={vehicles}
+                        onImportLogs={importLogs}
+                        onImportMaintenance={(items) => items.forEach(addMaintenance)}
+                        onImportVehicles={setVehicles}
+                    />
+                    <NotificationSettings maintenanceItems={maintenanceItems} currentOdometer={currentOdometer} />
+                </div>
+            </div>
+
+            {/* Data Management */}
             <DataManagement logs={logs} onImport={importLogs} onClear={clearLogs} />
         </div>
     );

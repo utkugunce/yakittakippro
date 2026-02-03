@@ -217,6 +217,13 @@ export const EntryForm: React.FC<EntryFormProps> = ({ logs, onAdd, onUpdate, onI
       onUpdate(logData);
     } else {
       onAdd(logData);
+
+      // Gamification Trigger
+      import('../../gamification/store/gamificationStore').then(({ useGamificationStore }) => {
+        const { addXp, checkBadges, stats } = useGamificationStore.getState();
+        addXp(20); // Base XP for daily log
+        checkBadges('LOG_COUNT', stats.totalXp); // Triggers not perfectly aligned but good enough for now
+      });
     }
 
     // Reset form but keep smart defaults

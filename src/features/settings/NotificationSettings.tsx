@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, BellOff, Check, X } from 'lucide-react';
+import { Bell, BellOff, Check, X, Calendar, Navigation, CheckCircle2 } from 'lucide-react';
 import { MaintenanceItem } from '../../types';
 import { useAppStore } from '../../stores/appStore';
 
@@ -28,8 +28,6 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({ main
             setPermission(result);
             if (result === 'granted') {
                 setNotificationsEnabled(true);
-
-                // Show test notification
                 new Notification('TripBook', {
                     body: 'Bildirimler başarıyla etkinleştirildi! 🚗',
                     icon: '/pwa-192x192.png',
@@ -67,27 +65,20 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({ main
     const toggleNotifications = () => {
         const newState = !notificationsEnabled;
         setNotificationsEnabled(newState);
-
         if (newState && permission === 'granted') {
             checkMaintenanceAlerts();
-            // Schedule daily check
             scheduleDailyCheck();
         }
     };
 
-    // Schedule daily notification check
     const scheduleDailyCheck = () => {
-        // Check if we should run today's check
         const today = new Date().toDateString();
-
         if (lastNotificationCheck !== today) {
-            // Run the check
             checkMaintenanceAlerts();
             setLastNotificationCheck(today);
         }
     };
 
-    // Run scheduled check on mount if enabled
     useEffect(() => {
         if (permission === 'granted' && notificationsEnabled) {
             scheduleDailyCheck();
@@ -104,68 +95,80 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({ main
     }
 
     return (
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
-            <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-4 flex items-center">
-                <Bell className="w-5 h-5 mr-2 text-blue-600 dark:text-blue-400" />
-                Bildirim Ayarları
-            </h3>
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden h-full">
+            <div className="p-4 border-b border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                    <div className="p-2 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
+                        <Bell className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                    </div>
+                    <h3 className="font-bold text-gray-800 dark:text-gray-100">Bildirimler</h3>
+                </div>
+                {permission === 'granted' && (
+                    <button
+                        onClick={toggleNotifications}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 ${notificationsEnabled ? 'bg-amber-500' : 'bg-gray-200 dark:bg-gray-600'}`}
+                    >
+                        <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${notificationsEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
+                    </button>
+                )}
+            </div>
 
-            <div className="space-y-4">
+            <div className="p-5">
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 h-10">
+                    Bakım hatırlatıcıları ve yaklaşan ödemeler için bildirim durumunu buradan yönetebilirsiniz.
+                </p>
+
                 {permission === 'default' && (
-                    <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
-                        <p className="text-sm text-blue-800 dark:text-blue-300 mb-3">
-                            Bakım hatırlatmalarını almak için bildirimlere izin verin
-                        </p>
-                        <button
-                            onClick={requestPermission}
-                            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg text-sm transition-colors flex items-center justify-center"
-                        >
-                            <Bell className="w-4 h-4 mr-2" />
-                            Bildirimleri Etkinleştir
-                        </button>
+                    <button
+                        onClick={requestPermission}
+                        className="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold py-2.5 px-4 rounded-xl text-sm transition-colors flex items-center justify-center shadow-lg shadow-amber-600/20"
+                    >
+                        <Bell className="w-4 h-4 mr-2" />
+                        Bildirimleri Etkinleştir
+                    </button>
+                )}
+
+                {permission === 'denied' && (
+                    <div className="bg-red-50 dark:bg-red-900/20 rounded-xl p-3 flex items-center gap-3">
+                        <X className="w-5 h-5 text-red-600 dark:text-red-400" />
+                        <span className="text-sm font-medium text-red-800 dark:text-red-300">Bildirimler engellendi. Tarayıcı ayarlarından izin verin.</span>
                     </div>
                 )}
 
                 {permission === 'granted' && (
                     <div className="space-y-3">
-                        <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                            <div className="flex items-center">
-                                <Check className="w-5 h-5 text-green-600 mr-2" />
-                                <span className="text-sm font-medium text-green-800 dark:text-green-300">Bildirim izni verildi</span>
+                        <div className={`p-3 rounded-xl border transition-all ${notificationsEnabled
+                                ? 'bg-blue-50/50 border-blue-100 dark:bg-blue-900/10 dark:border-blue-900/30'
+                                : 'bg-gray-50 border-gray-100 dark:bg-gray-800/50 dark:border-gray-700 opacity-60'
+                            }`}>
+                            <div className="flex items-center gap-3">
+                                <Calendar className={`w-4 h-4 ${notificationsEnabled ? 'text-blue-600 dark:text-blue-400' : 'text-gray-400'}`} />
+                                <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
+                                    {maintenanceItems.filter(i => i.type === 'date' || i.type === 'both').length} Tarih Bazlı Hatırlatıcı
+                                </span>
                             </div>
                         </div>
 
-                        <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                            <span className="text-sm text-gray-700 dark:text-gray-300">Bakım Hatırlatmaları</span>
+                        <div className={`p-3 rounded-xl border transition-all ${notificationsEnabled
+                                ? 'bg-purple-50/50 border-purple-100 dark:bg-purple-900/10 dark:border-purple-900/30'
+                                : 'bg-gray-50 border-gray-100 dark:bg-gray-800/50 dark:border-gray-700 opacity-60'
+                            }`}>
+                            <div className="flex items-center gap-3">
+                                <Navigation className={`w-4 h-4 ${notificationsEnabled ? 'text-purple-600 dark:text-purple-400' : 'text-gray-400'}`} />
+                                <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
+                                    {maintenanceItems.filter(i => i.type === 'km' || i.type === 'both').length} KM Bazlı Hatırlatıcı
+                                </span>
+                            </div>
+                        </div>
+
+                        {notificationsEnabled && (
                             <button
-                                onClick={toggleNotifications}
-                                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${notificationsEnabled ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'}`}
-                                title={notificationsEnabled ? 'Bildirimleri Kapat' : 'Bildirimleri Aç'}
-                                aria-label={notificationsEnabled ? 'Bildirimleri Kapat' : 'Bildirimleri Aç'}
+                                onClick={checkMaintenanceAlerts}
+                                className="w-full mt-2 text-xs font-semibold text-amber-600 hover:text-amber-700 underline"
                             >
-                                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${notificationsEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
+                                Test Bildirimi Gönder
                             </button>
-                        </div>
-
-                        <button
-                            onClick={checkMaintenanceAlerts}
-                            disabled={!notificationsEnabled}
-                            className="w-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-medium py-2 px-4 rounded-lg text-sm transition-colors disabled:opacity-50"
-                        >
-                            Test Bildirimi Gönder
-                        </button>
-                    </div>
-                )}
-
-                {permission === 'denied' && (
-                    <div className="bg-red-50 dark:bg-red-900/20 rounded-lg p-4">
-                        <div className="flex items-center text-red-800 dark:text-red-300">
-                            <X className="w-5 h-5 mr-2" />
-                            <span className="text-sm font-medium">Bildirimler engellendi</span>
-                        </div>
-                        <p className="text-xs text-red-600 dark:text-red-400 mt-2">
-                            Bildirimleri etkinleştirmek için tarayıcı ayarlarından izin verin
-                        </p>
+                        )}
                     </div>
                 )}
             </div>
