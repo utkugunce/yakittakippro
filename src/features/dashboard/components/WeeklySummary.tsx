@@ -37,16 +37,24 @@ export const WeeklySummary: React.FC<WeeklySummaryProps> = ({ logs, fuelPurchase
         const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
 
         const filterLogsByRange = (start: Date, end: Date) => {
+            // Ensure end date covers the full day
+            const adjustedEnd = new Date(end);
+            adjustedEnd.setHours(23, 59, 59, 999);
+
             return logs.filter(log => {
                 const logDate = new Date(log.date);
-                return logDate >= start && logDate <= end;
+                return logDate >= start && logDate <= adjustedEnd;
             });
         };
 
         const filterPurchasesByRange = (start: Date, end: Date) => {
+            // Ensure end date covers the full day
+            const adjustedEnd = new Date(end);
+            adjustedEnd.setHours(23, 59, 59, 999);
+
             return fuelPurchases.filter(p => {
                 const pDate = new Date(p.date);
-                return pDate >= start && pDate <= end;
+                return pDate >= start && pDate <= adjustedEnd;
             });
         };
 
