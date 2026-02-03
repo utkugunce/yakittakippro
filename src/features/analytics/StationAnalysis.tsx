@@ -1,15 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Fuel, TrendingDown, TrendingUp, MapPin, Award, ChevronDown, ChevronUp, Calendar, Hash, PieChart } from 'lucide-react';
-
-interface FuelPurchase {
-    station?: string;
-    pricePerLiter: number;
-    totalAmount: number;
-    liters: number;
-    liters: number;
-    date: string;
-    city?: string;
-}
+import { FuelPurchase } from '../../types';
 
 interface StationAnalysisProps {
     fuelPurchases: FuelPurchase[];
