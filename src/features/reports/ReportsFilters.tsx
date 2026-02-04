@@ -41,9 +41,9 @@ export const ReportsFilters: React.FC<ReportsFiltersProps> = ({
                         <button
                             key={preset.key}
                             onClick={() => onPresetChange(preset.key)}
-                            className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all ${selectedPreset === preset.key
-                                    ? 'bg-primary-600 text-white shadow-sm'
-                                    : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
+                            className={`px-4 py-2 text-sm font-medium rounded-lg transition-all min-h-[44px] touch-manipulation flex items-center justify-center ${selectedPreset === preset.key
+                                ? 'bg-primary-600 text-white shadow-sm'
+                                : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
                                 }`}
                         >
                             {preset.label}

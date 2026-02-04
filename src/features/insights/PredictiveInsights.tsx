@@ -32,7 +32,7 @@ export const PredictiveInsights: React.FC<InsightsPanelProps> = ({
     monthlyBudget = 0
 }) => {
     const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set());
-    const [isExpanded, setIsExpanded] = useState(true);
+    const [isExpanded, setIsExpanded] = useState(false);
 
     const dismissItem = (id: string) => {
         setDismissedIds(prev => new Set(prev).add(id));

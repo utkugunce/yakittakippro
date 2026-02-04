@@ -80,7 +80,7 @@ export const DayOfWeekAnalysis: React.FC<AnalyticsProps> = ({ logs, purchases, d
                 <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={data}>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} strokeOpacity={0.1} />
-                        <XAxis dataKey="name" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
+                        <XAxis dataKey="name" tick={{ fontSize: 12, fill: '#6b7280' }} axisLine={false} tickLine={false} />
                         <YAxis hide />
                         <Tooltip
                             contentStyle={{ backgroundColor: '#1f2937', color: '#fff', borderRadius: '8px', border: 'none' }}
@@ -245,7 +245,7 @@ export const StationPriceComparison: React.FC<AnalyticsProps> = ({ logs, purchas
 
             <div className="space-y-2 mb-4">
                 {data.slice(0, 5).map((station, i) => (
-                    <div key={station.name} className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                    <div key={station.name} className="flex items-center justify-between p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
                         <div className="flex items-center space-x-2">
                             <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${i === 0 ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300' : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'}`}>
                                 {i + 1}
@@ -407,10 +407,7 @@ export const SpeedEfficiencyAnalysis: React.FC<AnalyticsProps> = ({ logs }) => {
                         <CartesianGrid strokeDasharray="3 3" vertical={false} strokeOpacity={0.1} />
                         <XAxis
                             dataKey="name"
-                            tick={{ fontSize: 11 }}
-                            axisLine={false}
-                            tickLine={false}
-                            label={{ value: 'Hız (km/h)', position: 'insideBottom', offset: -5, fontSize: 10, fill: '#888' }}
+                            label={{ value: 'Hız (km/h)', position: 'insideBottom', offset: -5, fontSize: 12, fill: '#9ca3af' }}
                         />
                         <YAxis hide />
                         <Tooltip

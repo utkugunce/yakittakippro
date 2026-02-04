@@ -114,7 +114,7 @@ export const QuickSummaryCards: React.FC<QuickSummaryCardsProps> = ({ logs, purc
   ];
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+    <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
       {cards.map((card, index) => {
         const isGood = card.invertChange ? card.change < 0 : card.change > 0;
 
@@ -130,23 +130,23 @@ export const QuickSummaryCards: React.FC<QuickSummaryCardsProps> = ({ logs, purc
 
             <div className="relative">
               <div className={`inline-flex p-2 rounded-xl ${card.iconBg} mb-2`}>
-                <card.icon className="w-4 h-4" />
+                <card.icon className="w-5 h-5" />
               </div>
 
-              <p className="text-[10px] uppercase tracking-wide text-white/70 mb-0.5">{card.label}</p>
-              <p className="text-lg font-bold">{card.value}</p>
+              <p className="text-xs uppercase tracking-wide text-white/80 mb-1">{card.label}</p>
+              <p className="text-xl font-bold">{card.value}</p>
 
               {Math.abs(card.change) > 0.5 && (
-                <div className="flex items-center mt-1.5 text-[10px]">
+                <div className="flex items-center mt-2 text-xs font-medium">
                   {isGood ? (
-                    <TrendingDown className="w-3 h-3 mr-0.5 text-emerald-200" />
+                    <TrendingDown className="w-3.5 h-3.5 mr-1 text-emerald-200" />
                   ) : (
-                    <TrendingUp className="w-3 h-3 mr-0.5 text-rose-200" />
+                    <TrendingUp className="w-3.5 h-3.5 mr-1 text-rose-200" />
                   )}
                   <span className={isGood ? 'text-emerald-200' : 'text-rose-200'}>
                     {Math.abs(card.change).toFixed(0)}%
                   </span>
-                  <span className="text-white/50 ml-1">vs geçen ay</span>
+                  <span className="text-white/60 ml-1">vs geçen ay</span>
                 </div>
               )}
             </div>

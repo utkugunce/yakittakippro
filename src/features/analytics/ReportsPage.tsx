@@ -6,6 +6,7 @@ import { useReportData } from '../reports/hooks/useReportData';
 import { generateSalesReport } from './utils/pdfExport';
 import { exportToExcel, exportToCSV } from './utils/excelExport';
 import { StatCard } from '../reports/components/StatCard';
+import { FuelMap } from '../fuel/components/FuelMap';
 
 // Report Components
 import {
@@ -65,6 +66,11 @@ export const Reports: React.FC = () => {
         totalPurchases={purchases.length}
         dateRange={rangeLabel}
       />
+
+      {/* Advanced Fuel Map Integration */}
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-1">
+        <FuelMap />
+      </div>
 
       {/* Date Filters */}
       <ReportsFilters
