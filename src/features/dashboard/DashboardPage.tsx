@@ -131,7 +131,7 @@ export const DashboardPage: React.FC = () => {
                         <button
                             key={year}
                             onClick={() => setYearFilter(year)}
-                            className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${yearFilter === year
+                            className={`px-4 py-2 text-sm font-medium rounded-lg transition-all min-h-[44px] touch-manipulation ${yearFilter === year
                                 ? 'bg-white dark:bg-gray-700 text-primary-600 dark:text-primary-400 shadow-sm'
                                 : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
                                 }`}
