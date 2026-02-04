@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Award, TrendingUp, Zap, Fuel, Clock, Shield } from 'lucide-react';
+import { Award, TrendingUp, Zap, Fuel, LineChart, Shield } from 'lucide-react';
 import { DailyLog, FuelPurchase } from '@/types';
 
 interface DrivingScoreProps {
@@ -21,9 +21,9 @@ export const DrivingScore: React.FC<DrivingScoreProps> = ({ logs, purchases }) =
 
     if (last30Days.length < 3) return null;
 
-    // 1. Efficiency Score (lower consumption = higher score)
+    // 1. Efficiency Score (lower consumption = higher score) - Reference 8.0L
     const avgConsumption = last30Days.reduce((s, l) => s + l.avgConsumption, 0) / last30Days.length;
-    const efficiencyScore = Math.max(0, Math.min(100, 100 - (avgConsumption - 5) * 10));
+    const efficiencyScore = Math.max(0, Math.min(100, 100 - (avgConsumption - 8) * 10));
 
     // 2. Consistency Score (less variance = higher score)
     const consumptions = last30Days.map(l => l.avgConsumption);
@@ -32,9 +32,28 @@ export const DrivingScore: React.FC<DrivingScoreProps> = ({ logs, purchases }) =
     const stdDev = Math.sqrt(variance);
     const consistencyScore = Math.max(0, Math.min(100, 100 - stdDev * 20));
 
-    // 3. Activity Score (regular logging = higher score)
-    const uniqueDays = new Set(last30Days.map(l => l.date)).size;
-    const activityScore = Math.min(100, (uniqueDays / 20) * 100);
+    // 3. Progress Score (replacing Target) - Improvement trend
+    // Compares first half of the entries vs second half
+    const sortedLogs = [...last30Days].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    const midPoint = Math.ceil(sortedLogs.length / 2);
+    const firstHalf = sortedLogs.slice(0, midPoint);
+    const secondHalf = sortedLogs.slice(midPoint);
+
+    let progressScore = 75; // Neutral start
+    if (firstHalf.length > 0 && secondHalf.length > 0) {
+      const firstAvg = firstHalf.reduce((s, l) => s + l.avgConsumption, 0) / firstHalf.length;
+      const secondAvg = secondHalf.reduce((s, l) => s + l.avgConsumption, 0) / secondHalf.length;
+
+      if (secondAvg < firstAvg) {
+        // Improvement: Add points based on % reduction
+        const improvement = ((firstAvg - secondAvg) / firstAvg) * 100;
+        progressScore = Math.min(100, 75 + improvement * 2);
+      } else {
+        // Deterioration: Subtract points
+        const deterioration = ((secondAvg - firstAvg) / firstAvg) * 100;
+        progressScore = Math.max(0, 75 - deterioration * 2);
+      }
+    }
 
     // 4. Cost Awareness (using cheaper stations = higher score)
     const recentPurchases = purchases.filter(p => {
@@ -43,7 +62,7 @@ export const DrivingScore: React.FC<DrivingScoreProps> = ({ logs, purchases }) =
       cutoff.setDate(cutoff.getDate() - 30);
       return d >= cutoff;
     });
-    
+
     let costScore = 70; // Default
     if (recentPurchases.length >= 2) {
       const avgPrice = recentPurchases.reduce((s, p) => s + p.pricePerLiter, 0) / recentPurchases.length;
@@ -59,7 +78,7 @@ export const DrivingScore: React.FC<DrivingScoreProps> = ({ logs, purchases }) =
     const overallScore = Math.round(
       efficiencyScore * 0.35 +
       consistencyScore * 0.25 +
-      activityScore * 0.20 +
+      progressScore * 0.20 +
       costScore * 0.20
     );
 
@@ -75,7 +94,7 @@ export const DrivingScore: React.FC<DrivingScoreProps> = ({ logs, purchases }) =
       overall: overallScore,
       efficiency: Math.round(efficiencyScore),
       consistency: Math.round(consistencyScore),
-      activity: Math.round(activityScore),
+      progress: Math.round(progressScore),
       costAwareness: Math.round(costScore),
       grade: getGrade(overallScore),
     };
@@ -86,7 +105,7 @@ export const DrivingScore: React.FC<DrivingScoreProps> = ({ logs, purchases }) =
   const metrics = [
     { label: 'Verimlilik', value: scoreData.efficiency, icon: Fuel, color: 'text-emerald-500' },
     { label: 'Tutarlılık', value: scoreData.consistency, icon: TrendingUp, color: 'text-blue-500' },
-    { label: 'Aktivite', value: scoreData.activity, icon: Clock, color: 'text-purple-500' },
+    { label: 'Gelişim', value: scoreData.progress, icon: LineChart, color: 'text-purple-500' },
     { label: 'Tasarruf', value: scoreData.costAwareness, icon: Shield, color: 'text-amber-500' },
   ];
 
@@ -149,9 +168,9 @@ export const DrivingScore: React.FC<DrivingScoreProps> = ({ logs, purchases }) =
                   <span className="text-xs font-bold text-gray-900 dark:text-white">{metric.value}</span>
                 </div>
                 <div className="h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                  <div 
+                  <div
                     className={`h-full rounded-full ${metric.color.replace('text-', 'bg-')}`}
-                    style={{ 
+                    style={{
                       width: `${metric.value}%`,
                       transition: 'width 1s ease-out',
                     }}
