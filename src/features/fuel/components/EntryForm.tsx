@@ -123,12 +123,12 @@ export const EntryForm: React.FC<EntryFormProps> = ({ logs, onAdd, onUpdate, onI
   }, [currentOdometer, lastOdometer]);
 
   // Pre-fill fuel price from last refuel - updates whenever lastFuelPrice changes
-  // When isRefuelDay is false, always use the last known fuel price
+  // Only pre-fill when adding new entry (not editing)
   useEffect(() => {
-    if (lastFuelPrice > 0 && !isRefuelDay) {
+    if (!isEditing && lastFuelPrice > 0 && !isRefuelDay) {
       setFuelPrice(lastFuelPrice.toFixed(2));
     }
-  }, [lastFuelPrice, isRefuelDay]);
+  }, [lastFuelPrice, isRefuelDay, isEditing]);
 
   // Live Calculations
   const liveStats = useMemo(() => {

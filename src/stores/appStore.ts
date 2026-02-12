@@ -39,6 +39,7 @@ interface AppState {
   updateLog: (log: DailyLog) => void;
   importLogs: (logs: DailyLog[]) => void;
   clearLogs: () => void;
+  repairFuelPrices: () => number;
 
   // Actions - Fuel Purchases
   addFuelPurchase: (purchase: FuelPurchase) => void;
@@ -124,6 +125,40 @@ export const useAppStore = create<AppState>()(
       importLogs: (logs) => set({ logs }),
 
       clearLogs: () => set({ logs: [], maintenanceItems: [], fuelPurchases: [], vehicleParts: [] }),
+
+      repairFuelPrices: () => {
+        const { logs, fuelPurchases } = get();
+        if (fuelPurchases.length === 0 || logs.length === 0) return 0;
+
+        // Sort purchases by date ascending
+        const sortedPurchases = [...fuelPurchases].sort(
+          (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+        );
+
+        let updatedCount = 0;
+        const repairedLogs = logs.map(log => {
+          const logDate = new Date(log.date).getTime();
+          // Find the most recent purchase on or before this log's date
+          let matchedPrice: number | null = null;
+          for (let i = sortedPurchases.length - 1; i >= 0; i--) {
+            if (new Date(sortedPurchases[i].date).getTime() <= logDate) {
+              matchedPrice = sortedPurchases[i].pricePerLiter;
+              break;
+            }
+          }
+
+          if (matchedPrice !== null && matchedPrice !== log.fuelPrice) {
+            const dailyCost = log.dailyFuelConsumed * matchedPrice;
+            const costPerKm = log.dailyDistance > 0 ? dailyCost / log.dailyDistance : 0;
+            updatedCount++;
+            return { ...log, fuelPrice: matchedPrice, dailyCost, costPerKm };
+          }
+          return log;
+        });
+
+        set({ logs: repairedLogs });
+        return updatedCount;
+      },
 
       // Fuel Purchase Actions
       addFuelPurchase: (purchase) => set((state) => ({
