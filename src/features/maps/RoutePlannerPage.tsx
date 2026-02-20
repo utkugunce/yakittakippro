@@ -26,6 +26,7 @@ export const RoutePlannerPage: React.FC = () => {
     // UI state
     const [originText, setOriginText] = useState('');
     const [destinationText, setDestinationText] = useState('');
+    const [userFuelPrice, setUserFuelPrice] = useState<number>(0);
 
     const [directionsResponse, setDirectionsResponse] = useState<google.maps.DirectionsResult | null>(null);
     const [distance, setDistance] = useState<number | null>(null);
@@ -61,6 +62,13 @@ export const RoutePlannerPage: React.FC = () => {
 
         return { avgConsumption: avgCons, latestFuelPrice: latestPrice };
     }, [logs, selectedVehicleId]);
+
+    // Initialize the user fuel price input when latest price is loaded
+    useEffect(() => {
+        if (latestFuelPrice > 0 && userFuelPrice === 0) {
+            setUserFuelPrice(latestFuelPrice);
+        }
+    }, [latestFuelPrice]);
 
     const calculateRoute = async () => {
         setErrorMsg(null);
@@ -111,9 +119,8 @@ export const RoutePlannerPage: React.FC = () => {
     const estimatedCost = useMemo(() => {
         if (!distance) return null;
         const totalFuelUsed = (distance / 100) * avgConsumption;
-        return (totalFuelUsed * latestFuelPrice);
-    }, [distance, avgConsumption, latestFuelPrice]);
-
+        return (totalFuelUsed * userFuelPrice);
+    }, [distance, avgConsumption, userFuelPrice]);
 
     if (loadError) {
         return (
@@ -181,7 +188,7 @@ export const RoutePlannerPage: React.FC = () => {
                             </div>
 
                             <div>
-                                <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1 block">Nereye</label>
+                                <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1 block">Varış Noktası</label>
                                 <Autocomplete
                                     onLoad={setDestinationRef}
                                     onPlaceChanged={() => {
@@ -203,6 +210,22 @@ export const RoutePlannerPage: React.FC = () => {
                                         />
                                     </div>
                                 </Autocomplete>
+                            </div>
+
+                            <div>
+                                <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1 block">Yakıt Fiyatı (TL/L)</label>
+                                <div className="relative">
+                                    <Coins className="absolute left-3 top-3.5 w-5 h-5 text-gray-400" />
+                                    <input
+                                        type="number"
+                                        step="0.01"
+                                        min="0"
+                                        placeholder="Güncel yakıt fiyatı..."
+                                        value={userFuelPrice}
+                                        onChange={(e) => setUserFuelPrice(parseFloat(e.target.value) || 0)}
+                                        className="w-full pl-10 pr-4 py-3 bg-[#f8fafc] dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg border border-gray-200 dark:border-gray-600 focus:ring-2 focus:ring-primary-500 outline-none transition-all"
+                                    />
+                                </div>
                             </div>
 
                             {errorMsg && (
@@ -266,7 +289,7 @@ export const RoutePlannerPage: React.FC = () => {
                                         <Coins className="w-6 h-6 text-indigo-500 mr-2" />
                                         <span className="text-3xl font-extrabold text-gray-900 dark:text-white">₺{estimatedCost.toFixed(2)}</span>
                                     </div>
-                                    <p className="text-[10px] text-gray-500 mt-2">* {latestFuelPrice.toFixed(2)} TL/L güncel yakıt fiyatı baz alınmıştır.</p>
+                                    <p className="text-[10px] text-gray-500 mt-2">* {userFuelPrice.toFixed(2)} TL/L güncel yakıt fiyatı baz alınmıştır.</p>
                                 </div>
                             </div>
                         </div>
