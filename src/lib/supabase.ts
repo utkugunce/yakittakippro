@@ -34,12 +34,12 @@ export const getCurrentUser = async (): Promise<User | null> => {
 };
 
 export const signInWithEmail = async (email: string, password: string) => {
-    if (!supabase) return { error: new Error('Supabase not configured') };
+    if (!supabase) return { data: null, error: new Error('Supabase not configured') };
     return await supabase.auth.signInWithPassword({ email, password });
 };
 
 export const signUpWithEmail = async (email: string, password: string) => {
-    if (!supabase) return { error: new Error('Supabase not configured') };
+    if (!supabase) return { data: null, error: new Error('Supabase not configured') };
     return await supabase.auth.signUp({ email, password });
 };
 

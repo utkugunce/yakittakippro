@@ -81,8 +81,9 @@ interface AppState {
   setLastSyncTime: (date: string | null) => void;
   setGeminiApiKey: (key: string | null) => void;
 
-  // Hydration
+  // Hydration & Sync
   hydrate: () => void;
+  triggerSync: () => Promise<void>;
 }
 
 const defaultVehicle: Vehicle = {
