@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { CalendarClock, AlertTriangle, Droplets } from 'lucide-react';
-import { DailyLog, MaintenanceItem } from '../../types';
+import { DailyLog, MaintenanceItem } from '../../../types';
 
 interface PredictiveForecasterProps {
     logs: DailyLog[];

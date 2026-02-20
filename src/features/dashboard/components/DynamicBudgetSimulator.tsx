@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Calculator, Map, TrendingUp } from 'lucide-react';
-import { DailyLog } from '../../types';
+import { DailyLog } from '../../../types';
 
 interface DynamicBudgetSimulatorProps {
     logs: DailyLog[];
