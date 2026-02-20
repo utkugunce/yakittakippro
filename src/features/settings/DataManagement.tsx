@@ -356,6 +356,29 @@ export const DataManagement: React.FC<DataManagementProps> = ({ logs, onImport, 
         }
     };
 
+    const handleRawLocalStorageDump = () => {
+        try {
+            const dumpData: Record<string, string | null> = {};
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key) {
+                    dumpData[key] = localStorage.getItem(key);
+                }
+            }
+            const dataStr = JSON.stringify(dumpData, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
+            const exportFileDefaultName = `yakit_raw_storage_dump_${new Date().toISOString().split('T')[0]}.json`;
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+            setImportStatus({ success: true, message: "Tüm cihaz hafızası ham veri olarak indirildi." });
+        } catch (e: any) {
+            console.error("Dump failed:", e);
+            setImportStatus({ success: false, message: `Ham veri indirme başarısız: ${e.message}` });
+        }
+    };
+
     return (
         <div className="space-y-6">
             <input
@@ -525,20 +548,29 @@ export const DataManagement: React.FC<DataManagementProps> = ({ logs, onImport, 
                     <div className="p-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg">
                         <LifeBuoy className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
                     </div>
-                    <h3 className="font-bold text-emerald-900 dark:text-emerald-200">Veri Kurtarma (iOS/Safari)</h3>
+                    <h3 className="font-bold text-emerald-900 dark:text-emerald-200">Veri Pano ve Hata Ayıklama</h3>
                 </div>
 
                 <div className="p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
                     <p className="text-sm text-gray-600 dark:text-gray-300">
-                        Eğer kayıtlarınız kaybolduysa ve eski tarayıcı hafızasında duruyorsa, bu buton tarayıcıyı tarayıp verilerinizi geri yüklemeyi dener.
+                        Eski verileri tarayıcı hafızasında aramak veya cihaz verisinin ham halini indirmek için bu araçları kullanın.
                     </p>
-                    <button
-                        onClick={handleRunRecovery}
-                        className="w-full sm:w-auto px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/20 transition-all hover:-translate-y-0.5 flex items-center justify-center gap-2"
-                    >
-                        <LifeBuoy className="w-4 h-4" />
-                        Cihazı Tara ve Kurtar
-                    </button>
+                    <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                        <button
+                            onClick={handleRunRecovery}
+                            className="w-full sm:w-auto px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/20 transition-all hover:-translate-y-0.5 flex items-center justify-center gap-2"
+                        >
+                            <LifeBuoy className="w-4 h-4" />
+                            Cihazı Tara
+                        </button>
+                        <button
+                            onClick={handleRawLocalStorageDump}
+                            className="w-full sm:w-auto px-5 py-2.5 bg-gray-500 hover:bg-gray-600 text-white font-bold rounded-xl shadow-lg shadow-gray-500/20 transition-all hover:-translate-y-0.5 flex items-center justify-center gap-2"
+                        >
+                            <FileJson className="w-4 h-4" />
+                            Ham Haliyle İndir
+                        </button>
+                    </div>
                 </div>
             </div>
 
