@@ -3,7 +3,7 @@ import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { DailyLog } from '../../types';
-import { Download, Upload, Trash2, AlertTriangle, FileJson, Check, FileSpreadsheet, ArrowRight, X, Loader2, FileText, Smartphone, Database, Wrench } from 'lucide-react';
+import { Download, Upload, Trash2, AlertTriangle, FileJson, Check, FileSpreadsheet, ArrowRight, X, Loader2, FileText, Smartphone, Database, Wrench, LifeBuoy } from 'lucide-react';
 import { useAppStore } from '../../stores/appStore';
 
 interface DataManagementProps {
@@ -322,6 +322,27 @@ export const DataManagement: React.FC<DataManagementProps> = ({ logs, onImport, 
         }
     };
 
+    const handleRunRecovery = () => {
+        try {
+            const rawLegacy = localStorage.getItem('yakit_takip_logs_v1');
+            const legacyLogs = rawLegacy ? JSON.parse(rawLegacy) : [];
+            const rawStore = localStorage.getItem('yakit-takip-store');
+
+            if (legacyLogs && legacyLogs.length > 0) {
+                if (window.confirm(`Sistemde ${legacyLogs.length} adet eski kayıt bulundu. Bunları geri yüklemek istiyor musunuz? (Mevcut kayıtlarla birleştirilecek)`)) {
+                    onImport(legacyLogs);
+                    setImportStatus({ success: true, message: `Harika! Tarayıcı hafızasından ${legacyLogs.length} kayıt başarıyla geri yüklendi.` });
+                }
+            } else {
+                setImportStatus({ success: false, message: "Tarayıcı hafızasında kurtarılacak eski kayıt bulunamadı." });
+            }
+
+            console.log("Legacy:", legacyLogs?.length, "Store:", rawStore?.length);
+        } catch (e) {
+            setImportStatus({ success: false, message: "Kurtarma işlemi sırasında bir hata oluştu." });
+        }
+    };
+
     return (
         <div className="space-y-6">
             <input
@@ -481,6 +502,29 @@ export const DataManagement: React.FC<DataManagementProps> = ({ logs, onImport, 
                     >
                         <Wrench className="w-4 h-4" />
                         Fiyatları Onar
+                    </button>
+                </div>
+            </div>
+
+            {/* iOS Data Recovery */}
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-emerald-100 dark:border-emerald-900/30 overflow-hidden">
+                <div className="p-4 border-b border-emerald-100 dark:border-emerald-900/30 bg-emerald-50/50 dark:bg-emerald-900/10 flex items-center gap-2">
+                    <div className="p-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg">
+                        <LifeBuoy className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                    </div>
+                    <h3 className="font-bold text-emerald-900 dark:text-emerald-200">Veri Kurtarma (iOS/Safari)</h3>
+                </div>
+
+                <div className="p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <p className="text-sm text-gray-600 dark:text-gray-300">
+                        Eğer kayıtlarınız kaybolduysa ve eski tarayıcı hafızasında duruyorsa, bu buton tarayıcıyı tarayıp verilerinizi geri yüklemeyi dener.
+                    </p>
+                    <button
+                        onClick={handleRunRecovery}
+                        className="w-full sm:w-auto px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/20 transition-all hover:-translate-y-0.5 flex items-center justify-center gap-2"
+                    >
+                        <LifeBuoy className="w-4 h-4" />
+                        Cihazı Tara ve Kurtar
                     </button>
                 </div>
             </div>
