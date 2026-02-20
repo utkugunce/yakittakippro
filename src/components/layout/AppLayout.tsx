@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { Car, LayoutDashboard, History, BarChart3, Wrench, FileText, Settings, Sun, Moon, Fuel, Plus, Menu, X } from 'lucide-react';
+import { Car, LayoutDashboard, History, BarChart3, Wrench, FileText, Settings, Sun, Moon, Fuel, Plus, Menu, X, Map } from 'lucide-react';
 import { Vehicle } from '../../types';
 import { typography, textStyles } from '../../design-system/typography';
 import { OfflineIndicator } from '../ui/OfflineIndicator';
@@ -172,6 +172,16 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
                         <span>Raporlar</span>
                     </NavLink>
                     <NavLink
+                        to="/route"
+                        className={({ isActive }) => `flex-1 flex items-center justify-center py-2.5 rounded-lg transition-all ${isActive
+                            ? `bg-white dark:bg-gray-700 text-indigo-700 dark:text-indigo-300 shadow-sm ${typography.navItemActive}`
+                            : `text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 ${typography.navItem}`
+                            }`}
+                    >
+                        <Map className="w-4 h-4 mr-2" />
+                        <span>Rota Hesapla</span>
+                    </NavLink>
+                    <NavLink
                         to="/settings"
                         className={({ isActive }) => `flex-1 flex items-center justify-center py-2.5 rounded-lg transition-all ${isActive
                             ? `bg-white dark:bg-gray-700 text-blue-700 dark:text-blue-300 shadow-sm ${typography.navItemActive}`
@@ -300,6 +310,11 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
                             <NavLink to="/reports" onClick={() => setShowMobileMenu(false)} className={({ isActive }) => `flex items-center p-3 rounded-xl transition-colors ${isActive ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300' : 'hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200'}`}>
                                 <div className="bg-purple-100 dark:bg-purple-900/30 p-2 rounded-lg mr-3"><FileText className="w-5 h-5 text-purple-600 dark:text-purple-400" /></div>
                                 <span className="font-medium">Raporlar & Harita</span>
+                            </NavLink>
+
+                            <NavLink to="/route" onClick={() => setShowMobileMenu(false)} className={({ isActive }) => `flex items-center p-3 rounded-xl transition-colors ${isActive ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300' : 'hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200'}`}>
+                                <div className="bg-indigo-100 dark:bg-indigo-900/30 p-2 rounded-lg mr-3"><Map className="w-5 h-5 text-indigo-600 dark:text-indigo-400" /></div>
+                                <span className="font-medium">Akıllı Rota Hesapla</span>
                             </NavLink>
 
                             <NavLink to="/settings" onClick={() => setShowMobileMenu(false)} className={({ isActive }) => `flex items-center p-3 rounded-xl transition-colors ${isActive ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300' : 'hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200'}`}>
