@@ -6,6 +6,7 @@ import { FuelPurchaseForm } from './features/fuel/components/FuelPurchaseForm';
 import { AppLayout } from './components/layout/AppLayout';
 import { PwaReloadPrompt } from './components/pwa/PwaReloadPrompt';
 import { SuccessPopup } from './components/ui/SuccessPopup';
+import { BottomSheetModal } from './components/ui/BottomSheetModal';
 import { PageLoader } from './components/PageLoader';
 import { useAppStore } from './stores/appStore';
 
@@ -134,35 +135,35 @@ export default function App() {
       <SuccessPopup isOpen={showSuccessPopup} onClose={() => setShowSuccessPopup(false)} logs={logs} />
 
       {/* Global Modals controlled by store state */}
-      {activeModal === 'entry' && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-            <EntryForm
-              logs={logs}
-              onAdd={(log) => { addLog(log); closeModal(); setShowSuccessPopup(true); }}
-              onUpdate={(log) => { updateLog(log); closeModal(); }}
-              onImport={(l) => { importLogs(l); closeModal(); }}
-              lastOdometer={lastOdometer}
-              lastFuelPrice={lastFuelPrice}
-              editingLog={editingItem}
-            />
-          </div>
-        </div>
-      )}
+      <BottomSheetModal
+        isOpen={activeModal === 'entry'}
+        onClose={closeModal}
+        title={editingItem ? 'Sürüş Düzenle' : 'Yeni Sürüş Ekle'}
+      >
+        <EntryForm
+          logs={logs}
+          onAdd={(log) => { addLog(log); closeModal(); setShowSuccessPopup(true); }}
+          onUpdate={(log) => { updateLog(log); closeModal(); }}
+          onImport={(l) => { importLogs(l); closeModal(); }}
+          lastOdometer={lastOdometer}
+          lastFuelPrice={lastFuelPrice}
+          editingLog={editingItem}
+        />
+      </BottomSheetModal>
 
-      {activeModal === 'fuel' && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-            <FuelPurchaseForm
-              onAdd={(purchase) => { addFuelPurchase(purchase); closeModal(); setShowSuccessPopup(true); }}
-              onUpdate={(purchase) => { updateFuelPurchase(purchase); closeModal(); }}
-              onClose={closeModal}
-              editingPurchase={editingItem}
-              lastOdometer={lastOdometer}
-            />
-          </div>
-        </div>
-      )}
+      <BottomSheetModal
+        isOpen={activeModal === 'fuel'}
+        onClose={closeModal}
+        title={editingItem ? 'Yakıt Fişi Düzenle' : 'Yeni Yakıt Fişi Ekle'}
+      >
+        <FuelPurchaseForm
+          onAdd={(purchase) => { addFuelPurchase(purchase); closeModal(); setShowSuccessPopup(true); }}
+          onUpdate={(purchase) => { updateFuelPurchase(purchase); closeModal(); }}
+          onClose={closeModal}
+          editingPurchase={editingItem}
+          lastOdometer={lastOdometer}
+        />
+      </BottomSheetModal>
 
     </AppLayout>
   );
