@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Fuel, Calendar, Coins, Droplets, MapPin, Calculator, PlusCircle, Eraser, AlertCircle, GaugeCircle, Map, Search, Star } from 'lucide-react';
+import { Fuel, Calendar, Coins, Droplets, MapPin, Calculator, PlusCircle, Eraser, AlertCircle, GaugeCircle, Map, Search, Star, Camera, Loader2 } from 'lucide-react';
 import { LocationPicker } from '../../components/LocationPicker';
 import { useGamificationStore } from '../../stores/gamificationStore';
+import { parseReceiptWithOCR } from '../../lib/ocr';
 
 export interface FuelPurchase {
     id: string;
@@ -57,6 +58,14 @@ export const FuelPurchaseForm: React.FC<FuelPurchaseFormProps> = ({ onAdd, onUpd
     const [manualLng, setManualLng] = useState<string>('');
     const [gpsLoading, setGpsLoading] = useState(false);
     const [showMapPicker, setShowMapPicker] = useState(false);
+
+    // OCR Scanner State
+    const [isScanning, setIsScanning] = useState(false);
+    const [showScanner, setShowScanner] = useState(false);
+    const [scanError, setScanError] = useState<string | null>(null);
+
+    // File Input Ref for OCR
+    const fileInputRef = React.useRef<HTMLInputElement>(null);
 
     // Pre-fill last fuel price
     useEffect(() => {
@@ -162,6 +171,7 @@ export const FuelPurchaseForm: React.FC<FuelPurchaseFormProps> = ({ onAdd, onUpd
         setLocation(null);
         setManualLat('');
         setManualLng('');
+        setScanError(null);
     };
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -225,6 +235,43 @@ export const FuelPurchaseForm: React.FC<FuelPurchaseFormProps> = ({ onAdd, onUpd
         handleClear();
     };
 
+    const handleReceiptScan = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setIsScanning(true);
+        setScanError(null);
+
+        const result = await parseReceiptWithOCR(file);
+
+        if (result.error) {
+            setScanError(result.error);
+        } else {
+            // Apply recognized values
+            if (result.pricePerLiter) setPricePerLiter(result.pricePerLiter.toString());
+            if (result.totalAmount) {
+                setTotalAmount(result.totalAmount.toString());
+                setCalcMode('total'); // Switch to total mode so liters autofill correctly
+
+                // if liters also recognized, force it (though it might conflict with auto-calc)
+                if (result.liters) {
+                    setLiters(result.liters.toString());
+                    setCalcMode('liters'); // Switch back if both exist
+                }
+            } else if (result.liters) {
+                setLiters(result.liters.toString());
+                setCalcMode('liters');
+            }
+
+            // Gamification bonus for using smart scan!
+            addXP(20, 'Akıllı Fiş Tarama Kullanıldı');
+        }
+
+        setIsScanning(false);
+        // Reset file input
+        if (fileInputRef.current) fileInputRef.current.value = '';
+    };
+
     const inputBaseClasses = "w-full pl-10 pr-4 py-3 min-h-[48px] bg-[#333333] dark:bg-gray-700 text-gray-100 placeholder-gray-500 border border-transparent rounded-lg focus:ring-2 focus:ring-primary-500 outline-none transition-all [color-scheme:dark] appearance-none";
     const labelClasses = "text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1 block";
 
@@ -238,7 +285,7 @@ export const FuelPurchaseForm: React.FC<FuelPurchaseFormProps> = ({ onAdd, onUpd
                 </div>
             )}
 
-            {/* Header */}
+            {/* Header with Scan Button */}
             <div className="flex items-center justify-between mb-6 border-b border-gray-100 dark:border-gray-700 pb-4">
                 <div className="flex items-center space-x-3">
                     <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 p-2.5 rounded-xl shadow-md">
@@ -249,6 +296,26 @@ export const FuelPurchaseForm: React.FC<FuelPurchaseFormProps> = ({ onAdd, onUpd
                         <p className="text-xs text-gray-500 dark:text-gray-400">Yakıt doldurma bilgilerini girin</p>
                     </div>
                 </div>
+
+                <div className="relative">
+                    <input
+                        type="file"
+                        accept="image/*"
+                        capture="environment"
+                        ref={fileInputRef}
+                        className="hidden"
+                        onChange={handleReceiptScan}
+                    />
+                    <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={isScanning}
+                        className="flex items-center px-3 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg shadow-sm hover:shadow transition-all disabled:opacity-50 text-sm font-bold"
+                    >
+                        {isScanning ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Camera className="w-4 h-4 mr-2" />}
+                        {isScanning ? 'Taranıyor...' : 'Fiş Tara'}
+                    </button>
+                </div>
             </div>
 
             {/* Error Display */}
@@ -256,6 +323,12 @@ export const FuelPurchaseForm: React.FC<FuelPurchaseFormProps> = ({ onAdd, onUpd
                 <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg flex items-start space-x-2">
                     <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />
                     <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
+                </div>
+            )}
+            {scanError && (
+                <div className="mb-4 p-3 bg-orange-50 dark:bg-orange-900/30 border border-orange-200 dark:border-orange-800 rounded-lg flex items-start space-x-2">
+                    <AlertCircle className="w-5 h-5 text-orange-600 dark:text-orange-400 shrink-0 mt-0.5" />
+                    <p className="text-sm text-orange-700 dark:text-orange-300 text-xs">⚠️ Fiş okunamadı: {scanError}. Lütfen manuel girin.</p>
                 </div>
             )}
 
