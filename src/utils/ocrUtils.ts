@@ -1,5 +1,4 @@
 // import Tesseract from 'tesseract.js';
-import { DailyLog } from '../types'; // Preserving other imports if any (none seen in view_file, but playing safe with types which were not imported before? File view showed no other imports)
 
 export interface ScanResult {
     date?: string;
