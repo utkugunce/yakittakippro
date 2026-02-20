@@ -328,18 +328,29 @@ export const DataManagement: React.FC<DataManagementProps> = ({ logs, onImport, 
             const legacyLogs = rawLegacy ? JSON.parse(rawLegacy) : [];
             const rawStore = localStorage.getItem('yakit-takip-store');
 
-            if (legacyLogs && legacyLogs.length > 0) {
-                if (window.confirm(`Sistemde ${legacyLogs.length} adet eski kayıt bulundu. Bunları geri yüklemek istiyor musunuz? (Mevcut kayıtlarla birleştirilecek)`)) {
-                    onImport(legacyLogs);
-                    setImportStatus({ success: true, message: `Harika! Tarayıcı hafızasından ${legacyLogs.length} kayıt başarıyla geri yüklendi.` });
+            if (legacyLogs && Array.isArray(legacyLogs) && legacyLogs.length > 0) {
+                // Ensure legacy logs have an ID, if not generate one so React rendering doesn't crash
+                const safeLogs = legacyLogs.map((log: any) => ({
+                    ...log,
+                    id: log.id || crypto.randomUUID(),
+                    date: log.date || new Date().toISOString().split('T')[0],
+                    currentOdometer: Number(log.currentOdometer) || 0,
+                    dailyDistance: Number(log.dailyDistance) || 0,
+                    avgConsumption: Number(log.avgConsumption) || 0,
+                }));
+
+                if (window.confirm(`Sistemde ${safeLogs.length} adet eski kayıt bulundu. Bunları geri yüklemek istiyor musunuz? (Mevcut kayıtlarla birleştirilecek)`)) {
+                    onImport(safeLogs);
+                    setImportStatus({ success: true, message: `Harika! Tarayıcı hafızasından ${safeLogs.length} kayıt başarıyla geri yüklendi.` });
                 }
             } else {
                 setImportStatus({ success: false, message: "Tarayıcı hafızasında kurtarılacak eski kayıt bulunamadı." });
             }
 
             console.log("Legacy:", legacyLogs?.length, "Store:", rawStore?.length);
-        } catch (e) {
-            setImportStatus({ success: false, message: "Kurtarma işlemi sırasında bir hata oluştu." });
+        } catch (e: any) {
+            console.error("Recovery failed:", e);
+            setImportStatus({ success: false, message: `Kurtarma işlemi sırasında bir hata oluştu: ${e.message}` });
         }
     };
 
