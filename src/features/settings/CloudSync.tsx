@@ -214,7 +214,7 @@ export const CloudSync: React.FC<CloudSyncProps> = ({
                             Cloud Yedekleme
                         </h3>
                         <div className="flex items-center space-x-2">
-                            <span className="text-xs text-gray-500 dark:text-gray-400">{user.email}</span>
+                            <span className="text-xs text-gray-500 dark:text-gray-400">{user?.email}</span>
                             <button
                                 onClick={handleLogout}
                                 className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"

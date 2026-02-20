@@ -48,7 +48,7 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
                     </div>
                     <div>
                         <h4 className="font-bold text-emerald-900 dark:text-emerald-100 text-sm">Bulut Senkronizasyonu Aktif</h4>
-                        <p className="text-xs text-emerald-700 dark:text-emerald-300 mt-0.5">{user.email}</p>
+                        <p className="text-xs text-emerald-700 dark:text-emerald-300 mt-0.5">{user?.email}</p>
                     </div>
                 </div>
                 <CheckCircle className="w-5 h-5 text-emerald-500" />
