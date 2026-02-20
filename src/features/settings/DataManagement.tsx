@@ -53,12 +53,13 @@ export const DataManagement: React.FC<DataManagementProps> = ({ logs, onImport, 
     };
 
     const handleExportExcel = () => {
-        if (logs.length === 0) {
+        const safeLogs = logs || [];
+        if (safeLogs.length === 0) {
             alert("Dışa aktarılacak kayıt bulunamadı.");
             return;
         }
         try {
-            const exportData = logs.map(log => ({
+            const exportData = safeLogs.map(log => ({
                 "Tarih": new Date(log.date).toLocaleDateString('tr-TR'),
                 "Güncel KM": log.currentOdometer,
                 "Yapılan KM": log.dailyDistance,
@@ -82,7 +83,8 @@ export const DataManagement: React.FC<DataManagementProps> = ({ logs, onImport, 
     };
 
     const handleExportPDF = () => {
-        if (logs.length === 0) {
+        const safeLogs = logs || [];
+        if (safeLogs.length === 0) {
             alert("Dışa aktarılacak kayıt bulunamadı.");
             return;
         }
@@ -100,10 +102,10 @@ export const DataManagement: React.FC<DataManagementProps> = ({ logs, onImport, 
             doc.text(`Oluşturulma Tarihi: ${new Date().toLocaleDateString('tr-TR')}`, 14, 28);
 
             // Summary Stats
-            const totalDistance = logs.reduce((sum, log) => sum + log.dailyDistance, 0);
-            const totalCost = logs.reduce((sum, log) => sum + log.dailyCost, 0);
-            const totalFuel = logs.reduce((sum, log) => sum + log.dailyFuelConsumed, 0);
-            const avgConsumption = logs.length > 0 ? logs.reduce((sum, log) => sum + log.avgConsumption, 0) / logs.length : 0;
+            const totalDistance = safeLogs.reduce((sum, log) => sum + (log.dailyDistance || 0), 0);
+            const totalCost = safeLogs.reduce((sum, log) => sum + (log.dailyCost || 0), 0);
+            const totalFuel = safeLogs.reduce((sum, log) => sum + (log.dailyFuelConsumed || 0), 0);
+            const avgConsumption = safeLogs.length > 0 ? safeLogs.reduce((sum, log) => sum + (log.avgConsumption || 0), 0) / safeLogs.length : 0;
 
             doc.setFontSize(12);
             doc.setTextColor(0);
@@ -114,10 +116,10 @@ export const DataManagement: React.FC<DataManagementProps> = ({ logs, onImport, 
             doc.text(`Toplam Harcama: ₺${totalCost.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}`, 14, 55);
             doc.text(`Toplam Yakıt: ${totalFuel.toFixed(1)} L`, 14, 62);
             doc.text(`Ortalama Tüketim: ${avgConsumption.toFixed(2)} L/100km`, 14, 69);
-            doc.text(`Kayıt Sayısı: ${logs.length}`, 14, 76);
+            doc.text(`Kayıt Sayısı: ${safeLogs.length}`, 14, 76);
 
             // Table
-            const tableData = logs.slice(0, 50).map(log => [
+            const tableData = safeLogs.slice(0, 50).map(log => [
                 new Date(log.date).toLocaleDateString('tr-TR'),
                 log.currentOdometer.toLocaleString('tr-TR'),
                 log.dailyDistance.toString(),

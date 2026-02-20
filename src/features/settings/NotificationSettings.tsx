@@ -40,7 +40,8 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({ main
     const checkMaintenanceAlerts = () => {
         if (permission !== 'granted' || !notificationsEnabled) return;
 
-        const alerts = maintenanceItems.filter(item => {
+        const safeItems = maintenanceItems || [];
+        const alerts = safeItems.filter(item => {
             if (item.type === 'date' && item.dueDate) {
                 const dueDate = new Date(item.dueDate);
                 const daysRemaining = Math.ceil((dueDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
@@ -138,25 +139,25 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({ main
                 {permission === 'granted' && (
                     <div className="space-y-3">
                         <div className={`p-3 rounded-xl border transition-all ${notificationsEnabled
-                                ? 'bg-blue-50/50 border-blue-100 dark:bg-blue-900/10 dark:border-blue-900/30'
-                                : 'bg-gray-50 border-gray-100 dark:bg-gray-800/50 dark:border-gray-700 opacity-60'
+                            ? 'bg-blue-50/50 border-blue-100 dark:bg-blue-900/10 dark:border-blue-900/30'
+                            : 'bg-gray-50 border-gray-100 dark:bg-gray-800/50 dark:border-gray-700 opacity-60'
                             }`}>
                             <div className="flex items-center gap-3">
                                 <Calendar className={`w-4 h-4 ${notificationsEnabled ? 'text-blue-600 dark:text-blue-400' : 'text-gray-400'}`} />
                                 <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
-                                    {maintenanceItems.filter(i => i.type === 'date' || i.type === 'both').length} Tarih Bazlı Hatırlatıcı
+                                    {(maintenanceItems || []).filter(i => i.type === 'date' || i.type === 'both').length} Tarih Bazlı Hatırlatıcı
                                 </span>
                             </div>
                         </div>
 
                         <div className={`p-3 rounded-xl border transition-all ${notificationsEnabled
-                                ? 'bg-purple-50/50 border-purple-100 dark:bg-purple-900/10 dark:border-purple-900/30'
-                                : 'bg-gray-50 border-gray-100 dark:bg-gray-800/50 dark:border-gray-700 opacity-60'
+                            ? 'bg-purple-50/50 border-purple-100 dark:bg-purple-900/10 dark:border-purple-900/30'
+                            : 'bg-gray-50 border-gray-100 dark:bg-gray-800/50 dark:border-gray-700 opacity-60'
                             }`}>
                             <div className="flex items-center gap-3">
                                 <Navigation className={`w-4 h-4 ${notificationsEnabled ? 'text-purple-600 dark:text-purple-400' : 'text-gray-400'}`} />
                                 <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
-                                    {maintenanceItems.filter(i => i.type === 'km' || i.type === 'both').length} KM Bazlı Hatırlatıcı
+                                    {(maintenanceItems || []).filter(i => i.type === 'km' || i.type === 'both').length} KM Bazlı Hatırlatıcı
                                 </span>
                             </div>
                         </div>

@@ -137,7 +137,7 @@ export const CloudSync: React.FC<CloudSyncProps> = ({
         const result = await loadFromCloud();
 
         if (result.success && result.data) {
-            if (result.data.logs.length > 0) {
+            if (result.data.logs && result.data.logs.length > 0) {
                 // Ensure dates are valid ISO strings
                 const processedLogs = result.data.logs.map((log: any) => ({
                     ...log,
@@ -148,10 +148,10 @@ export const CloudSync: React.FC<CloudSyncProps> = ({
                 }));
                 onImportLogs(processedLogs);
             }
-            if (result.data.maintenanceItems.length > 0) {
+            if (result.data.maintenanceItems && result.data.maintenanceItems.length > 0) {
                 onImportMaintenance(result.data.maintenanceItems);
             }
-            if (result.data.vehicles.length > 0) {
+            if (result.data.vehicles && result.data.vehicles.length > 0) {
                 onImportVehicles(result.data.vehicles);
             }
             if (result.data.monthlyBudget > 0) {
@@ -267,7 +267,7 @@ export const CloudSync: React.FC<CloudSyncProps> = ({
                     </div>
 
                     <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
-                        {logs.length} kayıt, {maintenanceItems.length} bakım, {vehicles.length} araç
+                        {(logs || []).length} kayıt, {(maintenanceItems || []).length} bakım, {(vehicles || []).length} araç
                     </p>
 
                     {message && (

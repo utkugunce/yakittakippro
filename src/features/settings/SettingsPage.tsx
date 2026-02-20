@@ -24,7 +24,8 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
         importLogs, addMaintenance, setVehicles, clearLogs
     } = useAppStore();
 
-    const currentOdometer = logs.length > 0 ? Math.max(...logs.map(l => l.currentOdometer)) : 0;
+    const safeLogs = logs || [];
+    const currentOdometer = safeLogs.length > 0 ? Math.max(...safeLogs.map(l => l.currentOdometer || 0)) : 0;
 
     return (
         <div className="max-w-4xl mx-auto space-y-6 animate-in fade-in duration-500 pb-12">

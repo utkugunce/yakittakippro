@@ -302,10 +302,13 @@ export const useAppStore = create<AppState>()(
           const savedLogs = localStorage.getItem(LOCAL_STORAGE_KEY);
           if (savedLogs) {
             const legacyLogs = JSON.parse(savedLogs) as DailyLog[];
-            const existingIds = new Set(state.logs.map(l => l.id));
-            const newLogs = legacyLogs.filter(l => !existingIds.has(l.id));
-            if (newLogs.length > 0) {
-              set({ logs: [...state.logs, ...newLogs] });
+            if (legacyLogs && Array.isArray(legacyLogs)) {
+              const safeLogs = state.logs || [];
+              const existingIds = new Set(safeLogs.map(l => l.id));
+              const newLogs = legacyLogs.filter(l => !existingIds.has(l.id));
+              if (newLogs.length > 0) {
+                set({ logs: [...safeLogs, ...newLogs] });
+              }
             }
           }
 
@@ -313,18 +316,22 @@ export const useAppStore = create<AppState>()(
           const savedMaintenance = localStorage.getItem(MAINTENANCE_STORAGE_KEY);
           if (savedMaintenance) {
             const legacyMaint = JSON.parse(savedMaintenance) as MaintenanceItem[];
-            const existingIds = new Set(state.maintenanceItems.map(m => m.id));
-            const newItems = legacyMaint.filter(m => !existingIds.has(m.id));
-            if (newItems.length > 0) {
-              set({ maintenanceItems: [...state.maintenanceItems, ...newItems] });
+            if (legacyMaint && Array.isArray(legacyMaint)) {
+              const safeMaint = state.maintenanceItems || [];
+              const existingIds = new Set(safeMaint.map(m => m.id));
+              const newItems = legacyMaint.filter(m => !existingIds.has(m.id));
+              if (newItems.length > 0) {
+                set({ maintenanceItems: [...safeMaint, ...newItems] });
+              }
             }
           }
 
           // Set vehicles if current is default
+          const safeVehicles = state.vehicles || [];
           const savedVehicles = localStorage.getItem(VEHICLES_STORAGE_KEY);
-          if (savedVehicles && state.vehicles.length <= 1 && state.vehicles[0]?.id === 'default') {
+          if (savedVehicles && safeVehicles.length <= 1 && safeVehicles[0]?.id === 'default') {
             const parsed = JSON.parse(savedVehicles) as Vehicle[];
-            if (parsed.length > 0) {
+            if (parsed && Array.isArray(parsed) && parsed.length > 0) {
               set({
                 vehicles: parsed,
                 selectedVehicleId: parsed[0].id
@@ -336,10 +343,13 @@ export const useAppStore = create<AppState>()(
           const savedParts = localStorage.getItem(PARTS_STORAGE_KEY);
           if (savedParts) {
             const legacyParts = JSON.parse(savedParts) as VehiclePart[];
-            const existingIds = new Set(state.vehicleParts.map(p => p.id));
-            const newParts = legacyParts.filter(p => !existingIds.has(p.id));
-            if (newParts.length > 0) {
-              set({ vehicleParts: [...state.vehicleParts, ...newParts] });
+            if (legacyParts && Array.isArray(legacyParts)) {
+              const safeParts = state.vehicleParts || [];
+              const existingIds = new Set(safeParts.map(p => p.id));
+              const newParts = legacyParts.filter(p => !existingIds.has(p.id));
+              if (newParts.length > 0) {
+                set({ vehicleParts: [...safeParts, ...newParts] });
+              }
             }
           }
 
@@ -347,10 +357,13 @@ export const useAppStore = create<AppState>()(
           const savedFuelPurchases = localStorage.getItem(FUEL_PURCHASES_STORAGE_KEY);
           if (savedFuelPurchases) {
             const legacyPurchases = JSON.parse(savedFuelPurchases) as FuelPurchase[];
-            const existingIds = new Set(state.fuelPurchases.map(p => p.id));
-            const newPurchases = legacyPurchases.filter(p => !existingIds.has(p.id));
-            if (newPurchases.length > 0) {
-              set({ fuelPurchases: [...state.fuelPurchases, ...newPurchases] });
+            if (legacyPurchases && Array.isArray(legacyPurchases)) {
+              const safePurchases = state.fuelPurchases || [];
+              const existingIds = new Set(safePurchases.map(p => p.id));
+              const newPurchases = legacyPurchases.filter(p => !existingIds.has(p.id));
+              if (newPurchases.length > 0) {
+                set({ fuelPurchases: [...safePurchases, ...newPurchases] });
+              }
             }
           }
 
