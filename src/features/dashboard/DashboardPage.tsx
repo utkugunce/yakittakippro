@@ -13,6 +13,7 @@ import { SmartInsightsWidget } from './components/SmartInsightsWidget';
 import { useDashboardStats } from '../../hooks/useDashboardStats';
 import { DynamicBudgetSimulator } from './components/DynamicBudgetSimulator';
 import { PredictiveForecaster } from './components/PredictiveForecaster';
+import { EcoScoreLeaderboard } from './components/EcoScoreLeaderboard';
 
 export const DashboardPage: React.FC = () => {
     const navigate = useNavigate();
@@ -123,6 +124,11 @@ export const DashboardPage: React.FC = () => {
                     logs={logs}
                     currentFuelPrice={stats.lastFuelPrice || 40.0}
                 />
+            </Suspense>
+
+            {/* Eco-Score Leaderboard */}
+            <Suspense fallback={<div className="h-32 bg-gray-100 dark:bg-gray-800 rounded-xl animate-pulse" />}>
+                <EcoScoreLeaderboard logs={logs} />
             </Suspense>
 
             {/* Weekly/Monthly Summary */}
