@@ -1,5 +1,10 @@
 // AI Vision API Utility - Using Groq as free alternative
 // Groq free tier: no credit card required, supports vision models
+//
+// API key resolution order:
+// 1. User-provided Gemini key stored in localStorage under 'gemini_api_key'
+// 2. Build-time GROQ_API_KEY  (set via Vercel env vars – note: embedded in client bundle)
+// 3. Build-time GEMINI_API_KEY (set via Vercel env vars – note: embedded in client bundle)
 
 declare const process: { env: { GEMINI_API_KEY?: string; GROQ_API_KEY?: string } };
 
@@ -101,19 +106,29 @@ SADECE JSON formatında döndür:
 }
 
 async function callVisionAPI(imageBase64: string, prompt: string): Promise<string> {
-    // Try Groq first (free, no credit card)
+    // Prefer user-provided key from localStorage (runtime, never embedded in bundle)
+    try {
+        const userGeminiKey = localStorage.getItem('gemini_api_key');
+        if (userGeminiKey) {
+            return await callGeminiVision(imageBase64, prompt, userGeminiKey);
+        }
+    } catch {
+        // localStorage may be unavailable in some environments; fall through to build-time keys
+    }
+
+    // Try Groq build-time key (set via Vercel env vars; embedded in client bundle)
     const groqKey = process.env.GROQ_API_KEY;
     if (groqKey) {
         return await callGroqVision(imageBase64, prompt, groqKey);
     }
 
-    // Fallback to Gemini
+    // Fallback to Gemini build-time key (set via Vercel env vars; embedded in client bundle)
     const geminiKey = process.env.GEMINI_API_KEY;
     if (geminiKey) {
         return await callGeminiVision(imageBase64, prompt, geminiKey);
     }
 
-    throw new Error('API anahtarı yapılandırılmamış. Vercel\'de GROQ_API_KEY veya GEMINI_API_KEY ayarlayın.');
+    throw new Error('API anahtarı yapılandırılmamış. Ayarlardan Gemini API anahtarı girin veya Vercel\'de GROQ_API_KEY / GEMINI_API_KEY ayarlayın.');
 }
 
 async function callGroqVision(imageBase64: string, prompt: string, apiKey: string): Promise<string> {

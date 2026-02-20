@@ -82,7 +82,7 @@ interface AppState {
   setGeminiApiKey: (key: string | null) => void;
 
   // Hydration & Sync
-  hydrate: () => void;
+  hydrate: () => Promise<void>;
   triggerSync: () => Promise<void>;
 }
 

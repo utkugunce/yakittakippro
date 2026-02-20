@@ -142,6 +142,9 @@ export default defineConfig(({ mode }) => {
       setupFiles: './src/test/setup.ts',
     },
     define: {
+      // WARNING: These values are inlined into the client-side JavaScript bundle at build time.
+      // Do NOT set these to production API keys in CI/CD or Vercel if you want to keep them secret.
+      // Prefer having users supply their own key via the app's Settings page (stored in localStorage).
       'process.env.GEMINI_API_KEY': JSON.stringify(process.env.GEMINI_API_KEY || env.GEMINI_API_KEY || ''),
       'process.env.GROQ_API_KEY': JSON.stringify(process.env.GROQ_API_KEY || env.GROQ_API_KEY || '')
     },
