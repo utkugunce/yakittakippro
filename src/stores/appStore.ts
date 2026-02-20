@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { DailyLog, MaintenanceItem, Vehicle, VehiclePart, FuelPurchase, VehicleDocument } from '../types';
+import { saveToCloud, isSupabaseConfigured } from '../lib/supabase';
 
 const LOCAL_STORAGE_KEY = 'yakit_takip_logs_v1';
 const MAINTENANCE_STORAGE_KEY = 'yakit_takip_maintenance_v1';
@@ -116,15 +117,46 @@ export const useAppStore = create<AppState>()(
       lastSyncTime: localStorage.getItem('last_sync_time'),
       geminiApiKey: localStorage.getItem('gemini_api_key'),
 
-      // Log Actions
-      addLog: (log) => set((state) => ({ logs: [log, ...state.logs] })),
-      deleteLog: (id) => set((state) => ({ logs: state.logs.filter(l => l.id !== id) })),
-      updateLog: (log) => set((state) => ({
-        logs: state.logs.map(l => l.id === log.id ? log : l)
-      })),
-      importLogs: (logs) => set({ logs }),
+      // Helper to trigger background sync if autoSync is enabled
+      triggerSync: async () => {
+        const state = get();
+        if (state.autoSync && isSupabaseConfigured()) {
+          const result = await saveToCloud({
+            logs: state.logs,
+            maintenanceItems: state.maintenanceItems,
+            vehicles: state.vehicles,
+            monthlyBudget: state.monthlyBudget
+          });
+          if (result.success) {
+            set({ lastSyncTime: new Date().toLocaleString('tr-TR') });
+          }
+        }
+      },
 
-      clearLogs: () => set({ logs: [], maintenanceItems: [], fuelPurchases: [], vehicleParts: [] }),
+      // Log Actions
+      addLog: (log) => {
+        set((state) => ({ logs: [log, ...state.logs] }));
+        get().triggerSync();
+      },
+      deleteLog: (id) => {
+        set((state) => ({ logs: state.logs.filter(l => l.id !== id) }));
+        get().triggerSync();
+      },
+      updateLog: (log) => {
+        set((state) => ({
+          logs: state.logs.map(l => l.id === log.id ? log : l)
+        }));
+        get().triggerSync();
+      },
+      importLogs: (logs) => {
+        set({ logs });
+        get().triggerSync();
+      },
+
+      clearLogs: () => {
+        set({ logs: [], maintenanceItems: [], fuelPurchases: [], vehicleParts: [] });
+        get().triggerSync();
+      },
 
       repairFuelPrices: () => {
         const { logs, fuelPurchases } = get();
@@ -161,50 +193,68 @@ export const useAppStore = create<AppState>()(
       },
 
       // Fuel Purchase Actions
-      addFuelPurchase: (purchase) => set((state) => ({
-        fuelPurchases: [purchase, ...state.fuelPurchases]
-      })),
-      deleteFuelPurchase: (id) => set((state) => ({
-        fuelPurchases: state.fuelPurchases.filter(p => p.id !== id)
-      })),
-      updateFuelPurchase: (purchase) => set((state) => ({
-        fuelPurchases: state.fuelPurchases.map(p => p.id === purchase.id ? purchase : p)
-      })),
+      addFuelPurchase: (purchase) => {
+        set((state) => ({ fuelPurchases: [purchase, ...state.fuelPurchases] }));
+        get().triggerSync();
+      },
+      deleteFuelPurchase: (id) => {
+        set((state) => ({ fuelPurchases: state.fuelPurchases.filter(p => p.id !== id) }));
+        get().triggerSync();
+      },
+      updateFuelPurchase: (purchase) => {
+        set((state) => ({ fuelPurchases: state.fuelPurchases.map(p => p.id === purchase.id ? purchase : p) }));
+        get().triggerSync();
+      },
 
       // Maintenance Actions
-      addMaintenance: (item) => set((state) => ({
-        maintenanceItems: [...state.maintenanceItems, item]
-      })),
-      deleteMaintenance: (id) => set((state) => ({
-        maintenanceItems: state.maintenanceItems.filter(i => i.id !== id)
-      })),
-      updateMaintenance: (id, lastKm, intervalKm) => set((state) => ({
-        maintenanceItems: state.maintenanceItems.map(item => {
-          if (item.id === id) {
-            return {
-              ...item,
-              lastMaintenanceKm: lastKm,
-              nextDueKm: lastKm + (intervalKm ?? item.intervalKm ?? 0)
-            };
-          }
-          return item;
-        })
-      })),
+      addMaintenance: (item) => {
+        set((state) => ({ maintenanceItems: [...state.maintenanceItems, item] }));
+        get().triggerSync();
+      },
+      deleteMaintenance: (id) => {
+        set((state) => ({ maintenanceItems: state.maintenanceItems.filter(i => i.id !== id) }));
+        get().triggerSync();
+      },
+      updateMaintenance: (id, lastKm, intervalKm) => {
+        set((state) => ({
+          maintenanceItems: state.maintenanceItems.map(item => {
+            if (item.id === id) {
+              return {
+                ...item,
+                lastMaintenanceKm: lastKm,
+                nextDueKm: lastKm + (intervalKm ?? item.intervalKm ?? 0)
+              };
+            }
+            return item;
+          })
+        }));
+        get().triggerSync();
+      },
 
       // Part Actions
-      addPart: (part) => set((state) => ({ vehicleParts: [...state.vehicleParts, part] })),
-      deletePart: (id) => set((state) => ({
-        vehicleParts: state.vehicleParts.filter(p => p.id !== id)
-      })),
-      togglePart: (id) => set((state) => ({
-        vehicleParts: state.vehicleParts.map(p =>
-          p.id === id ? { ...p, isActive: !p.isActive } : p
-        )
-      })),
+      addPart: (part) => {
+        set((state) => ({ vehicleParts: [...state.vehicleParts, part] }));
+        get().triggerSync();
+      },
+      deletePart: (id) => {
+        set((state) => ({ vehicleParts: state.vehicleParts.filter(p => p.id !== id) }));
+        get().triggerSync();
+      },
+      togglePart: (id) => {
+        set((state) => ({
+          vehicleParts: state.vehicleParts.map(p =>
+            p.id === id ? { ...p, isActive: !p.isActive } : p
+          )
+        }));
+        get().triggerSync();
+      },
 
       // Vehicle Actions
       setSelectedVehicleId: (id) => set({ selectedVehicleId: id }),
-      setVehicles: (vehicles) => set({ vehicles }),
+      setVehicles: (vehicles) => {
+        set({ vehicles });
+        get().triggerSync();
+      },
 
       // UI Actions
       setActiveTab: (tab) => set({ activeTab: tab }),
@@ -214,7 +264,10 @@ export const useAppStore = create<AppState>()(
       closeModal: () => set({ activeModal: null, editingItem: null }),
 
       // Settings Actions
-      setMonthlyBudget: (budget) => set({ monthlyBudget: budget }),
+      setMonthlyBudget: (budget) => {
+        set({ monthlyBudget: budget });
+        get().triggerSync();
+      },
       setNotificationsEnabled: (enabled) => set({ notificationsEnabled: enabled }),
       setLastNotificationCheck: (date) => set({ lastNotificationCheck: date }),
       setAutoSync: (enabled) => set({ autoSync: enabled }),
@@ -223,13 +276,18 @@ export const useAppStore = create<AppState>()(
 
 
       // Document Actions
-      addDocument: (doc) => set((state) => ({ documents: [...state.documents, doc] })),
-      deleteDocument: (id) => set((state) => ({
-        documents: state.documents.filter(d => d.id !== id)
-      })),
-      updateDocument: (doc) => set((state) => ({
-        documents: state.documents.map(d => d.id === doc.id ? doc : d)
-      })),
+      addDocument: (doc) => {
+        set((state) => ({ documents: [...state.documents, doc] }));
+        get().triggerSync();
+      },
+      deleteDocument: (id) => {
+        set((state) => ({ documents: state.documents.filter(d => d.id !== id) }));
+        get().triggerSync();
+      },
+      updateDocument: (doc) => {
+        set((state) => ({ documents: state.documents.map(d => d.id === doc.id ? doc : d) }));
+        get().triggerSync();
+      },
 
       // Hydration - first loads Zustand persist data, then merges legacy localStorage
       hydrate: async () => {

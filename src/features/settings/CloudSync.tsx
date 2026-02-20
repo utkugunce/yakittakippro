@@ -13,6 +13,7 @@ import {
 } from '../../lib/supabase';
 import { DailyLog, MaintenanceItem, Vehicle } from '../../types';
 import { useAppStore } from '../../stores/appStore';
+import { AuthGuard } from './AuthGuard';
 
 interface CloudSyncProps {
     logs: DailyLog[];
@@ -184,141 +185,99 @@ export const CloudSync: React.FC<CloudSyncProps> = ({
         );
     }
 
-    // Loading
-    if (loading) {
-        return (
-            <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 flex items-center justify-center">
-                <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
-            </div>
-        );
-    }
-
-    // Not logged in
-    if (!user) {
-        return (
-            <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
-                <h3 className="font-bold text-gray-800 dark:text-white mb-4 flex items-center">
-                    <Cloud className="w-5 h-5 mr-2 text-blue-600" />
-                    Cloud Yedekleme
-                </h3>
-
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                    Email adresinizle giriş yapın ve verilerinizi bulutta yedekleyin.
-                </p>
-
-                <form onSubmit={handleEmailAuth} className="space-y-3">
-                    <input
-                        type="email"
-                        placeholder="Email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        className="w-full p-2 rounded-lg bg-gray-100 dark:bg-gray-700 border-0 focus:ring-2 focus:ring-blue-500 outline-none"
-                        required
-                    />
-                    <input
-                        type="password"
-                        placeholder="Şifre"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        className="w-full p-2 rounded-lg bg-gray-100 dark:bg-gray-700 border-0 focus:ring-2 focus:ring-blue-500 outline-none"
-                        required
-                    />
-                    <button
-                        type="submit"
-                        disabled={loading}
-                        className="w-full flex items-center justify-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors"
-                    >
-                        {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Mail className="w-5 h-5" />}
-                        <span>{isSignUp ? 'Kayıt Ol' : 'Giriş Yap'}</span>
-                    </button>
-                    <div className="flex justify-center text-sm">
-                        <button type="button" onClick={() => setIsSignUp(!isSignUp)} className="text-blue-600 hover:underline">
-                            {isSignUp ? 'Hesabım var, giriş yap' : 'Yeni hesap oluştur'}
-                        </button>
-                    </div>
-                </form>
-
-                {message && (
-                    <div className={`mt-4 p-3 rounded-lg flex items-center space-x-2 ${message.type === 'success' ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300' : 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300'}`}>
-                        {message.type === 'success' ? <Check className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
-                        <span className="text-sm">{message.text}</span>
-                    </div>
-                )}
-            </div>
-        );
-    }
-
-    // Logged in
+    // Logged in via AuthGuard
     return (
-        <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
-            <div className="flex items-center justify-between mb-4">
-                <h3 className="font-bold text-gray-800 dark:text-white flex items-center">
-                    <Cloud className="w-5 h-5 mr-2 text-green-600" />
-                    Cloud Yedekleme
-                </h3>
-                <div className="flex items-center space-x-2">
-                    <span className="text-xs text-gray-500 dark:text-gray-400">{user.email}</span>
+        <AuthGuard>
+            <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
+                <div className="flex items-center justify-between mb-6">
+                    <div>
+                        <h3 className="font-bold text-gray-800 dark:text-white flex items-center">
+                            <Cloud className="w-5 h-5 mr-2 text-primary-600" />
+                            Cloud Yedekleme
+                        </h3>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                            Verileriniz güvende ve eşitlenmiş durumda.
+                        </p>
+                    </div>
                     <button
                         onClick={handleLogout}
-                        className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                        className="flex items-center gap-2 px-3 py-1.5 text-sm bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400 rounded-lg font-medium hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors"
                     >
                         <LogOut className="w-4 h-4" />
+                        Çıkış Yap
                     </button>
                 </div>
-            </div>
+                <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
+                    <div className="flex items-center justify-between mb-4">
+                        <h3 className="font-bold text-gray-800 dark:text-white flex items-center">
+                            <Cloud className="w-5 h-5 mr-2 text-green-600" />
+                            Cloud Yedekleme
+                        </h3>
+                        <div className="flex items-center space-x-2">
+                            <span className="text-xs text-gray-500 dark:text-gray-400">{user.email}</span>
+                            <button
+                                onClick={handleLogout}
+                                className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                            >
+                                <LogOut className="w-4 h-4" />
+                            </button>
+                        </div>
+                    </div>
 
-            <div className="grid grid-cols-2 gap-3 mb-4">
-                <button
-                    onClick={handleSaveToCloud}
-                    disabled={syncing}
-                    className="flex flex-col items-center justify-center p-4 bg-blue-50 dark:bg-blue-900/20 border-2 border-dashed border-blue-200 dark:border-blue-800 rounded-xl hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all disabled:opacity-50"
-                >
-                    {syncing ? <Loader2 className="w-6 h-6 text-blue-500 animate-spin mb-2" /> : <Upload className="w-6 h-6 text-blue-500 mb-2" />}
-                    <span className="text-sm font-bold text-gray-700 dark:text-gray-200">Yükle</span>
-                </button>
-                <button
-                    onClick={handleLoadFromCloud}
-                    disabled={syncing}
-                    className="flex flex-col items-center justify-center p-4 bg-green-50 dark:bg-green-900/20 border-2 border-dashed border-green-200 dark:border-green-800 rounded-xl hover:bg-green-100 dark:hover:bg-green-900/30 transition-all disabled:opacity-50"
-                >
-                    {syncing ? <Loader2 className="w-6 h-6 text-green-500 animate-spin mb-2" /> : <Download className="w-6 h-6 text-green-500 mb-2" />}
-                    <span className="text-sm font-bold text-gray-700 dark:text-gray-200">İndir</span>
-                </button>
-            </div>
+                    <div className="grid grid-cols-2 gap-3 mb-4">
+                        <button
+                            onClick={handleSaveToCloud}
+                            disabled={syncing}
+                            className="flex flex-col items-center justify-center p-4 bg-blue-50 dark:bg-blue-900/20 border-2 border-dashed border-blue-200 dark:border-blue-800 rounded-xl hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all disabled:opacity-50"
+                        >
+                            {syncing ? <Loader2 className="w-6 h-6 text-blue-500 animate-spin mb-2" /> : <Upload className="w-6 h-6 text-blue-500 mb-2" />}
+                            <span className="text-sm font-bold text-gray-700 dark:text-gray-200">Yükle</span>
+                        </button>
+                        <button
+                            onClick={handleLoadFromCloud}
+                            disabled={syncing}
+                            className="flex flex-col items-center justify-center p-4 bg-green-50 dark:bg-green-900/20 border-2 border-dashed border-green-200 dark:border-green-800 rounded-xl hover:bg-green-100 dark:hover:bg-green-900/30 transition-all disabled:opacity-50"
+                        >
+                            {syncing ? <Loader2 className="w-6 h-6 text-green-500 animate-spin mb-2" /> : <Download className="w-6 h-6 text-green-500 mb-2" />}
+                            <span className="text-sm font-bold text-gray-700 dark:text-gray-200">İndir</span>
+                        </button>
+                    </div>
 
-            {/* Auto-sync toggle and last sync info */}
-            <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg mb-4">
-                <div>
-                    <span className="text-sm text-gray-700 dark:text-gray-300">Otomatik Senkronizasyon</span>
-                    {lastSyncTime && (
-                        <p className="text-xs text-gray-400">Son: {lastSyncTime}</p>
+                    {/* Auto-sync toggle and last sync info */}
+                    <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg mb-4">
+                        <div>
+                            <span className="text-sm text-gray-700 dark:text-gray-300">Otomatik Senkronizasyon</span>
+                            {lastSyncTime && (
+                                <p className="text-xs text-gray-400">Son: {lastSyncTime}</p>
+                            )}
+                        </div>
+                        <button
+                            onClick={() => {
+                                const newState = !autoSync;
+                                setAutoSync(newState);
+                                // localStorage persistence handled by store
+                                if (newState && user) {
+                                    handleSaveToCloud();
+                                }
+                            }}
+                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${autoSync ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'}`}
+                        >
+                            <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${autoSync ? 'translate-x-6' : 'translate-x-1'}`} />
+                        </button>
+                    </div>
+
+                    <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
+                        {logs.length} kayıt, {maintenanceItems.length} bakım, {vehicles.length} araç
+                    </p>
+
+                    {message && (
+                        <div className={`mt-4 p-3 rounded-lg flex items-center space-x-2 ${message.type === 'success' ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300' : 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300'}`}>
+                            {message.type === 'success' ? <Check className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
+                            <span className="text-sm">{message.text}</span>
+                        </div>
                     )}
                 </div>
-                <button
-                    onClick={() => {
-                        const newState = !autoSync;
-                        setAutoSync(newState);
-                        // localStorage persistence handled by store
-                        if (newState && user) {
-                            handleSaveToCloud();
-                        }
-                    }}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${autoSync ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'}`}
-                >
-                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${autoSync ? 'translate-x-6' : 'translate-x-1'}`} />
-                </button>
             </div>
-
-            <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
-                {logs.length} kayıt, {maintenanceItems.length} bakım, {vehicles.length} araç
-            </p>
-
-            {message && (
-                <div className={`mt-4 p-3 rounded-lg flex items-center space-x-2 ${message.type === 'success' ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300' : 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300'}`}>
-                    {message.type === 'success' ? <Check className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
-                    <span className="text-sm">{message.text}</span>
-                </div>
-            )}
-        </div>
+        </AuthGuard>
     );
 };
