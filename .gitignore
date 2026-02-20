@@ -34,3 +34,6 @@ yarn-error.log*
 # Cache
 .cache/
 *.tsbuildinfo
+
+# Storage dumps (may contain sensitive data)
+*_raw_storage_dump_*.json
