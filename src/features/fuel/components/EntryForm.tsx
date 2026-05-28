@@ -6,6 +6,7 @@ import { PhotoScanner } from '../../ocr/PhotoScanner';
 import { VoiceEntry } from '../../voice/VoiceEntry';
 import { Input } from '../../../components/ui/Input';
 import { toast } from '../../../stores/toastStore';
+import { dailyLogInputSchema, firstIssueMessage } from '../../../lib/validation';
 
 interface EntryFormProps {
   logs: DailyLog[];
@@ -175,15 +176,23 @@ export const EntryForm: React.FC<EntryFormProps> = ({ logs, onAdd, onUpdate, onI
     // Block if there is an active odometer error
     if (odoError) return;
 
-    const dist = parseFloat(dailyDistance);
-    const cons = parseFloat(avgConsumption);
-    const price = parseFloat(fuelPrice);
-    const currOdo = parseFloat(currentOdometer);
-
-    if (isNaN(dist) || isNaN(cons) || isNaN(price) || isNaN(currOdo)) {
-      setError("Lütfen tüm alanları geçerli sayılarla doldurun.");
+    // Validate the numeric fields via the shared zod schema.
+    const parsed = dailyLogInputSchema.safeParse({
+      currentOdometer,
+      dailyDistance,
+      avgConsumption,
+      fuelPrice,
+    });
+    if (!parsed.success) {
+      setError(firstIssueMessage(parsed.error));
       return;
     }
+    const {
+      currentOdometer: currOdo,
+      dailyDistance: dist,
+      avgConsumption: cons,
+      fuelPrice: price,
+    } = parsed.data;
 
     // STRICT VALIDATION: Prevent KM rollback (only when adding new, not editing)
     if (!isEditing && lastOdometer > 0 && currOdo < lastOdometer) {

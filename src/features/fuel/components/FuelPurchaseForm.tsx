@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Fuel, Calendar, Coins, Droplets, MapPin, Calculator, PlusCircle, Eraser, AlertCircle, GaugeCircle, Map, Search, Camera } from 'lucide-react';
 import { LocationPicker } from './LocationPicker';
 import { FuelPurchase } from '../../../types';
+import { fuelPurchaseInputSchema, firstIssueMessage } from '../../../lib/validation';
 import { Input } from '../../../components/ui/Input';
 import { Button } from '../../../components/ui/Button';
 import { useGamificationStore } from '../../gamification/store/gamificationStore';
@@ -155,24 +156,15 @@ export const FuelPurchaseForm: React.FC<FuelPurchaseFormProps> = ({ onAdd, onUpd
         e.preventDefault();
         setError(null);
 
-        const l = parseFloat(liters);
-        const p = parseFloat(pricePerLiter);
-        const t = parseFloat(totalAmount);
+        // Validate the numeric fields via the shared zod schema (also handles
+        // Turkish comma decimals like "25,50").
+        const parsed = fuelPurchaseInputSchema.safeParse({ liters, pricePerLiter, totalAmount });
+        if (!parsed.success) {
+            setError(firstIssueMessage(parsed.error));
+            return;
+        }
+        const { liters: l, pricePerLiter: p, totalAmount: t } = parsed.data;
         const odo = odometer ? parseFloat(odometer) : undefined;
-
-        // Validation
-        if (isNaN(l) || l <= 0) {
-            setError('Lütfen geçerli bir litre miktarı girin.');
-            return;
-        }
-        if (isNaN(p) || p <= 0) {
-            setError('Lütfen geçerli bir litre fiyatı girin.');
-            return;
-        }
-        if (isNaN(t) || t <= 0) {
-            setError('Lütfen geçerli bir toplam tutar girin.');
-            return;
-        }
 
         // Check date for historical entry
         const today = new Date().toISOString().split('T')[0];
