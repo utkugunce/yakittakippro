@@ -51,6 +51,84 @@ export interface FuelPurchase {
   city?: string;
 }
 
+// Electric / hybrid charging session (kWh-based counterpart to FuelPurchase)
+export interface ChargeSession {
+  id: string;
+  vehicleId?: string;
+  date: string;              // ISO string
+  kWh: number;               // Şarj edilen enerji (kWh)
+  cost: number;              // Toplam ücret (TL)
+  pricePerKwh?: number;      // TL/kWh
+  chargeType?: 'ac' | 'dc';  // AC (yavaş) / DC (hızlı)
+  location?: 'home' | 'station';
+  station?: string;          // Şarj istasyonu / marka
+  odometer?: number;
+  notes?: string;
+}
+
+// Non-fuel ownership costs (TCO)
+export type ExpenseCategory =
+  | 'toll'        // HGS/OGS geçiş
+  | 'parking'     // Otopark
+  | 'wash'        // Yıkama
+  | 'fine'        // Trafik cezası
+  | 'mtv'         // Motorlu Taşıtlar Vergisi
+  | 'insurance'   // Sigorta / Kasko
+  | 'inspection'  // Muayene (TÜVTÜRK)
+  | 'tax'         // Diğer vergi/harç
+  | 'accessory'   // Aksesuar / donanım
+  | 'other';      // Diğer
+
+export interface Expense {
+  id: string;
+  vehicleId?: string;
+  date: string;              // ISO string
+  category: ExpenseCategory;
+  amount: number;            // TL
+  title?: string;
+  notes?: string;
+}
+
+// Actual service/maintenance record performed (with cost & invoice photo)
+export interface ServiceRecord {
+  id: string;
+  vehicleId?: string;
+  date: string;              // ISO string
+  odometer?: number;
+  title: string;             // Yapılan işlem
+  cost: number;              // TL
+  provider?: string;         // Servis / usta
+  photoUrl?: string;         // Fatura fotoğrafı (base64)
+  notes?: string;
+}
+
+// Tracked fuel price point (manual entry) for price-history & cheapest signal
+export interface FuelPriceEntry {
+  id: string;
+  date: string;              // ISO string
+  city?: string;             // İl
+  fuelType: 'benzin' | 'dizel' | 'lpg' | 'elektrik';
+  pricePerLiter: number;     // TL/L (elektrik için TL/kWh)
+  station?: string;          // İstasyon / marka
+  notes?: string;
+}
+
+// Trip log with work/personal split (for mileage/expense reporting)
+export type TripPurpose = 'work' | 'personal';
+
+export interface Trip {
+  id: string;
+  vehicleId?: string;
+  date: string;              // ISO string
+  purpose: TripPurpose;
+  distance: number;          // km
+  startOdometer?: number;
+  endOdometer?: number;
+  from?: string;
+  to?: string;
+  notes?: string;
+}
+
 export interface DashboardStats {
   totalDistance: number;
   totalCost: number;

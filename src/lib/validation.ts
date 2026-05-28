@@ -38,6 +38,28 @@ export const fuelPurchaseInputSchema = z.object({
   totalAmount: positive('Toplam tutar'),
 });
 
+export const chargeSessionInputSchema = z.object({
+  kWh: positive('Şarj miktarı (kWh)'),
+  cost: nonNegative('Ücret'),
+});
+
+export const expenseInputSchema = z.object({
+  amount: positive('Tutar'),
+});
+
+export const serviceInputSchema = z.object({
+  title: z.string().trim().min(1, 'İşlem açıklaması zorunludur.'),
+  cost: nonNegative('Tutar'),
+});
+
+export const tripInputSchema = z.object({
+  distance: positive('Mesafe'),
+});
+
+export const fuelPriceInputSchema = z.object({
+  pricePerLiter: positive('Birim fiyat'),
+});
+
 export type DailyLogInput = z.infer<typeof dailyLogInputSchema>;
 export type FuelPurchaseInput = z.infer<typeof fuelPurchaseInputSchema>;
 

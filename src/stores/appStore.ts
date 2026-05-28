@@ -1,6 +1,9 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { DailyLog, MaintenanceItem, Vehicle, VehiclePart, FuelPurchase, VehicleDocument } from '../types';
+import {
+  DailyLog, MaintenanceItem, Vehicle, VehiclePart, FuelPurchase, VehicleDocument,
+  ChargeSession, Expense, ServiceRecord, FuelPriceEntry, Trip
+} from '../types';
 import { saveToCloud, isSupabaseConfigured } from '../lib/supabase';
 import { STORAGE_KEYS, getString, getJSON } from '../lib/storage';
 
@@ -21,6 +24,11 @@ interface AppState {
   vehicles: Vehicle[];
   vehicleParts: VehiclePart[];
   documents: VehicleDocument[];
+  chargeSessions: ChargeSession[];
+  expenses: Expense[];
+  serviceRecords: ServiceRecord[];
+  fuelPrices: FuelPriceEntry[];
+  trips: Trip[];
   selectedVehicleId: string | null;
 
   // UI State
@@ -70,6 +78,30 @@ interface AppState {
   deleteDocument: (id: string) => void;
   updateDocument: (doc: VehicleDocument) => void;
 
+  // Actions - Charge Sessions (electric/hybrid)
+  addChargeSession: (session: ChargeSession) => void;
+  deleteChargeSession: (id: string) => void;
+  updateChargeSession: (session: ChargeSession) => void;
+
+  // Actions - Expenses (TCO)
+  addExpense: (expense: Expense) => void;
+  deleteExpense: (id: string) => void;
+  updateExpense: (expense: Expense) => void;
+
+  // Actions - Service Records
+  addServiceRecord: (record: ServiceRecord) => void;
+  deleteServiceRecord: (id: string) => void;
+  updateServiceRecord: (record: ServiceRecord) => void;
+
+  // Actions - Fuel Prices
+  addFuelPrice: (entry: FuelPriceEntry) => void;
+  deleteFuelPrice: (id: string) => void;
+
+  // Actions - Trips
+  addTrip: (trip: Trip) => void;
+  deleteTrip: (id: string) => void;
+  updateTrip: (trip: Trip) => void;
+
   // Actions - UI
   setActiveTab: (tab: AppState['activeTab']) => void;
   setYearFilter: (filter: AppState['yearFilter']) => void;
@@ -107,6 +139,11 @@ export const useAppStore = create<AppState>()(
       vehicles: [defaultVehicle],
       vehicleParts: [],
       documents: [],
+      chargeSessions: [],
+      expenses: [],
+      serviceRecords: [],
+      fuelPrices: [],
+      trips: [],
       selectedVehicleId: 'default',
       activeTab: 'dashboard',
       yearFilter: 'all',
@@ -159,7 +196,10 @@ export const useAppStore = create<AppState>()(
       },
 
       clearLogs: () => {
-        set({ logs: [], maintenanceItems: [], fuelPurchases: [], vehicleParts: [] });
+        set({
+          logs: [], maintenanceItems: [], fuelPurchases: [], vehicleParts: [],
+          chargeSessions: [], expenses: [], serviceRecords: [], fuelPrices: [], trips: []
+        });
         get().triggerSync();
       },
 
@@ -294,6 +334,72 @@ export const useAppStore = create<AppState>()(
         get().triggerSync();
       },
 
+      // Charge Session Actions
+      addChargeSession: (session) => {
+        set((state) => ({ chargeSessions: [session, ...state.chargeSessions] }));
+        get().triggerSync();
+      },
+      deleteChargeSession: (id) => {
+        set((state) => ({ chargeSessions: state.chargeSessions.filter(c => c.id !== id) }));
+        get().triggerSync();
+      },
+      updateChargeSession: (session) => {
+        set((state) => ({ chargeSessions: state.chargeSessions.map(c => c.id === session.id ? session : c) }));
+        get().triggerSync();
+      },
+
+      // Expense Actions
+      addExpense: (expense) => {
+        set((state) => ({ expenses: [expense, ...state.expenses] }));
+        get().triggerSync();
+      },
+      deleteExpense: (id) => {
+        set((state) => ({ expenses: state.expenses.filter(e => e.id !== id) }));
+        get().triggerSync();
+      },
+      updateExpense: (expense) => {
+        set((state) => ({ expenses: state.expenses.map(e => e.id === expense.id ? expense : e) }));
+        get().triggerSync();
+      },
+
+      // Service Record Actions
+      addServiceRecord: (record) => {
+        set((state) => ({ serviceRecords: [record, ...state.serviceRecords] }));
+        get().triggerSync();
+      },
+      deleteServiceRecord: (id) => {
+        set((state) => ({ serviceRecords: state.serviceRecords.filter(r => r.id !== id) }));
+        get().triggerSync();
+      },
+      updateServiceRecord: (record) => {
+        set((state) => ({ serviceRecords: state.serviceRecords.map(r => r.id === record.id ? record : r) }));
+        get().triggerSync();
+      },
+
+      // Fuel Price Actions
+      addFuelPrice: (entry) => {
+        set((state) => ({ fuelPrices: [entry, ...state.fuelPrices] }));
+        get().triggerSync();
+      },
+      deleteFuelPrice: (id) => {
+        set((state) => ({ fuelPrices: state.fuelPrices.filter(p => p.id !== id) }));
+        get().triggerSync();
+      },
+
+      // Trip Actions
+      addTrip: (trip) => {
+        set((state) => ({ trips: [trip, ...state.trips] }));
+        get().triggerSync();
+      },
+      deleteTrip: (id) => {
+        set((state) => ({ trips: state.trips.filter(t => t.id !== id) }));
+        get().triggerSync();
+      },
+      updateTrip: (trip) => {
+        set((state) => ({ trips: state.trips.map(t => t.id === trip.id ? trip : t) }));
+        get().triggerSync();
+      },
+
       // Hydration - first loads Zustand persist data, then merges legacy localStorage
       hydrate: async () => {
         try {
@@ -387,6 +493,11 @@ export const useAppStore = create<AppState>()(
         vehicleParts: state.vehicleParts,
         selectedVehicleId: state.selectedVehicleId,
         documents: state.documents, // Persist documents
+        chargeSessions: state.chargeSessions,
+        expenses: state.expenses,
+        serviceRecords: state.serviceRecords,
+        fuelPrices: state.fuelPrices,
+        trips: state.trips,
         monthlyBudget: state.monthlyBudget,
         notificationsEnabled: state.notificationsEnabled,
         lastNotificationCheck: state.lastNotificationCheck,
