@@ -6,6 +6,7 @@ import { FuelPurchaseForm } from './features/fuel/components/FuelPurchaseForm';
 import { AppLayout } from './components/layout/AppLayout';
 import { PwaReloadPrompt } from './components/pwa/PwaReloadPrompt';
 import { SuccessPopup } from './components/ui/SuccessPopup';
+import { Toaster } from './components/ui/Toaster';
 import { BottomSheetModal } from './components/ui/BottomSheetModal';
 import { PageLoader } from './components/PageLoader';
 import { useAppStore } from './stores/appStore';
@@ -139,6 +140,7 @@ export default function App() {
       </Routes>
 
       <PwaReloadPrompt />
+      <Toaster />
       <SuccessPopup isOpen={showSuccessPopup} onClose={() => setShowSuccessPopup(false)} logs={logs} />
 
       {/* Global Modals controlled by store state */}

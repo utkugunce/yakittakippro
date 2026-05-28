@@ -2,6 +2,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import * as XLSX from 'xlsx';
 import { DailyLog } from '../../../types';
 import { FileSpreadsheet, Loader2, Download, Upload, Check, ArrowRight, X } from 'lucide-react';
+import { toast } from '../../../stores/toastStore';
 
 interface ExcelImportProps {
   logs: DailyLog[]; // Received logs to export
@@ -56,7 +57,7 @@ export const ExcelImport: React.FC<ExcelImportProps> = ({ logs, onImport }) => {
 
   const handleExportLogs = () => {
     if (logs.length === 0) {
-      alert("Dışa aktarılacak kayıt bulunamadı.");
+      toast.error("Dışa aktarılacak kayıt bulunamadı.");
       setShowOptions(false);
       return;
     }
@@ -83,7 +84,7 @@ export const ExcelImport: React.FC<ExcelImportProps> = ({ logs, onImport }) => {
       setShowOptions(false);
     } catch (error) {
       console.error("Export error:", error);
-      alert("Excel dosyası oluşturulurken bir hata oluştu.");
+      toast.error("Excel dosyası oluşturulurken bir hata oluştu.");
     }
   };
 
@@ -106,7 +107,7 @@ export const ExcelImport: React.FC<ExcelImportProps> = ({ logs, onImport }) => {
       XLSX.writeFile(wb, "yakit_takip_sablon.xlsx");
       setShowOptions(false);
     } catch (error) {
-      alert("Şablon oluşturulurken bir hata oluştu.");
+      toast.error("Şablon oluşturulurken bir hata oluştu.");
     }
   };
 
@@ -125,7 +126,7 @@ export const ExcelImport: React.FC<ExcelImportProps> = ({ logs, onImport }) => {
       const jsonData: any[] = XLSX.utils.sheet_to_json(worksheet);
 
       if (jsonData.length === 0) {
-        alert("Dosya boş veya okunamadı.");
+        toast.error("Dosya boş veya okunamadı.");
         setLoading(false);
         return;
       }
@@ -157,7 +158,7 @@ export const ExcelImport: React.FC<ExcelImportProps> = ({ logs, onImport }) => {
 
     } catch (error) {
       console.error("Read error:", error);
-      alert("Dosya okunamadı.");
+      toast.error("Dosya okunamadı.");
     } finally {
       setLoading(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -227,7 +228,7 @@ export const ExcelImport: React.FC<ExcelImportProps> = ({ logs, onImport }) => {
 
     onImport(importedLogs);
     setMappingModalOpen(false);
-    alert(`${successCount} kayıt başarıyla eklendi.\n${skippedCount} adet uygun olmayan satır atlandı.`);
+    toast.success(`${successCount} kayıt başarıyla eklendi.\n${skippedCount} adet uygun olmayan satır atlandı.`);
   };
 
   return (

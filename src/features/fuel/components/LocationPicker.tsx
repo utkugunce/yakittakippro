@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useRef, useMemo } from 'react';
 import { GoogleMap, useJsApiLoader, Marker, Autocomplete } from '@react-google-maps/api';
 import { MapPin, Crosshair, X, Check, Loader2, Search } from 'lucide-react';
+import { toast } from '../../../stores/toastStore';
 
 interface LocationPickerProps {
     onSelect: (lat: number, lng: number) => void;
@@ -96,13 +97,13 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({ onSelect, onClos
                 },
                 (err) => {
                     console.error('GPS error:', err);
-                    alert('Konum alınamadı. Lütfen izinleri kontrol edin.');
+                    toast.error('Konum alınamadı. Lütfen izinleri kontrol edin.');
                     setGpsLoading(false);
                 },
                 { enableHighAccuracy: true, timeout: 10000 }
             );
         } else {
-            alert('Tarayıcınız GPS desteklemiyor.');
+            toast.error('Tarayıcınız GPS desteklemiyor.');
         }
     };
 

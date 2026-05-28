@@ -5,6 +5,7 @@ import { ExcelImport } from '../../settings/components/ExcelImport';
 import { PhotoScanner } from '../../ocr/PhotoScanner';
 import { VoiceEntry } from '../../voice/VoiceEntry';
 import { Input } from '../../../components/ui/Input';
+import { toast } from '../../../stores/toastStore';
 
 interface EntryFormProps {
   logs: DailyLog[];
@@ -59,11 +60,11 @@ export const EntryForm: React.FC<EntryFormProps> = ({ logs, onAdd, onUpdate, onI
           (error) => {
             console.error("Error getting location:", error);
             setAddLocation(false); // Disable if error
-            alert("Konum alınamadı. Lütfen izinleri kontrol edin.");
+            toast.error("Konum alınamadı. Lütfen izinleri kontrol edin.");
           }
         );
       } else {
-        alert("Tarayıcınız konum özelliğini desteklemiyor.");
+        toast.error("Tarayıcınız konum özelliğini desteklemiyor.");
         setAddLocation(false);
       }
     } else {

@@ -5,6 +5,7 @@ import autoTable from 'jspdf-autotable';
 import { DailyLog } from '../../types';
 import { Download, Upload, Trash2, AlertTriangle, FileJson, Check, FileSpreadsheet, ArrowRight, X, Loader2, FileText, Smartphone, Database, Wrench, LifeBuoy } from 'lucide-react';
 import { useAppStore } from '../../stores/appStore';
+import { toast } from '../../stores/toastStore';
 
 interface DataManagementProps {
     logs: DailyLog[];
@@ -55,7 +56,7 @@ export const DataManagement: React.FC<DataManagementProps> = ({ logs, onImport, 
     const handleExportExcel = () => {
         const safeLogs = logs || [];
         if (safeLogs.length === 0) {
-            alert("Dışa aktarılacak kayıt bulunamadı.");
+            toast.error("Dışa aktarılacak kayıt bulunamadı.");
             return;
         }
         try {
@@ -78,14 +79,14 @@ export const DataManagement: React.FC<DataManagementProps> = ({ logs, onImport, 
             XLSX.writeFile(wb, fileName);
         } catch (error) {
             console.error("Export error:", error);
-            alert("Excel dosyası oluşturulurken bir hata oluştu.");
+            toast.error("Excel dosyası oluşturulurken bir hata oluştu.");
         }
     };
 
     const handleExportPDF = () => {
         const safeLogs = logs || [];
         if (safeLogs.length === 0) {
-            alert("Dışa aktarılacak kayıt bulunamadı.");
+            toast.error("Dışa aktarılacak kayıt bulunamadı.");
             return;
         }
         try {
@@ -149,7 +150,7 @@ export const DataManagement: React.FC<DataManagementProps> = ({ logs, onImport, 
             doc.save(fileName);
         } catch (error) {
             console.error("PDF export error:", error);
-            alert("PDF dosyası oluşturulurken bir hata oluştu.");
+            toast.error("PDF dosyası oluşturulurken bir hata oluştu.");
         }
     };
 
