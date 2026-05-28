@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { Car, LayoutDashboard, History, BarChart3, Wrench, FileText, Settings, Sun, Moon, Fuel, Plus, Menu, Map } from 'lucide-react';
+import { Car, LayoutDashboard, History, BarChart3, Wrench, FileText, Settings, Sun, Moon, Fuel, Plus, Menu, Map, Warehouse } from 'lucide-react';
 import { Vehicle } from '../../types';
 import { typography, textStyles } from '../../design-system/typography';
 import { OfflineIndicator } from '../ui/OfflineIndicator';
@@ -182,6 +182,16 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
                         <span>Rota Hesapla</span>
                     </NavLink>
                     <NavLink
+                        to="/garage"
+                        className={({ isActive }) => `flex-1 flex items-center justify-center py-2.5 rounded-lg transition-all ${isActive
+                            ? `bg-white dark:bg-gray-700 text-emerald-700 dark:text-emerald-300 shadow-sm ${typography.navItemActive}`
+                            : `text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 ${typography.navItem}`
+                            }`}
+                    >
+                        <Warehouse className="w-4 h-4 mr-2" />
+                        <span>Garaj</span>
+                    </NavLink>
+                    <NavLink
                         to="/settings"
                         className={({ isActive }) => `flex-1 flex items-center justify-center py-2.5 rounded-lg transition-all ${isActive
                             ? `bg-white dark:bg-gray-700 text-blue-700 dark:text-blue-300 shadow-sm ${typography.navItemActive}`
@@ -296,6 +306,11 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
                             onClick={e => e.stopPropagation()}
                         >
                             <h3 className="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 px-2">Diğer İşlemler</h3>
+
+                            <NavLink to="/garage" onClick={() => setShowMobileMenu(false)} className={({ isActive }) => `flex items-center p-3 rounded-xl transition-colors ${isActive ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300' : 'hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200'}`}>
+                                <div className="bg-emerald-100 dark:bg-emerald-900/30 p-2 rounded-lg mr-3"><Warehouse className="w-5 h-5 text-emerald-600 dark:text-emerald-400" /></div>
+                                <span className="font-medium">Garaj (Şarj, Gider, Servis, AI)</span>
+                            </NavLink>
 
                             <NavLink to="/maintenance" onClick={() => setShowMobileMenu(false)} className={({ isActive }) => `flex items-center p-3 rounded-xl transition-colors ${isActive ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300' : 'hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200'}`}>
                                 <div className="bg-blue-100 dark:bg-blue-900/30 p-2 rounded-lg mr-3"><Wrench className="w-5 h-5 text-blue-600 dark:text-blue-400" /></div>

@@ -24,6 +24,13 @@ const Reports = React.lazy(() => import('./features/analytics/ReportsPage').then
 const FuelMap = React.lazy(() => import('./features/fuel/components/FuelMap').then(module => ({ default: module.FuelMap })));
 const Glovebox = React.lazy(() => import('./features/glovebox/GloveboxPage').then(module => ({ default: module.GloveboxPage })));
 const RoutePlanner = React.lazy(() => import('./features/maps/RoutePlannerPage').then(module => ({ default: module.RoutePlannerPage })));
+const GaragePage = React.lazy(() => import('./features/garage/GaragePage').then(module => ({ default: module.GaragePage })));
+const ChargingPage = React.lazy(() => import('./features/charging/ChargingPage').then(module => ({ default: module.ChargingPage })));
+const ExpensesPage = React.lazy(() => import('./features/expenses/ExpensesPage').then(module => ({ default: module.ExpensesPage })));
+const ServiceHistoryPage = React.lazy(() => import('./features/service/ServiceHistoryPage').then(module => ({ default: module.ServiceHistoryPage })));
+const FuelPricePage = React.lazy(() => import('./features/prices/FuelPricePage').then(module => ({ default: module.FuelPricePage })));
+const TripsPage = React.lazy(() => import('./features/trips/TripsPage').then(module => ({ default: module.TripsPage })));
+const AssistantPage = React.lazy(() => import('./features/assistant/AssistantPage').then(module => ({ default: module.AssistantPage })));
 
 const THEME_STORAGE_KEY = STORAGE_KEYS.theme;
 const ACCENT_STORAGE_KEY = STORAGE_KEYS.accent;
@@ -135,6 +142,15 @@ export default function App() {
             }}
           />
         } />
+
+        {/* Garage hub + new feature pages */}
+        <Route path="garage" element={<React.Suspense fallback={<PageLoader />}><GaragePage /></React.Suspense>} />
+        <Route path="charging" element={<React.Suspense fallback={<PageLoader />}><ChargingPage /></React.Suspense>} />
+        <Route path="expenses" element={<React.Suspense fallback={<PageLoader />}><ExpensesPage /></React.Suspense>} />
+        <Route path="service" element={<React.Suspense fallback={<PageLoader />}><ServiceHistoryPage /></React.Suspense>} />
+        <Route path="prices" element={<React.Suspense fallback={<PageLoader />}><FuelPricePage /></React.Suspense>} />
+        <Route path="trips" element={<React.Suspense fallback={<PageLoader />}><TripsPage /></React.Suspense>} />
+        <Route path="assistant" element={<React.Suspense fallback={<PageLoader />}><AssistantPage /></React.Suspense>} />
 
         {/* Catch all - redirect to dashboard */}
         <Route path="*" element={<Navigate to="/" replace />} />
