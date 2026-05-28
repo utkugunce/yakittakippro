@@ -2,12 +2,16 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { DailyLog, MaintenanceItem, Vehicle, VehiclePart, FuelPurchase, VehicleDocument } from '../types';
 import { saveToCloud, isSupabaseConfigured } from '../lib/supabase';
+import { STORAGE_KEYS, getString, getJSON } from '../lib/storage';
 
-const LOCAL_STORAGE_KEY = 'yakit_takip_logs_v1';
-const MAINTENANCE_STORAGE_KEY = 'yakit_takip_maintenance_v1';
-const VEHICLES_STORAGE_KEY = 'yakit_takip_vehicles_v1';
-const PARTS_STORAGE_KEY = 'yakit_takip_parts_v1';
-const FUEL_PURCHASES_STORAGE_KEY = 'yakit_takip_fuel_purchases_v1';
+const LOCAL_STORAGE_KEY = STORAGE_KEYS.logs;
+const MAINTENANCE_STORAGE_KEY = STORAGE_KEYS.maintenance;
+const VEHICLES_STORAGE_KEY = STORAGE_KEYS.vehicles;
+const PARTS_STORAGE_KEY = STORAGE_KEYS.parts;
+const FUEL_PURCHASES_STORAGE_KEY = STORAGE_KEYS.fuelPurchases;
+
+// Bump when the persisted shape changes; pair with a `migrate` step below.
+const PERSIST_VERSION = 1;
 
 interface AppState {
   // Data
@@ -111,12 +115,12 @@ export const useAppStore = create<AppState>()(
       editingItem: null,
 
       // Initial Settings (Migration from separate localStorage keys)
-      monthlyBudget: parseFloat(localStorage.getItem('monthly_budget') || '0'),
-      notificationsEnabled: localStorage.getItem('notifications_enabled') === 'true',
-      lastNotificationCheck: localStorage.getItem('last_notification_check'),
-      autoSync: localStorage.getItem('auto_sync') === 'true',
-      lastSyncTime: localStorage.getItem('last_sync_time'),
-      geminiApiKey: localStorage.getItem('gemini_api_key'),
+      monthlyBudget: parseFloat(getString('monthly_budget') || '0'),
+      notificationsEnabled: getString('notifications_enabled') === 'true',
+      lastNotificationCheck: getString('last_notification_check'),
+      autoSync: getString('auto_sync') === 'true',
+      lastSyncTime: getString('last_sync_time'),
+      geminiApiKey: getString('gemini_api_key'),
 
       // Helper to trigger background sync if autoSync is enabled
       triggerSync: async () => {
@@ -299,72 +303,65 @@ export const useAppStore = create<AppState>()(
 
           const state = get();
 
-          // Merge logs - avoid duplicates by ID
-          const savedLogs = localStorage.getItem(LOCAL_STORAGE_KEY);
-          if (savedLogs) {
-            const legacyLogs = JSON.parse(savedLogs) as DailyLog[];
-            if (legacyLogs && Array.isArray(legacyLogs)) {
-              const safeLogs = state.logs || [];
-              const existingIds = new Set(safeLogs.map(l => l.id));
-              const newLogs = legacyLogs.filter(l => !existingIds.has(l.id));
-              if (newLogs.length > 0) {
-                set({ logs: [...safeLogs, ...newLogs] });
-              }
+          // Merge logs - avoid duplicates by ID. getJSON returns the fallback
+          // (null) when the legacy key is missing or holds corrupted data, so a
+          // single bad key can no longer abort the whole migration.
+          const legacyLogs = getJSON<DailyLog[] | null>(LOCAL_STORAGE_KEY, null);
+          if (legacyLogs && Array.isArray(legacyLogs)) {
+            const safeLogs = state.logs || [];
+            const existingIds = new Set(safeLogs.map(l => l.id));
+            const newLogs = legacyLogs.filter(l => !existingIds.has(l.id));
+            if (newLogs.length > 0) {
+              set({ logs: [...safeLogs, ...newLogs] });
             }
           }
 
           // Merge maintenance items
-          const savedMaintenance = localStorage.getItem(MAINTENANCE_STORAGE_KEY);
-          if (savedMaintenance) {
-            const legacyMaint = JSON.parse(savedMaintenance) as MaintenanceItem[];
-            if (legacyMaint && Array.isArray(legacyMaint)) {
-              const safeMaint = state.maintenanceItems || [];
-              const existingIds = new Set(safeMaint.map(m => m.id));
-              const newItems = legacyMaint.filter(m => !existingIds.has(m.id));
-              if (newItems.length > 0) {
-                set({ maintenanceItems: [...safeMaint, ...newItems] });
-              }
+          const legacyMaint = getJSON<MaintenanceItem[] | null>(MAINTENANCE_STORAGE_KEY, null);
+          if (legacyMaint && Array.isArray(legacyMaint)) {
+            const safeMaint = state.maintenanceItems || [];
+            const existingIds = new Set(safeMaint.map(m => m.id));
+            const newItems = legacyMaint.filter(m => !existingIds.has(m.id));
+            if (newItems.length > 0) {
+              set({ maintenanceItems: [...safeMaint, ...newItems] });
             }
           }
 
           // Set vehicles if current is default
           const safeVehicles = state.vehicles || [];
-          const savedVehicles = localStorage.getItem(VEHICLES_STORAGE_KEY);
-          if (savedVehicles && safeVehicles.length <= 1 && safeVehicles[0]?.id === 'default') {
-            const parsed = JSON.parse(savedVehicles) as Vehicle[];
-            if (parsed && Array.isArray(parsed) && parsed.length > 0) {
-              set({
-                vehicles: parsed,
-                selectedVehicleId: parsed[0].id
-              });
-            }
+          const legacyVehicles = getJSON<Vehicle[] | null>(VEHICLES_STORAGE_KEY, null);
+          if (
+            legacyVehicles &&
+            Array.isArray(legacyVehicles) &&
+            legacyVehicles.length > 0 &&
+            safeVehicles.length <= 1 &&
+            safeVehicles[0]?.id === 'default'
+          ) {
+            set({
+              vehicles: legacyVehicles,
+              selectedVehicleId: legacyVehicles[0].id
+            });
           }
 
           // Merge parts
-          const savedParts = localStorage.getItem(PARTS_STORAGE_KEY);
-          if (savedParts) {
-            const legacyParts = JSON.parse(savedParts) as VehiclePart[];
-            if (legacyParts && Array.isArray(legacyParts)) {
-              const safeParts = state.vehicleParts || [];
-              const existingIds = new Set(safeParts.map(p => p.id));
-              const newParts = legacyParts.filter(p => !existingIds.has(p.id));
-              if (newParts.length > 0) {
-                set({ vehicleParts: [...safeParts, ...newParts] });
-              }
+          const legacyParts = getJSON<VehiclePart[] | null>(PARTS_STORAGE_KEY, null);
+          if (legacyParts && Array.isArray(legacyParts)) {
+            const safeParts = state.vehicleParts || [];
+            const existingIds = new Set(safeParts.map(p => p.id));
+            const newParts = legacyParts.filter(p => !existingIds.has(p.id));
+            if (newParts.length > 0) {
+              set({ vehicleParts: [...safeParts, ...newParts] });
             }
           }
 
           // Merge fuel purchases
-          const savedFuelPurchases = localStorage.getItem(FUEL_PURCHASES_STORAGE_KEY);
-          if (savedFuelPurchases) {
-            const legacyPurchases = JSON.parse(savedFuelPurchases) as FuelPurchase[];
-            if (legacyPurchases && Array.isArray(legacyPurchases)) {
-              const safePurchases = state.fuelPurchases || [];
-              const existingIds = new Set(safePurchases.map(p => p.id));
-              const newPurchases = legacyPurchases.filter(p => !existingIds.has(p.id));
-              if (newPurchases.length > 0) {
-                set({ fuelPurchases: [...safePurchases, ...newPurchases] });
-              }
+          const legacyPurchases = getJSON<FuelPurchase[] | null>(FUEL_PURCHASES_STORAGE_KEY, null);
+          if (legacyPurchases && Array.isArray(legacyPurchases)) {
+            const safePurchases = state.fuelPurchases || [];
+            const existingIds = new Set(safePurchases.map(p => p.id));
+            const newPurchases = legacyPurchases.filter(p => !existingIds.has(p.id));
+            if (newPurchases.length > 0) {
+              set({ fuelPurchases: [...safePurchases, ...newPurchases] });
             }
           }
 
@@ -375,8 +372,13 @@ export const useAppStore = create<AppState>()(
       }
     }),
     {
-      name: 'yakit-takip-store',
+      name: STORAGE_KEYS.store,
+      version: PERSIST_VERSION,
       skipHydration: true, // Manual hydration for iOS Safari compatibility
+      // Runs when the persisted version is older than PERSIST_VERSION. Returning
+      // the state as-is is safe for v0 -> v1 (no shape change yet); future shape
+      // changes should transform `persisted` here instead of risking data loss.
+      migrate: (persisted) => persisted as AppState,
       partialize: (state) => ({
         logs: state.logs,
         fuelPurchases: state.fuelPurchases,

@@ -10,6 +10,7 @@ import { Toaster } from './components/ui/Toaster';
 import { BottomSheetModal } from './components/ui/BottomSheetModal';
 import { PageLoader } from './components/PageLoader';
 import { useAppStore } from './stores/appStore';
+import { STORAGE_KEYS, getString, setString } from './lib/storage';
 
 // Pages
 import { DashboardPage } from './features/dashboard/DashboardPage';
@@ -24,7 +25,8 @@ const FuelMap = React.lazy(() => import('./features/fuel/components/FuelMap').th
 const Glovebox = React.lazy(() => import('./features/glovebox/GloveboxPage').then(module => ({ default: module.GloveboxPage })));
 const RoutePlanner = React.lazy(() => import('./features/maps/RoutePlannerPage').then(module => ({ default: module.RoutePlannerPage })));
 
-const THEME_STORAGE_KEY = 'yakit_takip_theme_v1';
+const THEME_STORAGE_KEY = STORAGE_KEYS.theme;
+const ACCENT_STORAGE_KEY = STORAGE_KEYS.accent;
 
 export default function App() {
   const navigate = useNavigate();
@@ -49,12 +51,12 @@ export default function App() {
     });
 
     // Theme initialization
-    const savedTheme = localStorage.getItem(THEME_STORAGE_KEY);
+    const savedTheme = getString(THEME_STORAGE_KEY);
     if (savedTheme === 'dark') {
       setIsDarkMode(true);
       document.documentElement.classList.add('dark');
     }
-    const savedAccent = localStorage.getItem('yakit_takip_accent_v1') as AccentColor;
+    const savedAccent = getString(ACCENT_STORAGE_KEY) as AccentColor | null;
     if (savedAccent) {
       setAccentColor(savedAccent);
       document.documentElement.setAttribute('data-theme', savedAccent);
@@ -65,7 +67,7 @@ export default function App() {
   const toggleTheme = () => {
     const newMode = !isDarkMode;
     setIsDarkMode(newMode);
-    localStorage.setItem(THEME_STORAGE_KEY, newMode ? 'dark' : 'light');
+    setString(THEME_STORAGE_KEY, newMode ? 'dark' : 'light');
     if (newMode) document.documentElement.classList.add('dark');
     else document.documentElement.classList.remove('dark');
   };
@@ -129,7 +131,7 @@ export default function App() {
             onToggleTheme={toggleTheme}
             onChangeAccent={(color) => {
               setAccentColor(color);
-              localStorage.setItem('yakit_takip_accent_v1', color);
+              setString(ACCENT_STORAGE_KEY, color);
               document.documentElement.setAttribute('data-theme', color);
             }}
           />
