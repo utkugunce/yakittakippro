@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { Car, LayoutDashboard, History, BarChart3, Wrench, FileText, Settings, Sun, Moon, Fuel, Plus, Menu, X, Map } from 'lucide-react';
+import { Car, LayoutDashboard, History, BarChart3, Wrench, FileText, Settings, Sun, Moon, Fuel, Plus, Menu, Map } from 'lucide-react';
 import { Vehicle } from '../../types';
 import { typography, textStyles } from '../../design-system/typography';
 import { OfflineIndicator } from '../ui/OfflineIndicator';

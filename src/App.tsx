@@ -1,6 +1,6 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect } from 'react';
 import { Routes, Route, useNavigate, Navigate } from 'react-router-dom';
-import { DashboardStats, AccentColor } from './types';
+import { AccentColor } from './types';
 import { EntryForm } from './features/fuel/components/EntryForm';
 import { FuelPurchaseForm } from './features/fuel/components/FuelPurchaseForm';
 import { AppLayout } from './components/layout/AppLayout';

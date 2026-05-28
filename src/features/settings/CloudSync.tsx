@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { User } from '@supabase/supabase-js';
-import { Cloud, CloudOff, LogOut, Download, Upload, Loader2, Check, AlertCircle, Mail } from 'lucide-react';
+import { Cloud, CloudOff, LogOut, Download, Upload, Loader2, Check, AlertCircle } from 'lucide-react';
 import {
     supabase,
     isSupabaseConfigured,

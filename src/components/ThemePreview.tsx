@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sun, Moon, Monitor } from 'lucide-react';
+import { Sun, Moon } from 'lucide-react';
 
 export const ThemePreview: React.FC<{ isDark: boolean; accent: string }> = ({ isDark, accent }) => {
   return (

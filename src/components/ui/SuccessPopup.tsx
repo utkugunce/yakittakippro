@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { DailyLog } from '../../types';
-import { CheckCircle, TrendingUp, TrendingDown, Minus, Route, Fuel, Wallet, X, Sparkles } from 'lucide-react';
+import { CheckCircle, TrendingUp, TrendingDown, Minus, Route, Fuel, Wallet, Sparkles } from 'lucide-react';
 import '../../index.css';
 import { hapticSuccess } from '../../lib/haptic';
 

@@ -3,7 +3,7 @@ import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { DailyLog } from '../../types';
-import { Download, Upload, Trash2, AlertTriangle, FileJson, Check, FileSpreadsheet, ArrowRight, X, Loader2, FileText, Smartphone, Database, Wrench, LifeBuoy } from 'lucide-react';
+import { Upload, Trash2, AlertTriangle, FileJson, Check, FileSpreadsheet, X, Loader2, FileText, Smartphone, Database, Wrench, LifeBuoy } from 'lucide-react';
 import { useAppStore } from '../../stores/appStore';
 import { toast } from '../../stores/toastStore';
 

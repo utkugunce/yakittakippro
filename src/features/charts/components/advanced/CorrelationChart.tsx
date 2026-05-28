@@ -6,8 +6,7 @@ import {
     YAxis,
     CartesianGrid,
     Tooltip,
-    ResponsiveContainer,
-    ReferenceLine
+    ResponsiveContainer
 } from 'recharts';
 import { DailyLog } from '../../../../types';
 

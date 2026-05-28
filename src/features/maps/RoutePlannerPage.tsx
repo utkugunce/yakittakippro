@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { useJsApiLoader, DirectionsService, DirectionsRenderer, Autocomplete } from '@react-google-maps/api';
+import { useJsApiLoader, DirectionsRenderer, Autocomplete } from '@react-google-maps/api';
 import { Map, MapPin, Navigation, Loader2, Coins, Droplets, ArrowRight } from 'lucide-react';
 import { useAppStore } from '../../stores/appStore';
 

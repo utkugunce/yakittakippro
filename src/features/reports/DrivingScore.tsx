@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Award, TrendingUp, Zap, Fuel, LineChart, Shield } from 'lucide-react';
+import { Award, TrendingUp, Fuel, LineChart, Shield } from 'lucide-react';
 import { DailyLog, FuelPurchase } from '@/types';
 
 interface DrivingScoreProps {

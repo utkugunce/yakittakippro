@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { Sparkles, TrendingUp, CalendarClock, Droplet, AlertTriangle } from 'lucide-react';
 import { useAppStore } from '../../../stores/appStore';
-import { formatCurrency, formatDate } from '../../../utils/dateUtils';
+import { formatCurrency } from '../../../utils/dateUtils';
 
 export const SmartInsightsWidget: React.FC = () => {
     const { logs, fuelPurchases, vehicles, selectedVehicleId } = useAppStore();

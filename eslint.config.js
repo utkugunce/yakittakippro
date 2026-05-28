@@ -3,6 +3,7 @@ import globals from 'globals';
 import tseslint from 'typescript-eslint';
 import reactHooks from 'eslint-plugin-react-hooks';
 import reactRefresh from 'eslint-plugin-react-refresh';
+import unusedImports from 'eslint-plugin-unused-imports';
 import prettier from 'eslint-config-prettier';
 
 export default tseslint.config(
@@ -24,6 +25,7 @@ export default tseslint.config(
     plugins: {
       'react-hooks': reactHooks,
       'react-refresh': reactRefresh,
+      'unused-imports': unusedImports,
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
@@ -45,9 +47,13 @@ export default tseslint.config(
       // rules are warnings (visible, non-blocking) rather than hard errors.
       // Tighten these to "error" incrementally as the code is cleaned up.
       '@typescript-eslint/no-explicit-any': 'warn',
-      '@typescript-eslint/no-unused-vars': [
+      // Unused imports are auto-removed (safe, no behavior change); unused vars
+      // are reported by the plugin instead of the base rule.
+      '@typescript-eslint/no-unused-vars': 'off',
+      'unused-imports/no-unused-imports': 'warn',
+      'unused-imports/no-unused-vars': [
         'warn',
-        { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
+        { args: 'after-used', argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
       ],
       '@typescript-eslint/ban-ts-comment': 'warn',
       '@typescript-eslint/no-empty-object-type': 'warn',

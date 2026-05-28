@@ -1,6 +1,6 @@
 import React, { useMemo, useRef } from 'react';
 import { DailyLog, FuelPurchase } from '../../types';
-import { X, Calendar, Route, Fuel, Wallet, Share2, Download, Image, Copy, Check } from 'lucide-react';
+import { X, Calendar, Route, Fuel, Wallet, Share2, Image, Copy, Check } from 'lucide-react';
 import html2canvas from 'html2canvas';
 
 interface MonthlyDrilldownProps {

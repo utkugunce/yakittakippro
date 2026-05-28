@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { DailyLog, FuelPurchase } from '../../../types';
 import {
     TrendingUp, TrendingDown, Minus, Calendar, Fuel, Route, Wallet,
-    ChevronDown, ChevronUp, Droplets, Activity, Target, BarChart3, ArrowRight
+    ChevronDown, ChevronUp, Activity, BarChart3
 } from 'lucide-react';
 
 interface WeeklySummaryProps {

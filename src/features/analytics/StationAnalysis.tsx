@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Fuel, TrendingDown, TrendingUp, MapPin, Award, ChevronDown, ChevronUp, Calendar, Hash, PieChart } from 'lucide-react';
+import { Fuel, TrendingDown, TrendingUp, Award, ChevronDown, ChevronUp, Calendar, Hash, PieChart } from 'lucide-react';
 import { FuelPurchase } from '../../types';
 
 interface StationAnalysisProps {

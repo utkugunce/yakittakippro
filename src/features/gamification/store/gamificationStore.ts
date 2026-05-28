@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { GamificationState, UserStats, BadgeConditionType } from '../types';
+import { GamificationState, BadgeConditionType } from '../types';
 import { INITIAL_BADGES } from '../utils/badgeRules';
 
 interface GamificationStore extends GamificationState {

@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { TrendingUp, TrendingDown, Target, AlertTriangle, Lightbulb, Fuel, Wrench, Bell, AlertCircle, X, ChevronDown, ChevronUp } from 'lucide-react';
+import { TrendingUp, AlertTriangle, Lightbulb, Fuel, Bell, AlertCircle, X, ChevronDown, ChevronUp } from 'lucide-react';
 import { DailyLog, FuelPurchase, MaintenanceItem, VehiclePart } from '../../types';
 
 interface InsightsPanelProps {

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FileText, TrendingUp, Calendar, Award, BarChart3, Fuel, Route, Coins, TrendingDown, ArrowUpRight, ArrowDownRight, Download, FileSpreadsheet, Table } from 'lucide-react';
+import { FileText, TrendingUp, Calendar, Award, BarChart3, Fuel, Route, Coins, ArrowUpRight, ArrowDownRight, Download, FileSpreadsheet, Table } from 'lucide-react';
 
 // New Architecture Imports
 import { useReportData } from '../reports/hooks/useReportData';
