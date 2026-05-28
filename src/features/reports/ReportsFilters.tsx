@@ -1,5 +1,5 @@
 import React from 'react';
-import { Calendar, ChevronDown } from 'lucide-react';
+import { Calendar } from 'lucide-react';
 
 export type DateRangePreset = 'week' | 'month' | '3months' | 'year' | 'all' | 'custom';
 

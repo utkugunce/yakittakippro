@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Wallet, Target, AlertTriangle, TrendingUp, Settings, Check, X } from 'lucide-react';
+import { Wallet, Target, AlertTriangle, TrendingUp, Settings, Check } from 'lucide-react';
 import { useBudgetStore, getCurrentMonthSpending, getRemainingDays } from '../../stores/budgetStore';
 
 interface BudgetTrackerProps {

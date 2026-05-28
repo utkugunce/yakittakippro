@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Camera, RefreshCw, Check, X, Loader2, Upload } from 'lucide-react';
+import { Camera, Check, X, Loader2, Upload } from 'lucide-react';
 import { createWorker } from 'tesseract.js';
 import { parseReceiptText, ExtractedReceiptData } from '../utils/receiptParser';
 

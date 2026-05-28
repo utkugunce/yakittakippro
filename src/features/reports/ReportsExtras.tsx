@@ -1,6 +1,6 @@
 import React, { useMemo, useRef } from 'react';
 import { DailyLog, FuelPurchase } from '../../types';
-import { X, Calendar, Route, Fuel, Wallet, Share2, Download, Image, Copy, Check } from 'lucide-react';
+import { X, Calendar, Route, Fuel, Wallet, Share2, Image, Copy, Check } from 'lucide-react';
 import html2canvas from 'html2canvas';
 
 interface MonthlyDrilldownProps {
@@ -12,8 +12,6 @@ interface MonthlyDrilldownProps {
 }
 
 export const MonthlyDrilldown: React.FC<MonthlyDrilldownProps> = ({ isOpen, onClose, monthKey, logs, purchases }) => {
-    if (!isOpen) return null;
-
     const monthDate = new Date(monthKey + '-01');
     const monthName = monthDate.toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' });
 
@@ -49,6 +47,9 @@ export const MonthlyDrilldown: React.FC<MonthlyDrilldownProps> = ({ isOpen, onCl
             purchaseCount: monthPurchases.length
         };
     }, [monthLogs, monthPurchases]);
+
+    // Hooks must run on every render, so the visibility guard lives below them.
+    if (!isOpen) return null;
 
     return (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">

@@ -65,9 +65,9 @@ SADECE JSON formatında döndür:
             return parsed;
         }
         throw new Error('AI yanıtı JSON formatında değil: ' + response.substring(0, 100));
-    } catch (error: any) {
+    } catch (error) {
         console.error('Dashboard analysis error:', error);
-        throw new Error(error.message || 'Analiz başarısız');
+        throw new Error(error instanceof Error ? error.message : 'Analiz başarısız', { cause: error });
     }
 }
 
@@ -94,9 +94,9 @@ SADECE JSON formatında döndür:
             return parsed;
         }
         throw new Error('AI yanıtı JSON formatında değil');
-    } catch (error: any) {
+    } catch (error) {
         console.error('Receipt analysis error:', error);
-        throw new Error(error.message || 'Analiz başarısız');
+        throw new Error(error instanceof Error ? error.message : 'Analiz başarısız', { cause: error });
     }
 }
 

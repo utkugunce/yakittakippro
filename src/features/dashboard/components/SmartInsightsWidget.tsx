@@ -1,17 +1,17 @@
 import React, { useMemo } from 'react';
 import { Sparkles, TrendingUp, CalendarClock, Droplet, AlertTriangle } from 'lucide-react';
 import { useAppStore } from '../../../stores/appStore';
-import { formatCurrency, formatDate } from '../../../utils/dateUtils';
+import { formatCurrency } from '../../../utils/dateUtils';
 
 export const SmartInsightsWidget: React.FC = () => {
-    const { logs, fuelPurchases, vehicles, selectedVehicleId } = useAppStore();
+    const { logs, fuelPurchases, selectedVehicleId } = useAppStore();
 
     // Calculate Insights based on data
     const insights = useMemo(() => {
         if (logs.length < 5 && fuelPurchases.length < 3) return null;
 
         const vehicleLogs = logs.filter(l => l.vehicleId === selectedVehicleId || !selectedVehicleId);
-        const vehiclePurchases = fuelPurchases.filter(p => true); // Filtering by vehicle ID in purchases if supported? Assuming single vehicle or filtering logic needed.
+        const vehiclePurchases = fuelPurchases.filter(() => true); // TODO: filter by vehicle once purchases carry vehicleId
 
         // 1. Predict Next Refuel Date
         // Logic: Calculate average days between refuels

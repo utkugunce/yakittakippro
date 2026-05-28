@@ -3,8 +3,9 @@ import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { DailyLog } from '../../types';
-import { Download, Upload, Trash2, AlertTriangle, FileJson, Check, FileSpreadsheet, ArrowRight, X, Loader2, FileText, Smartphone, Database, Wrench, LifeBuoy } from 'lucide-react';
+import { Upload, Trash2, AlertTriangle, FileJson, Check, FileSpreadsheet, X, Loader2, FileText, Smartphone, Database, Wrench, LifeBuoy } from 'lucide-react';
 import { useAppStore } from '../../stores/appStore';
+import { toast } from '../../stores/toastStore';
 
 interface DataManagementProps {
     logs: DailyLog[];
@@ -55,7 +56,7 @@ export const DataManagement: React.FC<DataManagementProps> = ({ logs, onImport, 
     const handleExportExcel = () => {
         const safeLogs = logs || [];
         if (safeLogs.length === 0) {
-            alert("Dışa aktarılacak kayıt bulunamadı.");
+            toast.error("Dışa aktarılacak kayıt bulunamadı.");
             return;
         }
         try {
@@ -78,14 +79,14 @@ export const DataManagement: React.FC<DataManagementProps> = ({ logs, onImport, 
             XLSX.writeFile(wb, fileName);
         } catch (error) {
             console.error("Export error:", error);
-            alert("Excel dosyası oluşturulurken bir hata oluştu.");
+            toast.error("Excel dosyası oluşturulurken bir hata oluştu.");
         }
     };
 
     const handleExportPDF = () => {
         const safeLogs = logs || [];
         if (safeLogs.length === 0) {
-            alert("Dışa aktarılacak kayıt bulunamadı.");
+            toast.error("Dışa aktarılacak kayıt bulunamadı.");
             return;
         }
         try {
@@ -149,7 +150,7 @@ export const DataManagement: React.FC<DataManagementProps> = ({ logs, onImport, 
             doc.save(fileName);
         } catch (error) {
             console.error("PDF export error:", error);
-            alert("PDF dosyası oluşturulurken bir hata oluştu.");
+            toast.error("PDF dosyası oluşturulurken bir hata oluştu.");
         }
     };
 
@@ -180,7 +181,7 @@ export const DataManagement: React.FC<DataManagementProps> = ({ logs, onImport, 
                     } else {
                         setImportStatus({ success: false, message: "Dosya içeriği okunamadı." });
                     }
-                } catch (error) {
+                } catch {
                     setImportStatus({ success: false, message: "Bozuk veya hatalı JSON formatı." });
                 }
                 setLoading(false);
@@ -563,13 +564,17 @@ export const DataManagement: React.FC<DataManagementProps> = ({ logs, onImport, 
                             <LifeBuoy className="w-4 h-4" />
                             Cihazı Tara
                         </button>
-                        <button
-                            onClick={handleRawLocalStorageDump}
-                            className="w-full sm:w-auto px-5 py-2.5 bg-gray-500 hover:bg-gray-600 text-white font-bold rounded-xl shadow-lg shadow-gray-500/20 transition-all hover:-translate-y-0.5 flex items-center justify-center gap-2"
-                        >
-                            <FileJson className="w-4 h-4" />
-                            Ham Haliyle İndir
-                        </button>
+                        {/* Raw storage dump exposes the entire localStorage (incl. any
+                            API keys/tokens). Restrict it to development builds only. */}
+                        {import.meta.env.DEV && (
+                            <button
+                                onClick={handleRawLocalStorageDump}
+                                className="w-full sm:w-auto px-5 py-2.5 bg-gray-500 hover:bg-gray-600 text-white font-bold rounded-xl shadow-lg shadow-gray-500/20 transition-all hover:-translate-y-0.5 flex items-center justify-center gap-2"
+                            >
+                                <FileJson className="w-4 h-4" />
+                                Ham Haliyle İndir
+                            </button>
+                        )}
                     </div>
                 </div>
             </div>

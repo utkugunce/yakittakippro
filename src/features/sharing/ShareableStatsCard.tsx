@@ -1,5 +1,6 @@
 import React, { useRef } from 'react';
 import { Share2, Download, Car, Fuel, TrendingUp, Award } from 'lucide-react';
+import { toast } from '../../stores/toastStore';
 
 interface StatsCardProps {
     stats: {
@@ -32,7 +33,7 @@ export const ShareableStatsCard: React.FC<StatsCardProps> = ({ stats, userName =
             link.click();
         } catch (error) {
             console.error('Export failed:', error);
-            alert('Kart indirilemedi. html2canvas yüklü değil.');
+            toast.error('Kart indirilemedi. html2canvas yüklü değil.');
         }
     };
 
@@ -47,12 +48,12 @@ export const ShareableStatsCard: React.FC<StatsCardProps> = ({ stats, userName =
         if (navigator.share) {
             try {
                 await navigator.share({ text });
-            } catch (e) {
+            } catch {
                 // User cancelled
             }
         } else {
             await navigator.clipboard.writeText(text);
-            alert('İstatistikler panoya kopyalandı!');
+            toast.success('İstatistikler panoya kopyalandı!');
         }
     };
 

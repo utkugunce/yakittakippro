@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Lightbulb, X, ChevronRight, Sparkles } from 'lucide-react';
+import { X, ChevronRight, Sparkles } from 'lucide-react';
 
 const TIPS = [
   {

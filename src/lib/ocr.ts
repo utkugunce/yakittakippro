@@ -32,16 +32,16 @@ export const parseReceiptWithOCR = async (imageFile: File): Promise<{
 
         // Regex for Total (TUTAR, TOPLAM)
         // Looking for TOPLAM or TUTAR followed by roughly a decimal number
-        const totalMatch = normalizedText.match(/(?:TOPLAM|TUTAR|TOP\.?)\s*[:=]?\s*[\*]*\s*(\d+[\.\,]\d{2})/);
+        const totalMatch = normalizedText.match(/(?:TOPLAM|TUTAR|TOP\.?)\s*[:=]?\s*[*]*\s*(\d+[.,]\d{2})/);
         const totalAmount = totalMatch ? parseFloat(totalMatch[1]) : null;
 
         // Regex for Liters (LITRE, LT)
         // Looking for LT, LITRE or similar followed by a decimal
-        const litersMatch = normalizedText.match(/(?:L[I1]TRE|LT|MKT|M[I1]KTAR)\s*[:=]?\s*[\*]?\s*(\d+[\.\,]\d+)/);
+        const litersMatch = normalizedText.match(/(?:L[I1]TRE|LT|MKT|M[I1]KTAR)\s*[:=]?\s*[*]?\s*(\d+[.,]\d+)/);
         const liters = litersMatch ? parseFloat(litersMatch[1]) : null;
 
         // Regex for Price Per Liter (B.FIYAT, BIRIM FIYAT)
-        const priceMatch = normalizedText.match(/(?:B[I1]R[I1]M|F[I1]YAT|B\.F[I1]YAT)\s*[:=]?\s*[\*]?\s*(\d+[\.\,]\d{2})/);
+        const priceMatch = normalizedText.match(/(?:B[I1]R[I1]M|F[I1]YAT|B\.F[I1]YAT)\s*[:=]?\s*[*]?\s*(\d+[.,]\d{2})/);
         const pricePerLiter = priceMatch ? parseFloat(priceMatch[1]) : null;
 
         return {

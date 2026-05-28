@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { useJsApiLoader, DirectionsService, DirectionsRenderer, Autocomplete } from '@react-google-maps/api';
+import { useJsApiLoader, DirectionsRenderer, Autocomplete } from '@react-google-maps/api';
 import { Map, MapPin, Navigation, Loader2, Coins, Droplets, ArrowRight } from 'lucide-react';
 import { useAppStore } from '../../stores/appStore';
 
@@ -9,7 +9,7 @@ const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
 const LIBRARIES: ("places")[] = ["places"];
 
 export const RoutePlannerPage: React.FC = () => {
-    const { logs, vehicles, selectedVehicleId } = useAppStore();
+    const { logs, selectedVehicleId } = useAppStore();
 
     // Default map center (Ankara, Turkey)
     const [center] = useState({ lat: 39.92077, lng: 32.85411 });
@@ -79,12 +79,10 @@ export const RoutePlannerPage: React.FC = () => {
 
         setIsCalculating(true);
         try {
-            // eslint-disable-next-line no-undef
             const directionsService = new google.maps.DirectionsService();
             const results = await directionsService.route({
                 origin: originText,
                 destination: destinationText,
-                // eslint-disable-next-line no-undef
                 travelMode: google.maps.TravelMode.DRIVING,
             });
 

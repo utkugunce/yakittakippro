@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FileText, TrendingUp, Calendar, Award, BarChart3, Fuel, Route, Coins, TrendingDown, ArrowUpRight, ArrowDownRight, Download, FileSpreadsheet, Table } from 'lucide-react';
+import { FileText, TrendingUp, Calendar, Award, BarChart3, Fuel, Route, Coins, ArrowUpRight, ArrowDownRight, Download, FileSpreadsheet, Table } from 'lucide-react';
 
 // New Architecture Imports
 import { useReportData } from '../reports/hooks/useReportData';
@@ -30,7 +30,7 @@ import {
 import { useAppStore } from '../../stores/appStore';
 
 export const Reports: React.FC = () => {
-  const { logs, fuelPurchases: purchases, maintenanceItems, vehicleParts } = useAppStore();
+  const { logs, fuelPurchases: purchases } = useAppStore();
 
   // Use the new hook for all data logic
   const {
@@ -38,7 +38,6 @@ export const Reports: React.FC = () => {
     setDateRange: setDatePreset,
     filteredLogs,
     filteredPurchases,
-    stats,
     advancedStats,
     rangeLabel
   } = useReportData(logs, purchases);

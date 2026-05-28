@@ -13,7 +13,6 @@ interface HeroSectionProps {
 
 export const HeroSection: React.FC<HeroSectionProps> = ({
     logs,
-    fuelPurchases,
     onAddFuel,
     onAddEntry,
 }) => {

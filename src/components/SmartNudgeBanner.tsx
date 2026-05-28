@@ -24,7 +24,7 @@ export const SmartNudgeBanner: React.FC<SmartNudgeBannerProps> = ({ nudges, onAc
                 if (parsed.date === today) {
                     setDismissed(new Set(parsed.ids));
                 }
-            } catch (e) {
+            } catch {
                 // Ignore parse errors
             }
         }

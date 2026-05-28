@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Leaf, TreeDeciduous, Car, TrendingDown, Info } from 'lucide-react';
+import { Leaf, TreeDeciduous, Car, Info } from 'lucide-react';
 
 interface CarbonFootprintProps {
     fuelPurchases: { date: string; liters: number }[];

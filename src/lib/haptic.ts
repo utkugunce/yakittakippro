@@ -24,7 +24,7 @@ export function haptic(type: HapticType = 'light'): void {
         if ('vibrate' in navigator) {
             navigator.vibrate(hapticPatterns[type]);
         }
-    } catch (e) {
+    } catch {
         // Silently fail on unsupported devices
     }
 }

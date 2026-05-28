@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, Fuel, History, BarChart3, Wrench, FileText, Settings } from 'lucide-react';
+import { Plus, Fuel, History, BarChart3, Wrench, FileText } from 'lucide-react';
 import { Button } from './ui/Button';
 
 interface EmptyStateProps {

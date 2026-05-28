@@ -1,8 +1,7 @@
 import React, { useMemo, useState, useCallback } from 'react';
 import { GoogleMap, useJsApiLoader, Marker, InfoWindow, MarkerClusterer, Polyline, HeatmapLayer } from '@react-google-maps/api';
-import { Fuel, Calendar, Gauge, Droplets, Coins, Map as MapIcon, AlertTriangle, Layers, Filter, Navigation, Building2, Flame } from 'lucide-react';
+import { Fuel, Calendar, Gauge, Droplets, Coins, Map as MapIcon, AlertTriangle, Filter, Navigation, Building2, Flame } from 'lucide-react';
 import { useAppStore } from '../../../stores/appStore';
-import { Button } from '../../../components/ui/Button';
 
 interface MapItem {
     id: string;
@@ -57,7 +56,7 @@ export const FuelMap: React.FC = () => {
         libraries
     });
 
-    const [map, setMap] = useState<google.maps.Map | null>(null);
+    const [, setMap] = useState<google.maps.Map | null>(null);
 
     const onLoad = useCallback((map: google.maps.Map) => {
         setMap(map);

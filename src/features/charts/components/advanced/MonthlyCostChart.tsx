@@ -10,7 +10,7 @@ import {
     ResponsiveContainer
 } from 'recharts';
 import { FuelPurchase } from '../../../../types';
-import { formatCurrency } from '../../../../utils/dateUtils'; // Assuming this exists or I will use Intl directly
+// Assuming this exists or I will use Intl directly
 
 interface MonthlyCostChartProps {
     purchases: FuelPurchase[];

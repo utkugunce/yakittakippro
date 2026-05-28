@@ -172,7 +172,6 @@ export const YearEndProjection: React.FC<InsightsProps> = ({ logs, purchases }) 
         // Last year comparison
         const lastYear = currentYear - 1;
         const lastYearLogs = logs.filter(l => new Date(l.date).getFullYear() === lastYear);
-        const lastYearPurchases = purchases.filter(p => new Date(p.date).getFullYear() === lastYear);
         const lastYearCost = lastYearLogs.reduce((sum, l) => sum + l.dailyCost, 0); // Sadece günlük kayıtlar
 
         return {
@@ -190,15 +189,16 @@ export const YearEndProjection: React.FC<InsightsProps> = ({ logs, purchases }) 
         };
     }, [logs, purchases]);
 
-    if (!projection) return null;
-
     const progressRef = React.useRef<HTMLDivElement>(null);
 
     React.useEffect(() => {
-        if (progressRef.current) {
+        if (projection && progressRef.current) {
             progressRef.current.style.width = `${Math.min((projection.dayOfYear / 365) * 100, 100)}%`;
         }
-    }, [projection.dayOfYear]);
+    }, [projection]);
+
+    // Hooks must run on every render, so the empty-data guard lives below them.
+    if (!projection) return null;
 
     return (
         <div className="bg-gradient-to-r from-violet-50 to-purple-50 dark:from-violet-900/20 dark:to-purple-900/20 rounded-xl p-4 sm:p-6 border border-violet-200 dark:border-violet-800">

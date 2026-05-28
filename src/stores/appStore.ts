@@ -1,13 +1,20 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { DailyLog, MaintenanceItem, Vehicle, VehiclePart, FuelPurchase, VehicleDocument } from '../types';
+import {
+  DailyLog, MaintenanceItem, Vehicle, VehiclePart, FuelPurchase, VehicleDocument,
+  ChargeSession, Expense, ServiceRecord, FuelPriceEntry, Trip
+} from '../types';
 import { saveToCloud, isSupabaseConfigured } from '../lib/supabase';
+import { STORAGE_KEYS, getString, getJSON } from '../lib/storage';
 
-const LOCAL_STORAGE_KEY = 'yakit_takip_logs_v1';
-const MAINTENANCE_STORAGE_KEY = 'yakit_takip_maintenance_v1';
-const VEHICLES_STORAGE_KEY = 'yakit_takip_vehicles_v1';
-const PARTS_STORAGE_KEY = 'yakit_takip_parts_v1';
-const FUEL_PURCHASES_STORAGE_KEY = 'yakit_takip_fuel_purchases_v1';
+const LOCAL_STORAGE_KEY = STORAGE_KEYS.logs;
+const MAINTENANCE_STORAGE_KEY = STORAGE_KEYS.maintenance;
+const VEHICLES_STORAGE_KEY = STORAGE_KEYS.vehicles;
+const PARTS_STORAGE_KEY = STORAGE_KEYS.parts;
+const FUEL_PURCHASES_STORAGE_KEY = STORAGE_KEYS.fuelPurchases;
+
+// Bump when the persisted shape changes; pair with a `migrate` step below.
+const PERSIST_VERSION = 1;
 
 interface AppState {
   // Data
@@ -17,6 +24,11 @@ interface AppState {
   vehicles: Vehicle[];
   vehicleParts: VehiclePart[];
   documents: VehicleDocument[];
+  chargeSessions: ChargeSession[];
+  expenses: Expense[];
+  serviceRecords: ServiceRecord[];
+  fuelPrices: FuelPriceEntry[];
+  trips: Trip[];
   selectedVehicleId: string | null;
 
   // UI State
@@ -66,6 +78,30 @@ interface AppState {
   deleteDocument: (id: string) => void;
   updateDocument: (doc: VehicleDocument) => void;
 
+  // Actions - Charge Sessions (electric/hybrid)
+  addChargeSession: (session: ChargeSession) => void;
+  deleteChargeSession: (id: string) => void;
+  updateChargeSession: (session: ChargeSession) => void;
+
+  // Actions - Expenses (TCO)
+  addExpense: (expense: Expense) => void;
+  deleteExpense: (id: string) => void;
+  updateExpense: (expense: Expense) => void;
+
+  // Actions - Service Records
+  addServiceRecord: (record: ServiceRecord) => void;
+  deleteServiceRecord: (id: string) => void;
+  updateServiceRecord: (record: ServiceRecord) => void;
+
+  // Actions - Fuel Prices
+  addFuelPrice: (entry: FuelPriceEntry) => void;
+  deleteFuelPrice: (id: string) => void;
+
+  // Actions - Trips
+  addTrip: (trip: Trip) => void;
+  deleteTrip: (id: string) => void;
+  updateTrip: (trip: Trip) => void;
+
   // Actions - UI
   setActiveTab: (tab: AppState['activeTab']) => void;
   setYearFilter: (filter: AppState['yearFilter']) => void;
@@ -103,6 +139,11 @@ export const useAppStore = create<AppState>()(
       vehicles: [defaultVehicle],
       vehicleParts: [],
       documents: [],
+      chargeSessions: [],
+      expenses: [],
+      serviceRecords: [],
+      fuelPrices: [],
+      trips: [],
       selectedVehicleId: 'default',
       activeTab: 'dashboard',
       yearFilter: 'all',
@@ -111,12 +152,12 @@ export const useAppStore = create<AppState>()(
       editingItem: null,
 
       // Initial Settings (Migration from separate localStorage keys)
-      monthlyBudget: parseFloat(localStorage.getItem('monthly_budget') || '0'),
-      notificationsEnabled: localStorage.getItem('notifications_enabled') === 'true',
-      lastNotificationCheck: localStorage.getItem('last_notification_check'),
-      autoSync: localStorage.getItem('auto_sync') === 'true',
-      lastSyncTime: localStorage.getItem('last_sync_time'),
-      geminiApiKey: localStorage.getItem('gemini_api_key'),
+      monthlyBudget: parseFloat(getString('monthly_budget') || '0'),
+      notificationsEnabled: getString('notifications_enabled') === 'true',
+      lastNotificationCheck: getString('last_notification_check'),
+      autoSync: getString('auto_sync') === 'true',
+      lastSyncTime: getString('last_sync_time'),
+      geminiApiKey: getString('gemini_api_key'),
 
       // Helper to trigger background sync if autoSync is enabled
       triggerSync: async () => {
@@ -155,7 +196,10 @@ export const useAppStore = create<AppState>()(
       },
 
       clearLogs: () => {
-        set({ logs: [], maintenanceItems: [], fuelPurchases: [], vehicleParts: [] });
+        set({
+          logs: [], maintenanceItems: [], fuelPurchases: [], vehicleParts: [],
+          chargeSessions: [], expenses: [], serviceRecords: [], fuelPrices: [], trips: []
+        });
         get().triggerSync();
       },
 
@@ -290,6 +334,72 @@ export const useAppStore = create<AppState>()(
         get().triggerSync();
       },
 
+      // Charge Session Actions
+      addChargeSession: (session) => {
+        set((state) => ({ chargeSessions: [session, ...state.chargeSessions] }));
+        get().triggerSync();
+      },
+      deleteChargeSession: (id) => {
+        set((state) => ({ chargeSessions: state.chargeSessions.filter(c => c.id !== id) }));
+        get().triggerSync();
+      },
+      updateChargeSession: (session) => {
+        set((state) => ({ chargeSessions: state.chargeSessions.map(c => c.id === session.id ? session : c) }));
+        get().triggerSync();
+      },
+
+      // Expense Actions
+      addExpense: (expense) => {
+        set((state) => ({ expenses: [expense, ...state.expenses] }));
+        get().triggerSync();
+      },
+      deleteExpense: (id) => {
+        set((state) => ({ expenses: state.expenses.filter(e => e.id !== id) }));
+        get().triggerSync();
+      },
+      updateExpense: (expense) => {
+        set((state) => ({ expenses: state.expenses.map(e => e.id === expense.id ? expense : e) }));
+        get().triggerSync();
+      },
+
+      // Service Record Actions
+      addServiceRecord: (record) => {
+        set((state) => ({ serviceRecords: [record, ...state.serviceRecords] }));
+        get().triggerSync();
+      },
+      deleteServiceRecord: (id) => {
+        set((state) => ({ serviceRecords: state.serviceRecords.filter(r => r.id !== id) }));
+        get().triggerSync();
+      },
+      updateServiceRecord: (record) => {
+        set((state) => ({ serviceRecords: state.serviceRecords.map(r => r.id === record.id ? record : r) }));
+        get().triggerSync();
+      },
+
+      // Fuel Price Actions
+      addFuelPrice: (entry) => {
+        set((state) => ({ fuelPrices: [entry, ...state.fuelPrices] }));
+        get().triggerSync();
+      },
+      deleteFuelPrice: (id) => {
+        set((state) => ({ fuelPrices: state.fuelPrices.filter(p => p.id !== id) }));
+        get().triggerSync();
+      },
+
+      // Trip Actions
+      addTrip: (trip) => {
+        set((state) => ({ trips: [trip, ...state.trips] }));
+        get().triggerSync();
+      },
+      deleteTrip: (id) => {
+        set((state) => ({ trips: state.trips.filter(t => t.id !== id) }));
+        get().triggerSync();
+      },
+      updateTrip: (trip) => {
+        set((state) => ({ trips: state.trips.map(t => t.id === trip.id ? trip : t) }));
+        get().triggerSync();
+      },
+
       // Hydration - first loads Zustand persist data, then merges legacy localStorage
       hydrate: async () => {
         try {
@@ -299,72 +409,65 @@ export const useAppStore = create<AppState>()(
 
           const state = get();
 
-          // Merge logs - avoid duplicates by ID
-          const savedLogs = localStorage.getItem(LOCAL_STORAGE_KEY);
-          if (savedLogs) {
-            const legacyLogs = JSON.parse(savedLogs) as DailyLog[];
-            if (legacyLogs && Array.isArray(legacyLogs)) {
-              const safeLogs = state.logs || [];
-              const existingIds = new Set(safeLogs.map(l => l.id));
-              const newLogs = legacyLogs.filter(l => !existingIds.has(l.id));
-              if (newLogs.length > 0) {
-                set({ logs: [...safeLogs, ...newLogs] });
-              }
+          // Merge logs - avoid duplicates by ID. getJSON returns the fallback
+          // (null) when the legacy key is missing or holds corrupted data, so a
+          // single bad key can no longer abort the whole migration.
+          const legacyLogs = getJSON<DailyLog[] | null>(LOCAL_STORAGE_KEY, null);
+          if (legacyLogs && Array.isArray(legacyLogs)) {
+            const safeLogs = state.logs || [];
+            const existingIds = new Set(safeLogs.map(l => l.id));
+            const newLogs = legacyLogs.filter(l => !existingIds.has(l.id));
+            if (newLogs.length > 0) {
+              set({ logs: [...safeLogs, ...newLogs] });
             }
           }
 
           // Merge maintenance items
-          const savedMaintenance = localStorage.getItem(MAINTENANCE_STORAGE_KEY);
-          if (savedMaintenance) {
-            const legacyMaint = JSON.parse(savedMaintenance) as MaintenanceItem[];
-            if (legacyMaint && Array.isArray(legacyMaint)) {
-              const safeMaint = state.maintenanceItems || [];
-              const existingIds = new Set(safeMaint.map(m => m.id));
-              const newItems = legacyMaint.filter(m => !existingIds.has(m.id));
-              if (newItems.length > 0) {
-                set({ maintenanceItems: [...safeMaint, ...newItems] });
-              }
+          const legacyMaint = getJSON<MaintenanceItem[] | null>(MAINTENANCE_STORAGE_KEY, null);
+          if (legacyMaint && Array.isArray(legacyMaint)) {
+            const safeMaint = state.maintenanceItems || [];
+            const existingIds = new Set(safeMaint.map(m => m.id));
+            const newItems = legacyMaint.filter(m => !existingIds.has(m.id));
+            if (newItems.length > 0) {
+              set({ maintenanceItems: [...safeMaint, ...newItems] });
             }
           }
 
           // Set vehicles if current is default
           const safeVehicles = state.vehicles || [];
-          const savedVehicles = localStorage.getItem(VEHICLES_STORAGE_KEY);
-          if (savedVehicles && safeVehicles.length <= 1 && safeVehicles[0]?.id === 'default') {
-            const parsed = JSON.parse(savedVehicles) as Vehicle[];
-            if (parsed && Array.isArray(parsed) && parsed.length > 0) {
-              set({
-                vehicles: parsed,
-                selectedVehicleId: parsed[0].id
-              });
-            }
+          const legacyVehicles = getJSON<Vehicle[] | null>(VEHICLES_STORAGE_KEY, null);
+          if (
+            legacyVehicles &&
+            Array.isArray(legacyVehicles) &&
+            legacyVehicles.length > 0 &&
+            safeVehicles.length <= 1 &&
+            safeVehicles[0]?.id === 'default'
+          ) {
+            set({
+              vehicles: legacyVehicles,
+              selectedVehicleId: legacyVehicles[0].id
+            });
           }
 
           // Merge parts
-          const savedParts = localStorage.getItem(PARTS_STORAGE_KEY);
-          if (savedParts) {
-            const legacyParts = JSON.parse(savedParts) as VehiclePart[];
-            if (legacyParts && Array.isArray(legacyParts)) {
-              const safeParts = state.vehicleParts || [];
-              const existingIds = new Set(safeParts.map(p => p.id));
-              const newParts = legacyParts.filter(p => !existingIds.has(p.id));
-              if (newParts.length > 0) {
-                set({ vehicleParts: [...safeParts, ...newParts] });
-              }
+          const legacyParts = getJSON<VehiclePart[] | null>(PARTS_STORAGE_KEY, null);
+          if (legacyParts && Array.isArray(legacyParts)) {
+            const safeParts = state.vehicleParts || [];
+            const existingIds = new Set(safeParts.map(p => p.id));
+            const newParts = legacyParts.filter(p => !existingIds.has(p.id));
+            if (newParts.length > 0) {
+              set({ vehicleParts: [...safeParts, ...newParts] });
             }
           }
 
           // Merge fuel purchases
-          const savedFuelPurchases = localStorage.getItem(FUEL_PURCHASES_STORAGE_KEY);
-          if (savedFuelPurchases) {
-            const legacyPurchases = JSON.parse(savedFuelPurchases) as FuelPurchase[];
-            if (legacyPurchases && Array.isArray(legacyPurchases)) {
-              const safePurchases = state.fuelPurchases || [];
-              const existingIds = new Set(safePurchases.map(p => p.id));
-              const newPurchases = legacyPurchases.filter(p => !existingIds.has(p.id));
-              if (newPurchases.length > 0) {
-                set({ fuelPurchases: [...safePurchases, ...newPurchases] });
-              }
+          const legacyPurchases = getJSON<FuelPurchase[] | null>(FUEL_PURCHASES_STORAGE_KEY, null);
+          if (legacyPurchases && Array.isArray(legacyPurchases)) {
+            const safePurchases = state.fuelPurchases || [];
+            const existingIds = new Set(safePurchases.map(p => p.id));
+            const newPurchases = legacyPurchases.filter(p => !existingIds.has(p.id));
+            if (newPurchases.length > 0) {
+              set({ fuelPurchases: [...safePurchases, ...newPurchases] });
             }
           }
 
@@ -375,8 +478,13 @@ export const useAppStore = create<AppState>()(
       }
     }),
     {
-      name: 'yakit-takip-store',
+      name: STORAGE_KEYS.store,
+      version: PERSIST_VERSION,
       skipHydration: true, // Manual hydration for iOS Safari compatibility
+      // Runs when the persisted version is older than PERSIST_VERSION. Returning
+      // the state as-is is safe for v0 -> v1 (no shape change yet); future shape
+      // changes should transform `persisted` here instead of risking data loss.
+      migrate: (persisted) => persisted as AppState,
       partialize: (state) => ({
         logs: state.logs,
         fuelPurchases: state.fuelPurchases,
@@ -385,6 +493,11 @@ export const useAppStore = create<AppState>()(
         vehicleParts: state.vehicleParts,
         selectedVehicleId: state.selectedVehicleId,
         documents: state.documents, // Persist documents
+        chargeSessions: state.chargeSessions,
+        expenses: state.expenses,
+        serviceRecords: state.serviceRecords,
+        fuelPrices: state.fuelPrices,
+        trips: state.trips,
         monthlyBudget: state.monthlyBudget,
         notificationsEnabled: state.notificationsEnabled,
         lastNotificationCheck: state.lastNotificationCheck,

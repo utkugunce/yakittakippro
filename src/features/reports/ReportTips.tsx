@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Lightbulb, TrendingDown, Fuel, DollarSign, Clock, MapPin, ThermometerSun } from 'lucide-react';
+import { Lightbulb, TrendingDown, Fuel, Clock, MapPin, ThermometerSun } from 'lucide-react';
 import { DailyLog, FuelPurchase } from '@/types';
 
 interface ReportTipsProps {

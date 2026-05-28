@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Trophy, Flame, Target, Star, Award, Zap, TrendingDown, Calendar } from 'lucide-react';
+import { Trophy, Flame, Target, Star, Award, TrendingDown } from 'lucide-react';
 import { DailyLog, FuelPurchase } from '@/types';
 
 interface ChartAchievementsProps {

@@ -10,7 +10,7 @@ const TIPS = [
 ];
 
 export const ThemeSettingsTips: React.FC = () => {
-  const [tip, setTip] = React.useState(() => TIPS[Math.floor(Math.random() * TIPS.length)]);
+  const [tip] = React.useState(() => TIPS[Math.floor(Math.random() * TIPS.length)]);
 
   return (
     <div className="flex items-center gap-2 bg-violet-50 border border-violet-200 rounded-xl px-3 py-2 mb-4 animate-fadeIn">

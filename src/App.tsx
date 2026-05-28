@@ -1,14 +1,16 @@
-import React, { useEffect, useMemo } from 'react';
-import { Routes, Route, useNavigate, Navigate } from 'react-router-dom';
-import { DashboardStats, AccentColor } from './types';
+import React, { useEffect } from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { AccentColor } from './types';
 import { EntryForm } from './features/fuel/components/EntryForm';
 import { FuelPurchaseForm } from './features/fuel/components/FuelPurchaseForm';
 import { AppLayout } from './components/layout/AppLayout';
 import { PwaReloadPrompt } from './components/pwa/PwaReloadPrompt';
 import { SuccessPopup } from './components/ui/SuccessPopup';
+import { Toaster } from './components/ui/Toaster';
 import { BottomSheetModal } from './components/ui/BottomSheetModal';
 import { PageLoader } from './components/PageLoader';
 import { useAppStore } from './stores/appStore';
+import { STORAGE_KEYS, getString, setString } from './lib/storage';
 
 // Pages
 import { DashboardPage } from './features/dashboard/DashboardPage';
@@ -22,11 +24,18 @@ const Reports = React.lazy(() => import('./features/analytics/ReportsPage').then
 const FuelMap = React.lazy(() => import('./features/fuel/components/FuelMap').then(module => ({ default: module.FuelMap })));
 const Glovebox = React.lazy(() => import('./features/glovebox/GloveboxPage').then(module => ({ default: module.GloveboxPage })));
 const RoutePlanner = React.lazy(() => import('./features/maps/RoutePlannerPage').then(module => ({ default: module.RoutePlannerPage })));
+const GaragePage = React.lazy(() => import('./features/garage/GaragePage').then(module => ({ default: module.GaragePage })));
+const ChargingPage = React.lazy(() => import('./features/charging/ChargingPage').then(module => ({ default: module.ChargingPage })));
+const ExpensesPage = React.lazy(() => import('./features/expenses/ExpensesPage').then(module => ({ default: module.ExpensesPage })));
+const ServiceHistoryPage = React.lazy(() => import('./features/service/ServiceHistoryPage').then(module => ({ default: module.ServiceHistoryPage })));
+const FuelPricePage = React.lazy(() => import('./features/prices/FuelPricePage').then(module => ({ default: module.FuelPricePage })));
+const TripsPage = React.lazy(() => import('./features/trips/TripsPage').then(module => ({ default: module.TripsPage })));
+const AssistantPage = React.lazy(() => import('./features/assistant/AssistantPage').then(module => ({ default: module.AssistantPage })));
 
-const THEME_STORAGE_KEY = 'yakit_takip_theme_v1';
+const THEME_STORAGE_KEY = STORAGE_KEYS.theme;
+const ACCENT_STORAGE_KEY = STORAGE_KEYS.accent;
 
 export default function App() {
-  const navigate = useNavigate();
   const {
     logs, vehicles, selectedVehicleId, activeModal, editingItem,
     addLog, updateLog, importLogs,
@@ -48,12 +57,12 @@ export default function App() {
     });
 
     // Theme initialization
-    const savedTheme = localStorage.getItem(THEME_STORAGE_KEY);
+    const savedTheme = getString(THEME_STORAGE_KEY);
     if (savedTheme === 'dark') {
       setIsDarkMode(true);
       document.documentElement.classList.add('dark');
     }
-    const savedAccent = localStorage.getItem('yakit_takip_accent_v1') as AccentColor;
+    const savedAccent = getString(ACCENT_STORAGE_KEY) as AccentColor | null;
     if (savedAccent) {
       setAccentColor(savedAccent);
       document.documentElement.setAttribute('data-theme', savedAccent);
@@ -64,7 +73,7 @@ export default function App() {
   const toggleTheme = () => {
     const newMode = !isDarkMode;
     setIsDarkMode(newMode);
-    localStorage.setItem(THEME_STORAGE_KEY, newMode ? 'dark' : 'light');
+    setString(THEME_STORAGE_KEY, newMode ? 'dark' : 'light');
     if (newMode) document.documentElement.classList.add('dark');
     else document.documentElement.classList.remove('dark');
   };
@@ -128,17 +137,27 @@ export default function App() {
             onToggleTheme={toggleTheme}
             onChangeAccent={(color) => {
               setAccentColor(color);
-              localStorage.setItem('yakit_takip_accent_v1', color);
+              setString(ACCENT_STORAGE_KEY, color);
               document.documentElement.setAttribute('data-theme', color);
             }}
           />
         } />
+
+        {/* Garage hub + new feature pages */}
+        <Route path="garage" element={<React.Suspense fallback={<PageLoader />}><GaragePage /></React.Suspense>} />
+        <Route path="charging" element={<React.Suspense fallback={<PageLoader />}><ChargingPage /></React.Suspense>} />
+        <Route path="expenses" element={<React.Suspense fallback={<PageLoader />}><ExpensesPage /></React.Suspense>} />
+        <Route path="service" element={<React.Suspense fallback={<PageLoader />}><ServiceHistoryPage /></React.Suspense>} />
+        <Route path="prices" element={<React.Suspense fallback={<PageLoader />}><FuelPricePage /></React.Suspense>} />
+        <Route path="trips" element={<React.Suspense fallback={<PageLoader />}><TripsPage /></React.Suspense>} />
+        <Route path="assistant" element={<React.Suspense fallback={<PageLoader />}><AssistantPage /></React.Suspense>} />
 
         {/* Catch all - redirect to dashboard */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
 
       <PwaReloadPrompt />
+      <Toaster />
       <SuccessPopup isOpen={showSuccessPopup} onClose={() => setShowSuccessPopup(false)} logs={logs} />
 
       {/* Global Modals controlled by store state */}

@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Camera, X, Upload, Loader2, Check, AlertTriangle, RefreshCcw, Receipt, Gauge, ArrowLeft, Plus, Fuel, Car } from 'lucide-react';
+import { Camera, X, Upload, Loader2, Check, AlertTriangle, RefreshCcw, Receipt, Gauge, ArrowLeft, Fuel, Car } from 'lucide-react';
 import { analyzeDashboardPhoto, analyzeReceiptPhoto } from '../../utils/geminiVision';
 
 type ScanType = 'receipt' | 'dashboard' | null;
@@ -32,7 +32,7 @@ export const PhotoScanner: React.FC<PhotoScannerProps> = ({ onDashboardData, onR
     const [dashboardResults, setDashboardResults] = useState<DashboardResults>({});
 
     // Receipt flow
-    const [receiptImage, setReceiptImage] = useState<string | null>(null);
+    const [, setReceiptImage] = useState<string | null>(null);
     const [receiptResults, setReceiptResults] = useState<{ pricePerLiter?: number; totalAmount?: number; liters?: number } | null>(null);
 
     // Common state

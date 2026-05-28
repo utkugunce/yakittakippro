@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { DailyLog, FuelPurchase } from '../../../types';
 import {
     TrendingUp, TrendingDown, Minus, Calendar, Fuel, Route, Wallet,
-    ChevronDown, ChevronUp, Droplets, Activity, Target, BarChart3, ArrowRight
+    ChevronDown, ChevronUp, Activity, BarChart3
 } from 'lucide-react';
 
 interface WeeklySummaryProps {
@@ -144,10 +144,6 @@ export const WeeklySummary: React.FC<WeeklySummaryProps> = ({ logs, fuelPurchase
         );
     };
 
-    // Calculate averages
-    const weeklyAvgPerDay = summary.thisWeek.logCount > 0 || summary.thisWeek.purchaseCount > 0
-        ? summary.thisWeek.cost / 7
-        : 0;
 
     const monthlyAvgPerDay = summary.thisMonth.logCount > 0 || summary.thisMonth.purchaseCount > 0
         ? summary.thisMonth.cost / new Date().getDate()

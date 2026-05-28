@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, BellOff, Check, X, Calendar, Navigation, CheckCircle2 } from 'lucide-react';
+import { Bell, BellOff, X, Calendar, Navigation } from 'lucide-react';
 import { MaintenanceItem } from '../../types';
 import { useAppStore } from '../../stores/appStore';
 
