@@ -5,6 +5,7 @@ import { useAppStore } from '../../stores/appStore';
 import { toast } from '../../stores/toastStore';
 import { tripInputSchema, firstIssueMessage } from '../../lib/validation';
 import { formatDate } from '../../utils/dateUtils';
+import { EmptyStateCompact } from '../../components/EmptyState';
 import type { Trip, TripPurpose } from '../../types';
 
 const today = () => new Date().toISOString().split('T')[0];
@@ -113,7 +114,7 @@ export const TripsPage: React.FC = () => {
       </form>
 
       <div className="space-y-2">
-        {trips.length === 0 && <p className="text-center text-sm text-gray-400 py-8">Henüz sefer kaydı yok.</p>}
+        {trips.length === 0 && <EmptyStateCompact message="Henüz sefer kaydı yok. İş/özel yolculuklarını ekle." emoji="🚗" />}
         {trips.map((t) => (
           <div key={t.id} className="flex items-center justify-between bg-white dark:bg-gray-800 rounded-xl p-3 border border-gray-100 dark:border-gray-700">
             <div className="flex items-center gap-3">
@@ -127,7 +128,7 @@ export const TripsPage: React.FC = () => {
                 </p>
               </div>
             </div>
-            <button onClick={() => { deleteTrip(t.id); toast.info('Sefer silindi.'); }} className="p-2 text-gray-400 hover:text-red-500" aria-label="Sil">
+            <button onClick={() => { deleteTrip(t.id); toast.info('Sefer silindi.', { action: { label: 'Geri Al', onClick: () => addTrip(t) } }); }} className="p-2 text-gray-400 hover:text-red-500" aria-label="Sil">
               <Trash2 className="w-4 h-4" />
             </button>
           </div>

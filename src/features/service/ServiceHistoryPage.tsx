@@ -5,6 +5,7 @@ import { useAppStore } from '../../stores/appStore';
 import { toast } from '../../stores/toastStore';
 import { serviceInputSchema, firstIssueMessage } from '../../lib/validation';
 import { formatCurrency, formatDate } from '../../utils/dateUtils';
+import { EmptyStateCompact } from '../../components/EmptyState';
 import type { ServiceRecord } from '../../types';
 
 const today = () => new Date().toISOString().split('T')[0];
@@ -111,7 +112,7 @@ export const ServiceHistoryPage: React.FC = () => {
       </form>
 
       <div className="space-y-2">
-        {serviceRecords.length === 0 && <p className="text-center text-sm text-gray-400 py-8">Henüz servis kaydı yok.</p>}
+        {serviceRecords.length === 0 && <EmptyStateCompact message="Henüz servis kaydı yok. Yapılan bakımları ekle." emoji="🔧" />}
         {serviceRecords.map((r) => (
           <div key={r.id} className="flex items-center justify-between bg-white dark:bg-gray-800 rounded-xl p-3 border border-gray-100 dark:border-gray-700">
             <div className="flex items-center gap-3 min-w-0">
@@ -123,7 +124,7 @@ export const ServiceHistoryPage: React.FC = () => {
                 </p>
               </div>
             </div>
-            <button onClick={() => { deleteServiceRecord(r.id); toast.info('Kayıt silindi.'); }} className="p-2 text-gray-400 hover:text-red-500 shrink-0" aria-label="Sil">
+            <button onClick={() => { deleteServiceRecord(r.id); toast.info('Kayıt silindi.', { action: { label: 'Geri Al', onClick: () => addServiceRecord(r) } }); }} className="p-2 text-gray-400 hover:text-red-500 shrink-0" aria-label="Sil">
               <Trash2 className="w-4 h-4" />
             </button>
           </div>

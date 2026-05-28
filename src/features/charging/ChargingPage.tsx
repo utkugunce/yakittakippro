@@ -5,6 +5,7 @@ import { useAppStore } from '../../stores/appStore';
 import { toast } from '../../stores/toastStore';
 import { chargeSessionInputSchema, firstIssueMessage } from '../../lib/validation';
 import { formatCurrency, formatDate } from '../../utils/dateUtils';
+import { EmptyStateCompact } from '../../components/EmptyState';
 import type { ChargeSession } from '../../types';
 
 const today = () => new Date().toISOString().split('T')[0];
@@ -129,7 +130,7 @@ export const ChargingPage: React.FC = () => {
       {/* List */}
       <div className="space-y-2">
         {chargeSessions.length === 0 && (
-          <p className="text-center text-sm text-gray-400 py-8">Henüz şarj kaydı yok.</p>
+          <EmptyStateCompact message="Henüz şarj kaydı yok. İlk şarjını ekle." emoji="🔌" />
         )}
         {chargeSessions.map((c) => (
           <div key={c.id} className="flex items-center justify-between bg-white dark:bg-gray-800 rounded-xl p-3 border border-gray-100 dark:border-gray-700">
@@ -141,7 +142,7 @@ export const ChargingPage: React.FC = () => {
                 {formatDate(c.date)} · {c.chargeType === 'dc' ? 'DC' : 'AC'} · {c.location === 'home' ? 'Ev' : c.station || 'İstasyon'}
               </p>
             </div>
-            <button onClick={() => { deleteChargeSession(c.id); toast.info('Kayıt silindi.'); }} className="p-2 text-gray-400 hover:text-red-500" aria-label="Sil">
+            <button onClick={() => { deleteChargeSession(c.id); toast.info('Kayıt silindi.', { action: { label: 'Geri Al', onClick: () => addChargeSession(c) } }); }} className="p-2 text-gray-400 hover:text-red-500" aria-label="Sil">
               <Trash2 className="w-4 h-4" />
             </button>
           </div>

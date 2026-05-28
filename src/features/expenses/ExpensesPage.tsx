@@ -6,6 +6,7 @@ import { toast } from '../../stores/toastStore';
 import { expenseInputSchema, firstIssueMessage } from '../../lib/validation';
 import { computeTco, EXPENSE_CATEGORY_LABELS } from '../../lib/tco';
 import { formatCurrency, formatDate } from '../../utils/dateUtils';
+import { EmptyStateCompact } from '../../components/EmptyState';
 import type { Expense, ExpenseCategory } from '../../types';
 
 const today = () => new Date().toISOString().split('T')[0];
@@ -126,7 +127,7 @@ export const ExpensesPage: React.FC = () => {
 
       {/* List */}
       <div className="space-y-2">
-        {expenses.length === 0 && <p className="text-center text-sm text-gray-400 py-8">Henüz gider yok.</p>}
+        {expenses.length === 0 && <EmptyStateCompact message="Henüz gider yok. HGS, MTV, sigorta gibi masrafları ekle." emoji="🧾" />}
         {expenses.map((ex) => (
           <div key={ex.id} className="flex items-center justify-between bg-white dark:bg-gray-800 rounded-xl p-3 border border-gray-100 dark:border-gray-700">
             <div>
@@ -137,7 +138,7 @@ export const ExpensesPage: React.FC = () => {
                 {formatDate(ex.date)}{ex.title ? ` · ${ex.title}` : ''}
               </p>
             </div>
-            <button onClick={() => { deleteExpense(ex.id); toast.info('Gider silindi.'); }} className="p-2 text-gray-400 hover:text-red-500" aria-label="Sil">
+            <button onClick={() => { deleteExpense(ex.id); toast.info('Gider silindi.', { action: { label: 'Geri Al', onClick: () => addExpense(ex) } }); }} className="p-2 text-gray-400 hover:text-red-500" aria-label="Sil">
               <Trash2 className="w-4 h-4" />
             </button>
           </div>

@@ -49,6 +49,18 @@ export const Toaster: React.FC = () => {
             <p className="flex-1 text-sm text-gray-800 dark:text-gray-100 whitespace-pre-line">
               {t.message}
             </p>
+            {t.action && (
+              <button
+                type="button"
+                onClick={() => {
+                  t.action?.onClick();
+                  dismiss(t.id);
+                }}
+                className="shrink-0 text-sm font-bold text-primary-600 dark:text-primary-400 hover:underline"
+              >
+                {t.action.label}
+              </button>
+            )}
             <button
               type="button"
               onClick={() => dismiss(t.id)}

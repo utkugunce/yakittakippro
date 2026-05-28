@@ -6,6 +6,7 @@ import { toast } from '../../stores/toastStore';
 import { fuelPriceInputSchema, firstIssueMessage } from '../../lib/validation';
 import { latestPrice, cheapestEntry, priceTrend } from '../../lib/fuelPrice';
 import { formatDate } from '../../utils/dateUtils';
+import { EmptyStateCompact } from '../../components/EmptyState';
 import type { FuelPriceEntry } from '../../types';
 
 const today = () => new Date().toISOString().split('T')[0];
@@ -128,7 +129,7 @@ export const FuelPricePage: React.FC = () => {
       </form>
 
       <div className="space-y-2">
-        {view.list.length === 0 && <p className="text-center text-sm text-gray-400 py-8">Bu yakıt için kayıt yok.</p>}
+        {view.list.length === 0 && <EmptyStateCompact message="Bu yakıt türü için fiyat kaydı yok." emoji="⛽" />}
         {view.list.map((p) => (
           <div key={p.id} className="flex items-center justify-between bg-white dark:bg-gray-800 rounded-xl p-3 border border-gray-100 dark:border-gray-700">
             <div>
@@ -137,7 +138,7 @@ export const FuelPricePage: React.FC = () => {
                 {formatDate(p.date)}{p.station ? ` · ${p.station}` : ''}{p.city ? ` · ${p.city}` : ''}
               </p>
             </div>
-            <button onClick={() => { deleteFuelPrice(p.id); toast.info('Kayıt silindi.'); }} className="p-2 text-gray-400 hover:text-red-500" aria-label="Sil">
+            <button onClick={() => { deleteFuelPrice(p.id); toast.info('Kayıt silindi.', { action: { label: 'Geri Al', onClick: () => addFuelPrice(p) } }); }} className="p-2 text-gray-400 hover:text-red-500" aria-label="Sil">
               <Trash2 className="w-4 h-4" />
             </button>
           </div>
