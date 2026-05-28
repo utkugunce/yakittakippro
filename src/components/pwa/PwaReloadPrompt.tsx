@@ -1,5 +1,5 @@
 import React from 'react';
-// @ts-ignore
+// @ts-expect-error - virtual module provided by vite-plugin-pwa at build time
 import { useRegisterSW } from 'virtual:pwa-register/react';
 import { RefreshCw, X, DownloadCloud } from 'lucide-react';
 

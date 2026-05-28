@@ -172,7 +172,6 @@ export const YearEndProjection: React.FC<InsightsProps> = ({ logs, purchases }) 
         // Last year comparison
         const lastYear = currentYear - 1;
         const lastYearLogs = logs.filter(l => new Date(l.date).getFullYear() === lastYear);
-        const lastYearPurchases = purchases.filter(p => new Date(p.date).getFullYear() === lastYear);
         const lastYearCost = lastYearLogs.reduce((sum, l) => sum + l.dailyCost, 0); // Sadece günlük kayıtlar
 
         return {

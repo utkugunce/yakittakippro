@@ -144,10 +144,6 @@ export const WeeklySummary: React.FC<WeeklySummaryProps> = ({ logs, fuelPurchase
         );
     };
 
-    // Calculate averages
-    const weeklyAvgPerDay = summary.thisWeek.logCount > 0 || summary.thisWeek.purchaseCount > 0
-        ? summary.thisWeek.cost / 7
-        : 0;
 
     const monthlyAvgPerDay = summary.thisMonth.logCount > 0 || summary.thisMonth.purchaseCount > 0
         ? summary.thisMonth.cost / new Date().getDate()

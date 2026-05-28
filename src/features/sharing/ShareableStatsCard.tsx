@@ -48,7 +48,7 @@ export const ShareableStatsCard: React.FC<StatsCardProps> = ({ stats, userName =
         if (navigator.share) {
             try {
                 await navigator.share({ text });
-            } catch (e) {
+            } catch {
                 // User cancelled
             }
         } else {

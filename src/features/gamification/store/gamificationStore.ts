@@ -3,9 +3,9 @@ import { persist } from 'zustand/middleware';
 import { GamificationState, BadgeConditionType } from '../types';
 import { INITIAL_BADGES } from '../utils/badgeRules';
 
-interface GamificationStore extends GamificationState {
-    // We can add internal helper methods here if needed, but for now interface matches state
-}
+// Mirrors GamificationState; widen this to a richer type if internal helper
+// methods are added later.
+type GamificationStore = GamificationState;
 
 const calculateLevel = (xp: number) => {
     return Math.floor(xp / 1000) + 1;

@@ -38,7 +38,7 @@ export const FuelPurchaseForm: React.FC<FuelPurchaseFormProps> = ({ onAdd, onUpd
     const [location, setLocation] = useState<{ latitude: number; longitude: number } | null>(null);
     const [manualLat, setManualLat] = useState<string>('');
     const [manualLng, setManualLng] = useState<string>('');
-    const [gpsLoading, setGpsLoading] = useState(false);
+    const [gpsLoading] = useState(false);
     const [showMapPicker, setShowMapPicker] = useState(false);
     const [isScannerOpen, setIsScannerOpen] = useState(false);
 

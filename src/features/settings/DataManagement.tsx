@@ -181,7 +181,7 @@ export const DataManagement: React.FC<DataManagementProps> = ({ logs, onImport, 
                     } else {
                         setImportStatus({ success: false, message: "Dosya içeriği okunamadı." });
                     }
-                } catch (error) {
+                } catch {
                     setImportStatus({ success: false, message: "Bozuk veya hatalı JSON formatı." });
                 }
                 setLoading(false);

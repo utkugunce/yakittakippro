@@ -56,7 +56,7 @@ export const FuelMap: React.FC = () => {
         libraries
     });
 
-    const [map, setMap] = useState<google.maps.Map | null>(null);
+    const [, setMap] = useState<google.maps.Map | null>(null);
 
     const onLoad = useCallback((map: google.maps.Map) => {
         setMap(map);

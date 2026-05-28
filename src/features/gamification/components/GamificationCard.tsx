@@ -9,7 +9,6 @@ export const GamificationCard: React.FC = () => {
     // Level N starts at N*1000 XP
     // Current XP in level = totalXP % 1000
     const progress = (stats.totalXp % 1000) / 10; // 0 to 100
-    const nextLevelXp = (stats.level) * 1000;
     const currentLevelXp = (stats.level - 1) * 1000;
     const xpInLevel = stats.totalXp - currentLevelXp;
 

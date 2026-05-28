@@ -148,7 +148,6 @@ export const useChallengeStore = create<ChallengeState>()(
 
             initializeWithHistoricalData: (data) => {
                 const { logs, fuelPurchases, currentStreak } = data;
-                const { activeChallenges } = get();
 
                 // Get start of current week (Sunday)
                 const now = new Date();

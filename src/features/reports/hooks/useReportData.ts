@@ -36,9 +36,10 @@ export const useReportData = (logs: DailyLog[], purchases: FuelPurchase[]) => {
         switch (dateRange) {
             case 'thisMonth':
                 return { start: startOfMonth(now), end: endOfMonth(now) };
-            case 'lastMonth':
+            case 'lastMonth': {
                 const lastMonth = subMonths(now, 1);
                 return { start: startOfMonth(lastMonth), end: endOfMonth(lastMonth) };
+            }
             case 'last3Months':
                 return { start: subMonths(now, 3), end: now };
             case 'thisYear':

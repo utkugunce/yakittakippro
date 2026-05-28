@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Routes, Route, useNavigate, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { AccentColor } from './types';
 import { EntryForm } from './features/fuel/components/EntryForm';
 import { FuelPurchaseForm } from './features/fuel/components/FuelPurchaseForm';
@@ -29,7 +29,6 @@ const THEME_STORAGE_KEY = STORAGE_KEYS.theme;
 const ACCENT_STORAGE_KEY = STORAGE_KEYS.accent;
 
 export default function App() {
-  const navigate = useNavigate();
   const {
     logs, vehicles, selectedVehicleId, activeModal, editingItem,
     addLog, updateLog, importLogs,

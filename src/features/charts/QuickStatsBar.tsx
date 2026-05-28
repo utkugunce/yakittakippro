@@ -7,7 +7,7 @@ interface QuickStatsBarProps {
   purchases: FuelPurchase[];
 }
 
-export const QuickStatsBar: React.FC<QuickStatsBarProps> = ({ logs, purchases }) => {
+export const QuickStatsBar: React.FC<QuickStatsBarProps> = ({ logs }) => {
   // Calculate stats
   const last30Days = logs.filter(l => {
     const logDate = new Date(l.date);

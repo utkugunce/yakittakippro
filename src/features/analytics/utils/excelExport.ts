@@ -68,7 +68,7 @@ export function exportToExcel({ logs, purchases, filename }: ExcelExportOptions)
 /**
  * Export logs and purchases to CSV file
  */
-export function exportToCSV({ logs, purchases, filename }: ExcelExportOptions): void {
+export function exportToCSV({ logs, filename }: ExcelExportOptions): void {
     const rows: string[] = [];
 
     // Header

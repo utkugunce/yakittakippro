@@ -9,7 +9,7 @@ const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
 const LIBRARIES: ("places")[] = ["places"];
 
 export const RoutePlannerPage: React.FC = () => {
-    const { logs, vehicles, selectedVehicleId } = useAppStore();
+    const { logs, selectedVehicleId } = useAppStore();
 
     // Default map center (Ankara, Turkey)
     const [center] = useState({ lat: 39.92077, lng: 32.85411 });

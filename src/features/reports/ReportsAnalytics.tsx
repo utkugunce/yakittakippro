@@ -281,7 +281,7 @@ export const StationPriceComparison: React.FC<AnalyticsProps> = ({ logs, purchas
 };
 
 // Anomali Tespiti
-export const AnomalyDetection: React.FC<AnalyticsProps> = ({ logs, purchases }) => {
+export const AnomalyDetection: React.FC<AnalyticsProps> = ({ logs }) => {
     const anomalies = useMemo(() => {
         const results: Array<{ type: string; date: string; value: number; avg: number; message: string }> = [];
 

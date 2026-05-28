@@ -32,7 +32,7 @@ export const PhotoScanner: React.FC<PhotoScannerProps> = ({ onDashboardData, onR
     const [dashboardResults, setDashboardResults] = useState<DashboardResults>({});
 
     // Receipt flow
-    const [receiptImage, setReceiptImage] = useState<string | null>(null);
+    const [, setReceiptImage] = useState<string | null>(null);
     const [receiptResults, setReceiptResults] = useState<{ pricePerLiter?: number; totalAmount?: number; liters?: number } | null>(null);
 
     // Common state

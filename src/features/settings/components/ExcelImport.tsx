@@ -106,7 +106,7 @@ export const ExcelImport: React.FC<ExcelImportProps> = ({ logs, onImport }) => {
       XLSX.utils.book_append_sheet(wb, ws, "Veri Girişi Şablonu");
       XLSX.writeFile(wb, "yakit_takip_sablon.xlsx");
       setShowOptions(false);
-    } catch (error) {
+    } catch {
       toast.error("Şablon oluşturulurken bir hata oluştu.");
     }
   };

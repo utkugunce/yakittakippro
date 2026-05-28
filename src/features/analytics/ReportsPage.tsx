@@ -30,7 +30,7 @@ import {
 import { useAppStore } from '../../stores/appStore';
 
 export const Reports: React.FC = () => {
-  const { logs, fuelPurchases: purchases, maintenanceItems, vehicleParts } = useAppStore();
+  const { logs, fuelPurchases: purchases } = useAppStore();
 
   // Use the new hook for all data logic
   const {
@@ -38,7 +38,6 @@ export const Reports: React.FC = () => {
     setDateRange: setDatePreset,
     filteredLogs,
     filteredPurchases,
-    stats,
     advancedStats,
     rangeLabel
   } = useReportData(logs, purchases);
