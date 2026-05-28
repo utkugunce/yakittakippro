@@ -79,12 +79,10 @@ export const RoutePlannerPage: React.FC = () => {
 
         setIsCalculating(true);
         try {
-            // eslint-disable-next-line no-undef
             const directionsService = new google.maps.DirectionsService();
             const results = await directionsService.route({
                 origin: originText,
                 destination: destinationText,
-                // eslint-disable-next-line no-undef
                 travelMode: google.maps.TravelMode.DRIVING,
             });
 

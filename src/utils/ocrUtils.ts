@@ -1,6 +1,3 @@
-// import Tesseract from 'tesseract.js';
-import { DailyLog } from '../types'; // Preserving other imports if any (none seen in view_file, but playing safe with types which were not imported before? File view showed no other imports)
-
 export interface ScanResult {
     date?: string;
     totalAmount?: number;
@@ -32,10 +29,8 @@ export const scanReceipt = async (file: File): Promise<ScanResult> => {
     }
 };
 
-const parseReceiptText = (text: string): ScanResult => {
-    // Clean text: remove spaces around newlines, unify separators
-    const cleanedText = text.replace(/,/g, '.').replace(/\s+/g, ' ');
-
+// Exported so the parsing heuristics can be unit-tested without running Tesseract.
+export const parseReceiptText = (text: string): ScanResult => {
     const result: ScanResult = {
         text: text
     };
@@ -44,8 +39,8 @@ const parseReceiptText = (text: string): ScanResult => {
     // Matches 01.01.2024, 1.1.24 etc.
     const dateMatch = text.match(/(\d{1,2})[./-](\d{1,2})[./-](\d{2,4})/);
     if (dateMatch) {
-        let day = parseInt(dateMatch[1]);
-        let month = parseInt(dateMatch[2]);
+        const day = parseInt(dateMatch[1]);
+        const month = parseInt(dateMatch[2]);
         let year = parseInt(dateMatch[3]);
 
         // Fix 2-digit year
@@ -60,12 +55,7 @@ const parseReceiptText = (text: string): ScanResult => {
         }
     }
 
-    // 2. Total Amount Detection (Look for 'TOPLAM', 'TUTAR' followed by numbers)
-    // Common patterns: "TOPLAM: 1.234,56", "TOPLAM TUTAR 500.00"
-    const totalRegex = /(?:TOPLAM|TUTAR|ODENECEK).*?(\d+[.,]\d{2})/i;
-    // Fallback: Find the largest number with 2 decimals (risky but often works for total)
-
-    // We'll scan lines for "TOPLAM" or similar keywords
+    // 2. Total / liters / unit price detection by scanning lines for keywords.
     const lines = text.split('\n');
 
     // Strategy: Look for specific keywords and grab the number on that line

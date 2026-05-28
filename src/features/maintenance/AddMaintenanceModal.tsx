@@ -42,7 +42,7 @@ export const AddMaintenanceModal: React.FC<AddMaintenanceModalProps> = ({ isOpen
         if (activeTab === 'scheduled') {
             if (!title) return;
 
-            let newItem: MaintenanceItem = {
+            const newItem: MaintenanceItem = {
                 id: crypto.randomUUID(),
                 title,
                 type: maintenanceType,

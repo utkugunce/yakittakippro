@@ -563,13 +563,17 @@ export const DataManagement: React.FC<DataManagementProps> = ({ logs, onImport, 
                             <LifeBuoy className="w-4 h-4" />
                             Cihazı Tara
                         </button>
-                        <button
-                            onClick={handleRawLocalStorageDump}
-                            className="w-full sm:w-auto px-5 py-2.5 bg-gray-500 hover:bg-gray-600 text-white font-bold rounded-xl shadow-lg shadow-gray-500/20 transition-all hover:-translate-y-0.5 flex items-center justify-center gap-2"
-                        >
-                            <FileJson className="w-4 h-4" />
-                            Ham Haliyle İndir
-                        </button>
+                        {/* Raw storage dump exposes the entire localStorage (incl. any
+                            API keys/tokens). Restrict it to development builds only. */}
+                        {import.meta.env.DEV && (
+                            <button
+                                onClick={handleRawLocalStorageDump}
+                                className="w-full sm:w-auto px-5 py-2.5 bg-gray-500 hover:bg-gray-600 text-white font-bold rounded-xl shadow-lg shadow-gray-500/20 transition-all hover:-translate-y-0.5 flex items-center justify-center gap-2"
+                            >
+                                <FileJson className="w-4 h-4" />
+                                Ham Haliyle İndir
+                            </button>
+                        )}
                     </div>
                 </div>
             </div>
