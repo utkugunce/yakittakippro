@@ -1,5 +1,5 @@
 import React from 'react';
-import { Check, Palette, Moon } from 'lucide-react';
+import { Check, Palette, Moon, Monitor } from 'lucide-react';
 import { ThemePreview } from '../../components/ThemePreview';
 import { ThemeBadge } from '../../components/ThemeBadge';
 import { ThemeSettingsTips } from '../../components/ThemeSettingsTips';
@@ -8,13 +8,15 @@ export type AccentColor = 'blue' | 'green' | 'purple' | 'orange' | 'red' | 'viol
 
 interface ThemeSettingsProps {
     isDarkMode: boolean;
+    themePref?: 'light' | 'dark' | 'system';
+    onUseSystemTheme?: () => void;
     onToggleTheme: () => void;
     currentAccent: AccentColor;
     onChangeAccent: (color: AccentColor) => void;
 }
 
 export const ThemeSettings: React.FC<ThemeSettingsProps> = ({
-    isDarkMode, onToggleTheme, currentAccent, onChangeAccent
+    isDarkMode, themePref = 'system', onUseSystemTheme, onToggleTheme, currentAccent, onChangeAccent
 }) => {
 
     const colors: { id: AccentColor, name: string, class: string, ring: string }[] = [
@@ -61,6 +63,9 @@ export const ThemeSettings: React.FC<ThemeSettingsProps> = ({
                             </div>
                             <button
                                 onClick={onToggleTheme}
+                                role="switch"
+                                aria-checked={isDarkMode}
+                                aria-label="Karanlık modu aç/kapat"
                                 className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none focus:ring-4 focus:ring-primary-500/20 ${isDarkMode ? 'bg-primary-600' : 'bg-gray-200'}`}
                             >
                                 <span
@@ -68,6 +73,29 @@ export const ThemeSettings: React.FC<ThemeSettingsProps> = ({
                                 />
                             </button>
                         </div>
+
+                        {/* System theme */}
+                        {onUseSystemTheme && (
+                            <button
+                                onClick={onUseSystemTheme}
+                                aria-pressed={themePref === 'system'}
+                                className={`w-full flex items-center justify-between p-4 rounded-xl border transition-colors ${themePref === 'system'
+                                    ? 'bg-primary-50 dark:bg-primary-900/20 border-primary-200 dark:border-primary-800'
+                                    : 'bg-gray-50 dark:bg-gray-700/30 border-gray-100 dark:border-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700/50'
+                                    }`}
+                            >
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 rounded-lg bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-300">
+                                        <Monitor className="w-5 h-5" />
+                                    </div>
+                                    <div className="text-left">
+                                        <h4 className="font-semibold text-gray-800 dark:text-gray-200">Sistem Teması</h4>
+                                        <p className="text-xs text-gray-500 dark:text-gray-400">Cihaz ayarını otomatik izle</p>
+                                    </div>
+                                </div>
+                                {themePref === 'system' && <Check className="w-5 h-5 text-primary-600 dark:text-primary-400" />}
+                            </button>
+                        )}
                     </div>
                 </div>
 

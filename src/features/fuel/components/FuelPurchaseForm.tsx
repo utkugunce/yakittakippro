@@ -221,7 +221,7 @@ export const FuelPurchaseForm: React.FC<FuelPurchaseFormProps> = ({ onAdd, onUpd
         setIsScannerOpen(false);
     };
 
-    const inputBaseClasses = "w-full pl-10 pr-4 py-3 min-h-[48px] bg-[#333333] dark:bg-gray-700 text-gray-100 placeholder-gray-500 border border-transparent rounded-lg focus:ring-2 focus:ring-primary-500 outline-none transition-all [color-scheme:dark] appearance-none";
+    const inputBaseClasses = "w-full pl-10 pr-4 py-3 min-h-[48px] bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 border border-transparent rounded-lg focus:ring-2 focus:ring-primary-500 outline-none transition-all dark:[color-scheme:dark] appearance-none";
     const labelClasses = "text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1 block";
 
     return (
@@ -337,7 +337,7 @@ export const FuelPurchaseForm: React.FC<FuelPurchaseFormProps> = ({ onAdd, onUpd
                                     }}
                                     className={`px-4 py-3 rounded-lg text-sm font-bold transition-all border min-h-[44px] touch-manipulation flex items-center ${station === brand
                                         ? 'bg-emerald-600 text-white border-emerald-600 shadow-md transform scale-105'
-                                        : 'bg-[#333333] dark:bg-gray-700 text-gray-300 border-transparent hover:bg-gray-600'
+                                        : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 border-transparent hover:bg-gray-200 dark:hover:bg-gray-600'
                                         }`}
                                 >
                                     {brand}
@@ -589,7 +589,7 @@ export const FuelPurchaseForm: React.FC<FuelPurchaseFormProps> = ({ onAdd, onUpd
                                             placeholder="Örn: 41.0082"
                                             value={manualLat}
                                             onChange={(e) => setManualLat(e.target.value)}
-                                            className="w-full px-3 py-2 bg-[#333333] dark:bg-gray-600 text-gray-100 placeholder-gray-500 rounded-lg text-sm focus:ring-2 focus:ring-green-500 outline-none"
+                                            className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-600 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 rounded-lg text-sm focus:ring-2 focus:ring-green-500 outline-none"
                                         />
                                     </div>
                                     <div>
@@ -602,7 +602,7 @@ export const FuelPurchaseForm: React.FC<FuelPurchaseFormProps> = ({ onAdd, onUpd
                                             placeholder="Örn: 28.9784"
                                             value={manualLng}
                                             onChange={(e) => setManualLng(e.target.value)}
-                                            className="w-full px-3 py-2 bg-[#333333] dark:bg-gray-600 text-gray-100 placeholder-gray-500 rounded-lg text-sm focus:ring-2 focus:ring-green-500 outline-none"
+                                            className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-600 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 rounded-lg text-sm focus:ring-2 focus:ring-green-500 outline-none"
                                         />
                                     </div>
                                     {location && (

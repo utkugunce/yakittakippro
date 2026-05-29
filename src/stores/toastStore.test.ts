@@ -22,7 +22,7 @@ describe('toastStore', () => {
 
   it('auto-dismisses after the given duration', () => {
     vi.useFakeTimers();
-    useToastStore.getState().show('info', 'temp', 1000);
+    useToastStore.getState().show('info', 'temp', { durationMs: 1000 });
     expect(useToastStore.getState().toasts).toHaveLength(1);
     vi.advanceTimersByTime(1000);
     expect(useToastStore.getState().toasts).toHaveLength(0);
@@ -30,8 +30,17 @@ describe('toastStore', () => {
 
   it('keeps sticky toasts when duration is non-positive', () => {
     vi.useFakeTimers();
-    useToastStore.getState().show('info', 'sticky', 0);
+    useToastStore.getState().show('info', 'sticky', { durationMs: 0 });
     vi.advanceTimersByTime(10000);
     expect(useToastStore.getState().toasts).toHaveLength(1);
+  });
+
+  it('stores an optional action', () => {
+    const onClick = vi.fn();
+    toast.info('silindi', { action: { label: 'Geri Al', onClick } });
+    const t = useToastStore.getState().toasts[0];
+    expect(t.action?.label).toBe('Geri Al');
+    t.action?.onClick();
+    expect(onClick).toHaveBeenCalled();
   });
 });

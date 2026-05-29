@@ -6,6 +6,7 @@ import { toast } from '../../stores/toastStore';
 import { fuelPriceInputSchema, firstIssueMessage } from '../../lib/validation';
 import { latestPrice, cheapestEntry, priceTrend } from '../../lib/fuelPrice';
 import { formatDate } from '../../utils/dateUtils';
+import { EmptyStateCompact } from '../../components/EmptyState';
 import type { FuelPriceEntry } from '../../types';
 
 const today = () => new Date().toISOString().split('T')[0];
@@ -21,6 +22,11 @@ export const FuelPricePage: React.FC = () => {
   const [station, setStation] = useState('');
   const [city, setCity] = useState('');
   const [viewType, setViewType] = useState<FType>('benzin');
+
+  const stationOptions = useMemo(
+    () => Array.from(new Set(fuelPrices.map((p) => p.station).filter(Boolean))) as string[],
+    [fuelPrices]
+  );
 
   const view = useMemo(() => ({
     latest: latestPrice(fuelPrices, viewType),
@@ -115,7 +121,8 @@ export const FuelPricePage: React.FC = () => {
           </label>
           <label className="block">
             <span className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">İstasyon (ops.)</span>
-            <input value={station} onChange={(e) => setStation(e.target.value)} placeholder="Shell / Opet…" className="mt-1 w-full px-3 py-2.5 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 border-0 focus:ring-2 focus:ring-primary-500" />
+            <input list="price-stations" value={station} onChange={(e) => setStation(e.target.value)} placeholder="Shell / Opet…" className="mt-1 w-full px-3 py-2.5 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 border-0 focus:ring-2 focus:ring-primary-500" />
+            <datalist id="price-stations">{stationOptions.map((s) => <option key={s} value={s} />)}</datalist>
           </label>
           <label className="block col-span-2">
             <span className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">İl (ops.)</span>
@@ -128,7 +135,7 @@ export const FuelPricePage: React.FC = () => {
       </form>
 
       <div className="space-y-2">
-        {view.list.length === 0 && <p className="text-center text-sm text-gray-400 py-8">Bu yakıt için kayıt yok.</p>}
+        {view.list.length === 0 && <EmptyStateCompact message="Bu yakıt türü için fiyat kaydı yok." emoji="⛽" />}
         {view.list.map((p) => (
           <div key={p.id} className="flex items-center justify-between bg-white dark:bg-gray-800 rounded-xl p-3 border border-gray-100 dark:border-gray-700">
             <div>
@@ -137,7 +144,7 @@ export const FuelPricePage: React.FC = () => {
                 {formatDate(p.date)}{p.station ? ` · ${p.station}` : ''}{p.city ? ` · ${p.city}` : ''}
               </p>
             </div>
-            <button onClick={() => { deleteFuelPrice(p.id); toast.info('Kayıt silindi.'); }} className="p-2 text-gray-400 hover:text-red-500" aria-label="Sil">
+            <button onClick={() => { deleteFuelPrice(p.id); toast.info('Kayıt silindi.', { action: { label: 'Geri Al', onClick: () => addFuelPrice(p) } }); }} className="p-2 text-gray-400 hover:text-red-500" aria-label="Sil">
               <Trash2 className="w-4 h-4" />
             </button>
           </div>

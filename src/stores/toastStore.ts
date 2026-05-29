@@ -2,16 +2,28 @@ import { create } from 'zustand';
 
 export type ToastType = 'success' | 'error' | 'info';
 
+export interface ToastAction {
+  label: string;
+  onClick: () => void;
+}
+
 export interface Toast {
   id: string;
   type: ToastType;
   message: string;
+  action?: ToastAction;
+}
+
+export interface ToastOptions {
+  /** Auto-dismiss delay in ms. Non-positive keeps it sticky. */
+  durationMs?: number;
+  /** Optional inline action button (e.g. "Geri Al"). */
+  action?: ToastAction;
 }
 
 interface ToastState {
   toasts: Toast[];
-  /** Show a toast and return its id. A non-positive duration keeps it sticky. */
-  show: (type: ToastType, message: string, durationMs?: number) => string;
+  show: (type: ToastType, message: string, options?: ToastOptions) => string;
   dismiss: (id: string) => void;
   clear: () => void;
 }
@@ -23,9 +35,10 @@ const newId = (): string =>
 
 export const useToastStore = create<ToastState>((set, get) => ({
   toasts: [],
-  show: (type, message, durationMs = 4000) => {
+  show: (type, message, options = {}) => {
+    const { durationMs = 4000, action } = options;
     const id = newId();
-    set((s) => ({ toasts: [...s.toasts, { id, type, message }] }));
+    set((s) => ({ toasts: [...s.toasts, { id, type, message, action }] }));
     if (durationMs > 0 && typeof window !== 'undefined') {
       window.setTimeout(() => get().dismiss(id), durationMs);
     }
@@ -40,10 +53,10 @@ export const useToastStore = create<ToastState>((set, get) => ({
  * a React hook. Replaces scattered `alert()` calls with a consistent UI.
  */
 export const toast = {
-  success: (message: string, durationMs?: number) =>
-    useToastStore.getState().show('success', message, durationMs),
-  error: (message: string, durationMs?: number) =>
-    useToastStore.getState().show('error', message, durationMs),
-  info: (message: string, durationMs?: number) =>
-    useToastStore.getState().show('info', message, durationMs),
+  success: (message: string, options?: ToastOptions) =>
+    useToastStore.getState().show('success', message, options),
+  error: (message: string, options?: ToastOptions) =>
+    useToastStore.getState().show('error', message, options),
+  info: (message: string, options?: ToastOptions) =>
+    useToastStore.getState().show('info', message, options),
 };

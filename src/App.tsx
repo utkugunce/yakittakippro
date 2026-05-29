@@ -7,6 +7,7 @@ import { AppLayout } from './components/layout/AppLayout';
 import { PwaReloadPrompt } from './components/pwa/PwaReloadPrompt';
 import { SuccessPopup } from './components/ui/SuccessPopup';
 import { Toaster } from './components/ui/Toaster';
+import { OnboardingModal } from './features/onboarding/OnboardingModal';
 import { BottomSheetModal } from './components/ui/BottomSheetModal';
 import { PageLoader } from './components/PageLoader';
 import { useAppStore } from './stores/appStore';
@@ -35,6 +36,13 @@ const AssistantPage = React.lazy(() => import('./features/assistant/AssistantPag
 const THEME_STORAGE_KEY = STORAGE_KEYS.theme;
 const ACCENT_STORAGE_KEY = STORAGE_KEYS.accent;
 
+type ThemePref = 'light' | 'dark' | 'system';
+const prefersDark = (): boolean =>
+  typeof window !== 'undefined' && window.matchMedia
+    ? window.matchMedia('(prefers-color-scheme: dark)').matches
+    : false;
+const resolveDark = (pref: ThemePref): boolean => (pref === 'system' ? prefersDark() : pref === 'dark');
+
 export default function App() {
   const {
     logs, vehicles, selectedVehicleId, activeModal, editingItem,
@@ -43,25 +51,42 @@ export default function App() {
     setSelectedVehicleId, openModal, closeModal, hydrate
   } = useAppStore();
 
+  const [themePref, setThemePref] = React.useState<ThemePref>('system');
   const [isDarkMode, setIsDarkMode] = React.useState(false);
   const [accentColor, setAccentColor] = React.useState<AccentColor>('blue');
   const [showSuccessPopup, setShowSuccessPopup] = React.useState(false);
+  const [showOnboarding, setShowOnboarding] = React.useState(false);
+
+  const applyDark = (dark: boolean) => {
+    setIsDarkMode(dark);
+    document.documentElement.classList.toggle('dark', dark);
+  };
 
   // Initial Hydration
   useEffect(() => {
-    hydrate();
+    const hydration = hydrate();
+
+    // Show the first-run onboarding once, only if there's still no data after
+    // hydration completes.
+    if (!getString(STORAGE_KEYS.onboarding)) {
+      Promise.resolve(hydration).then(() => {
+        const s = useAppStore.getState();
+        if (s.logs.length === 0 && s.fuelPurchases.length === 0) setShowOnboarding(true);
+      });
+    }
 
     // Gamification Check
     import('./features/gamification/store/gamificationStore').then(({ useGamificationStore }) => {
       useGamificationStore.getState().updateStreak();
     });
 
-    // Theme initialization
-    const savedTheme = getString(THEME_STORAGE_KEY);
-    if (savedTheme === 'dark') {
-      setIsDarkMode(true);
-      document.documentElement.classList.add('dark');
-    }
+    // Theme initialization. Default is "system" so a first-time visitor gets the
+    // OS preference automatically; explicit light/dark is remembered.
+    const saved = getString(THEME_STORAGE_KEY);
+    const pref: ThemePref = saved === 'light' || saved === 'dark' || saved === 'system' ? saved : 'system';
+    setThemePref(pref);
+    applyDark(resolveDark(pref));
+
     const savedAccent = getString(ACCENT_STORAGE_KEY) as AccentColor | null;
     if (savedAccent) {
       setAccentColor(savedAccent);
@@ -69,13 +94,28 @@ export default function App() {
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Toggle Dark Mode (Local UI state, separate from data store)
+  // Follow OS theme changes live while in "system" mode.
+  useEffect(() => {
+    if (themePref !== 'system' || !window.matchMedia) return;
+    const mq = window.matchMedia('(prefers-color-scheme: dark)');
+    const handler = () => applyDark(mq.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, [themePref]);
+
+  // Toggle Dark Mode -> switches to an explicit (non-system) preference.
   const toggleTheme = () => {
-    const newMode = !isDarkMode;
-    setIsDarkMode(newMode);
-    setString(THEME_STORAGE_KEY, newMode ? 'dark' : 'light');
-    if (newMode) document.documentElement.classList.add('dark');
-    else document.documentElement.classList.remove('dark');
+    const next: ThemePref = isDarkMode ? 'light' : 'dark';
+    setThemePref(next);
+    setString(THEME_STORAGE_KEY, next);
+    applyDark(resolveDark(next));
+  };
+
+  // Revert to following the operating system theme.
+  const useSystemTheme = () => {
+    setThemePref('system');
+    setString(THEME_STORAGE_KEY, 'system');
+    applyDark(resolveDark('system'));
   };
 
   // Derived state for legacy prop passing
@@ -133,6 +173,8 @@ export default function App() {
         <Route path="settings" element={
           <SettingsPage
             isDarkMode={isDarkMode}
+            themePref={themePref}
+            onUseSystemTheme={useSystemTheme}
             accentColor={accentColor}
             onToggleTheme={toggleTheme}
             onChangeAccent={(color) => {
@@ -158,6 +200,11 @@ export default function App() {
 
       <PwaReloadPrompt />
       <Toaster />
+      <OnboardingModal
+        open={showOnboarding}
+        onStart={() => { setString(STORAGE_KEYS.onboarding, 'seen'); setShowOnboarding(false); openModal('entry'); }}
+        onClose={() => { setString(STORAGE_KEYS.onboarding, 'seen'); setShowOnboarding(false); }}
+      />
       <SuccessPopup isOpen={showSuccessPopup} onClose={() => setShowSuccessPopup(false)} logs={logs} />
 
       {/* Global Modals controlled by store state */}

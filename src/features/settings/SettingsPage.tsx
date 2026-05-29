@@ -8,6 +8,8 @@ import { useAppStore } from '../../stores/appStore';
 
 interface SettingsPageProps {
     isDarkMode: boolean;
+    themePref: 'light' | 'dark' | 'system';
+    onUseSystemTheme: () => void;
     accentColor: AccentColor;
     onToggleTheme: () => void;
     onChangeAccent: (color: AccentColor) => void;
@@ -15,6 +17,8 @@ interface SettingsPageProps {
 
 export const SettingsPage: React.FC<SettingsPageProps> = ({
     isDarkMode,
+    themePref,
+    onUseSystemTheme,
     accentColor,
     onToggleTheme,
     onChangeAccent
@@ -34,6 +38,8 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <ThemeSettings
                     isDarkMode={isDarkMode}
+                    themePref={themePref}
+                    onUseSystemTheme={onUseSystemTheme}
                     onToggleTheme={onToggleTheme}
                     currentAccent={accentColor}
                     onChangeAccent={onChangeAccent}
