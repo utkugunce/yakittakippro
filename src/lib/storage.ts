@@ -17,6 +17,8 @@ export const STORAGE_KEYS = {
   fuelPurchases: 'yakit_takip_fuel_purchases_v1',
   theme: 'yakit_takip_theme_v1',
   accent: 'yakit_takip_accent_v1',
+  onboarding: 'yakit_takip_onboarding_v1',
+  dashboardHidden: 'yakit_takip_dashboard_hidden_v1',
 } as const;
 
 const hasStorage = (): boolean => {

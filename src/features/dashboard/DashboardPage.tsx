@@ -14,9 +14,24 @@ import { useDashboardStats } from '../../hooks/useDashboardStats';
 import { DynamicBudgetSimulator } from './components/DynamicBudgetSimulator';
 import { PredictiveForecaster } from './components/PredictiveForecaster';
 import { EcoScoreLeaderboard } from './components/EcoScoreLeaderboard';
+import { SlidersHorizontal, Check } from 'lucide-react';
+import { useDashboardStore } from '../../stores/dashboardStore';
+
+const OPTIONAL_WIDGETS: { key: string; label: string }[] = [
+    { key: 'insights', label: 'Tahmini İçgörüler' },
+    { key: 'smartInsights', label: 'Akıllı AI İçgörüleri' },
+    { key: 'forecaster', label: 'Yıl Sonu Tahmini' },
+    { key: 'simulator', label: 'Bütçe Simülatörü' },
+    { key: 'eco', label: 'Eko-Skor Sıralaması' },
+    { key: 'weekly', label: 'Haftalık Özet' },
+    { key: 'station', label: 'İstasyon Analizi' },
+];
 
 export const DashboardPage: React.FC = () => {
     const navigate = useNavigate();
+    const { hidden, toggle } = useDashboardStore();
+    const [customizing, setCustomizing] = React.useState(false);
+    const isHidden = (key: string) => hidden.includes(key);
     const {
         logs, fuelPurchases, maintenanceItems, vehicleParts, vehicles, selectedVehicleId,
         yearFilter, setYearFilter, openModal
@@ -50,16 +65,18 @@ export const DashboardPage: React.FC = () => {
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
             {/* 1. Bildirim Merkezi (Insights + Alerts + Tips) */}
-            <Suspense fallback={<div className="h-48 bg-gray-100 dark:bg-gray-800 rounded-xl animate-pulse" />}>
-                <PredictiveInsights
-                    logs={logs}
-                    purchases={fuelPurchases}
-                    maintenanceItems={maintenanceItems}
-                    vehicleParts={vehicleParts}
-                    currentOdometer={lastOdometer}
-                    monthlyBudget={0}
-                />
-            </Suspense>
+            {!isHidden('insights') && (
+                <Suspense fallback={<div className="h-48 bg-gray-100 dark:bg-gray-800 rounded-xl animate-pulse" />}>
+                    <PredictiveInsights
+                        logs={logs}
+                        purchases={fuelPurchases}
+                        maintenanceItems={maintenanceItems}
+                        vehicleParts={vehicleParts}
+                        currentOdometer={lastOdometer}
+                        monthlyBudget={0}
+                    />
+                </Suspense>
+            )}
 
             {/* Smart Nudges Banner */}
             {smartNudges.length > 0 && (
@@ -83,8 +100,8 @@ export const DashboardPage: React.FC = () => {
                 onAddEntry={() => openModal('entry')}
             />
 
-            {/* Year Filter Tabs */}
-            <div className="flex justify-center items-center gap-4">
+            {/* Year Filter Tabs + customize */}
+            <div className="flex justify-center items-center gap-3">
                 <div className="inline-flex rounded-lg bg-gray-100 dark:bg-gray-800 p-1">
                     {(['2026', '2025', 'all'] as const).map((year) => (
                         <button
@@ -99,45 +116,88 @@ export const DashboardPage: React.FC = () => {
                         </button>
                     ))}
                 </div>
+                <button
+                    onClick={() => setCustomizing((v) => !v)}
+                    aria-label="Panoyu düzenle"
+                    aria-pressed={customizing}
+                    className={`min-h-[44px] min-w-[44px] p-2.5 rounded-lg transition-colors ${customizing ? 'bg-primary-600 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'}`}
+                >
+                    <SlidersHorizontal className="w-5 h-5" />
+                </button>
             </div>
 
+            {/* Customize panel */}
+            {customizing && (
+                <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 border border-gray-100 dark:border-gray-700">
+                    <h3 className="font-bold text-gray-900 dark:text-white mb-3 text-sm">Pano Bölümleri</h3>
+                    <div className="grid grid-cols-2 gap-2">
+                        {OPTIONAL_WIDGETS.map(({ key, label }) => {
+                            const visible = !isHidden(key);
+                            return (
+                                <button
+                                    key={key}
+                                    onClick={() => toggle(key)}
+                                    aria-pressed={visible}
+                                    className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-left transition-colors ${visible ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300' : 'bg-gray-50 dark:bg-gray-700/50 text-gray-500 dark:text-gray-400'}`}
+                                >
+                                    <span className={`w-4 h-4 rounded flex items-center justify-center border ${visible ? 'bg-primary-600 border-primary-600' : 'border-gray-300 dark:border-gray-600'}`}>
+                                        {visible && <Check className="w-3 h-3 text-white" />}
+                                    </span>
+                                    <span className="truncate">{label}</span>
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
+            )}
+
             {/* Smart AI Insights */}
-            <Suspense fallback={<div className="h-32 bg-gray-100 dark:bg-gray-800 rounded-xl animate-pulse" />}>
-                <SmartInsightsWidget />
-            </Suspense>
+            {!isHidden('smartInsights') && (
+                <Suspense fallback={<div className="h-32 bg-gray-100 dark:bg-gray-800 rounded-xl animate-pulse" />}>
+                    <SmartInsightsWidget />
+                </Suspense>
+            )}
 
             {/* Predictive Forecaster */}
-            <Suspense fallback={<div className="h-32 bg-gray-100 dark:bg-gray-800 rounded-xl animate-pulse" />}>
-                <PredictiveForecaster
-                    logs={logs}
-                    maintenanceItems={maintenanceItems}
-                    currentOdometer={lastOdometer}
-                />
-            </Suspense>
+            {!isHidden('forecaster') && (
+                <Suspense fallback={<div className="h-32 bg-gray-100 dark:bg-gray-800 rounded-xl animate-pulse" />}>
+                    <PredictiveForecaster
+                        logs={logs}
+                        maintenanceItems={maintenanceItems}
+                        currentOdometer={lastOdometer}
+                    />
+                </Suspense>
+            )}
 
-            {/* Stats Card */}
+            {/* Stats Card (always shown) */}
             <DashboardStatsCard stats={stats} currentOdometer={lastOdometer} />
 
             {/* Interactive Dynamic Simulator */}
-            <Suspense fallback={<div className="h-64 bg-gray-100 dark:bg-gray-800 rounded-xl animate-pulse" />}>
-                <DynamicBudgetSimulator
-                    logs={logs}
-                    currentFuelPrice={stats.lastFuelPrice || 40.0}
-                />
-            </Suspense>
+            {!isHidden('simulator') && (
+                <Suspense fallback={<div className="h-64 bg-gray-100 dark:bg-gray-800 rounded-xl animate-pulse" />}>
+                    <DynamicBudgetSimulator
+                        logs={logs}
+                        currentFuelPrice={stats.lastFuelPrice || 40.0}
+                    />
+                </Suspense>
+            )}
 
             {/* Eco-Score Leaderboard */}
-            <Suspense fallback={<div className="h-32 bg-gray-100 dark:bg-gray-800 rounded-xl animate-pulse" />}>
-                <EcoScoreLeaderboard logs={logs} />
-            </Suspense>
+            {!isHidden('eco') && (
+                <Suspense fallback={<div className="h-32 bg-gray-100 dark:bg-gray-800 rounded-xl animate-pulse" />}>
+                    <EcoScoreLeaderboard logs={logs} />
+                </Suspense>
+            )}
 
             {/* Weekly/Monthly Summary */}
-            <WeeklySummary logs={logs} fuelPurchases={fuelPurchases} />
+            {!isHidden('weekly') && <WeeklySummary logs={logs} fuelPurchases={fuelPurchases} />}
 
             {/* Analytics Section */}
-            <Suspense fallback={<div className="h-64 bg-gray-100 dark:bg-gray-800 rounded-xl animate-pulse" />}>
-                <StationAnalysis fuelPurchases={fuelPurchases} />
-            </Suspense>
+            {!isHidden('station') && (
+                <Suspense fallback={<div className="h-64 bg-gray-100 dark:bg-gray-800 rounded-xl animate-pulse" />}>
+                    <StationAnalysis fuelPurchases={fuelPurchases} />
+                </Suspense>
+            )}
         </div>
     );
 };

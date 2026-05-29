@@ -7,6 +7,7 @@ import { AppLayout } from './components/layout/AppLayout';
 import { PwaReloadPrompt } from './components/pwa/PwaReloadPrompt';
 import { SuccessPopup } from './components/ui/SuccessPopup';
 import { Toaster } from './components/ui/Toaster';
+import { OnboardingModal } from './features/onboarding/OnboardingModal';
 import { BottomSheetModal } from './components/ui/BottomSheetModal';
 import { PageLoader } from './components/PageLoader';
 import { useAppStore } from './stores/appStore';
@@ -54,6 +55,7 @@ export default function App() {
   const [isDarkMode, setIsDarkMode] = React.useState(false);
   const [accentColor, setAccentColor] = React.useState<AccentColor>('blue');
   const [showSuccessPopup, setShowSuccessPopup] = React.useState(false);
+  const [showOnboarding, setShowOnboarding] = React.useState(false);
 
   const applyDark = (dark: boolean) => {
     setIsDarkMode(dark);
@@ -62,7 +64,16 @@ export default function App() {
 
   // Initial Hydration
   useEffect(() => {
-    hydrate();
+    const hydration = hydrate();
+
+    // Show the first-run onboarding once, only if there's still no data after
+    // hydration completes.
+    if (!getString(STORAGE_KEYS.onboarding)) {
+      Promise.resolve(hydration).then(() => {
+        const s = useAppStore.getState();
+        if (s.logs.length === 0 && s.fuelPurchases.length === 0) setShowOnboarding(true);
+      });
+    }
 
     // Gamification Check
     import('./features/gamification/store/gamificationStore').then(({ useGamificationStore }) => {
@@ -189,6 +200,11 @@ export default function App() {
 
       <PwaReloadPrompt />
       <Toaster />
+      <OnboardingModal
+        open={showOnboarding}
+        onStart={() => { setString(STORAGE_KEYS.onboarding, 'seen'); setShowOnboarding(false); openModal('entry'); }}
+        onClose={() => { setString(STORAGE_KEYS.onboarding, 'seen'); setShowOnboarding(false); }}
+      />
       <SuccessPopup isOpen={showSuccessPopup} onClose={() => setShowSuccessPopup(false)} logs={logs} />
 
       {/* Global Modals controlled by store state */}
