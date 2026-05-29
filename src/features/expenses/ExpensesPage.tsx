@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Wallet, Trash2, ArrowLeft, PlusCircle } from 'lucide-react';
+import { Wallet, Trash2, ArrowLeft, PlusCircle, Pencil, X } from 'lucide-react';
 import { useAppStore } from '../../stores/appStore';
 import { toast } from '../../stores/toastStore';
 import { expenseInputSchema, firstIssueMessage } from '../../lib/validation';
@@ -13,14 +13,41 @@ const today = () => new Date().toISOString().split('T')[0];
 const CATEGORIES = Object.keys(EXPENSE_CATEGORY_LABELS) as ExpenseCategory[];
 
 export const ExpensesPage: React.FC = () => {
-  const { logs, fuelPurchases, chargeSessions, expenses, serviceRecords, addExpense, deleteExpense } =
+  const { logs, fuelPurchases, chargeSessions, expenses, serviceRecords, addExpense, deleteExpense, updateExpense } =
     useAppStore();
 
   const year = new Date().getFullYear();
+  const [query, setQuery] = useState('');
+  const [editingId, setEditingId] = useState<string | null>(null);
+
+  const filteredExpenses = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return expenses;
+    return expenses.filter((e) =>
+      `${EXPENSE_CATEGORY_LABELS[e.category]} ${e.title || ''}`.toLowerCase().includes(q)
+    );
+  }, [expenses, query]);
   const [date, setDate] = useState(today());
   const [category, setCategory] = useState<ExpenseCategory>('toll');
   const [amount, setAmount] = useState('');
   const [title, setTitle] = useState('');
+
+  const resetForm = () => {
+    setEditingId(null);
+    setDate(today());
+    setCategory('toll');
+    setAmount('');
+    setTitle('');
+  };
+
+  const startEdit = (ex: Expense) => {
+    setEditingId(ex.id);
+    setDate(ex.date.split('T')[0]);
+    setCategory(ex.category);
+    setAmount(String(ex.amount));
+    setTitle(ex.title || '');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   const tco = useMemo(
     () =>
@@ -43,16 +70,20 @@ export const ExpensesPage: React.FC = () => {
       return;
     }
     const expense: Expense = {
-      id: crypto.randomUUID(),
+      id: editingId || crypto.randomUUID(),
       date: new Date(date).toISOString(),
       category,
       amount: parsed.data.amount,
       title: title.trim() || undefined,
     };
-    addExpense(expense);
-    toast.success('Gider eklendi.');
-    setAmount('');
-    setTitle('');
+    if (editingId) {
+      updateExpense(expense);
+      toast.success('Gider güncellendi.');
+    } else {
+      addExpense(expense);
+      toast.success('Gider eklendi.');
+    }
+    resetForm();
   };
 
   const costRows: Array<[string, number]> = [
@@ -120,15 +151,34 @@ export const ExpensesPage: React.FC = () => {
             <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Köprü geçişi…" className="mt-1 w-full px-3 py-2.5 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 border-0 focus:ring-2 focus:ring-primary-500" />
           </label>
         </div>
-        <button type="submit" className="w-full flex items-center justify-center gap-2 bg-amber-600 hover:bg-amber-700 text-white font-bold py-3 rounded-xl transition-colors">
-          <PlusCircle className="w-4 h-4" /> Gider Ekle
-        </button>
+        <div className="flex gap-2">
+          {editingId && (
+            <button type="button" onClick={resetForm} className="flex items-center justify-center gap-1 px-4 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 font-bold py-3 rounded-xl">
+              <X className="w-4 h-4" /> Vazgeç
+            </button>
+          )}
+          <button type="submit" className="flex-1 flex items-center justify-center gap-2 bg-amber-600 hover:bg-amber-700 text-white font-bold py-3 rounded-xl transition-colors">
+            <PlusCircle className="w-4 h-4" /> {editingId ? 'Güncelle' : 'Gider Ekle'}
+          </button>
+        </div>
       </form>
 
       {/* List */}
+      {expenses.length > 0 && (
+        <input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Giderlerde ara (kategori, açıklama)…"
+          aria-label="Giderlerde ara"
+          className="w-full px-4 py-2.5 rounded-xl bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 border-0 focus:ring-2 focus:ring-primary-500"
+        />
+      )}
       <div className="space-y-2">
         {expenses.length === 0 && <EmptyStateCompact message="Henüz gider yok. HGS, MTV, sigorta gibi masrafları ekle." emoji="🧾" />}
-        {expenses.map((ex) => (
+        {expenses.length > 0 && filteredExpenses.length === 0 && (
+          <p className="text-center text-sm text-gray-400 py-4">Eşleşen gider yok.</p>
+        )}
+        {filteredExpenses.map((ex) => (
           <div key={ex.id} className="flex items-center justify-between bg-white dark:bg-gray-800 rounded-xl p-3 border border-gray-100 dark:border-gray-700">
             <div>
               <p className="font-bold text-gray-900 dark:text-white">
@@ -138,9 +188,14 @@ export const ExpensesPage: React.FC = () => {
                 {formatDate(ex.date)}{ex.title ? ` · ${ex.title}` : ''}
               </p>
             </div>
-            <button onClick={() => { deleteExpense(ex.id); toast.info('Gider silindi.', { action: { label: 'Geri Al', onClick: () => addExpense(ex) } }); }} className="p-2 text-gray-400 hover:text-red-500" aria-label="Sil">
-              <Trash2 className="w-4 h-4" />
-            </button>
+            <div className="flex items-center">
+              <button onClick={() => startEdit(ex)} className="p-2 text-gray-400 hover:text-primary-500" aria-label="Düzenle">
+                <Pencil className="w-4 h-4" />
+              </button>
+              <button onClick={() => { deleteExpense(ex.id); toast.info('Gider silindi.', { action: { label: 'Geri Al', onClick: () => addExpense(ex) } }); }} className="p-2 text-gray-400 hover:text-red-500" aria-label="Sil">
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         ))}
       </div>

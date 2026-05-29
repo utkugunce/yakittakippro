@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Zap, Trash2, ArrowLeft, BatteryCharging } from 'lucide-react';
+import { Zap, Trash2, ArrowLeft, BatteryCharging, Pencil, X } from 'lucide-react';
 import { useAppStore } from '../../stores/appStore';
 import { toast } from '../../stores/toastStore';
 import { chargeSessionInputSchema, firstIssueMessage } from '../../lib/validation';
@@ -11,14 +11,41 @@ import type { ChargeSession } from '../../types';
 const today = () => new Date().toISOString().split('T')[0];
 
 export const ChargingPage: React.FC = () => {
-  const { chargeSessions, addChargeSession, deleteChargeSession } = useAppStore();
+  const { chargeSessions, addChargeSession, deleteChargeSession, updateChargeSession } = useAppStore();
 
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [date, setDate] = useState(today());
   const [kWh, setKWh] = useState('');
   const [cost, setCost] = useState('');
   const [chargeType, setChargeType] = useState<'ac' | 'dc'>('ac');
   const [location, setLocation] = useState<'home' | 'station'>('home');
   const [station, setStation] = useState('');
+
+  const stationOptions = useMemo(
+    () => Array.from(new Set(chargeSessions.map((c) => c.station).filter(Boolean))) as string[],
+    [chargeSessions]
+  );
+
+  const resetForm = () => {
+    setEditingId(null);
+    setDate(today());
+    setKWh('');
+    setCost('');
+    setChargeType('ac');
+    setLocation('home');
+    setStation('');
+  };
+
+  const startEdit = (c: ChargeSession) => {
+    setEditingId(c.id);
+    setDate(c.date.split('T')[0]);
+    setKWh(String(c.kWh));
+    setCost(String(c.cost));
+    setChargeType(c.chargeType || 'ac');
+    setLocation(c.location || 'home');
+    setStation(c.station || '');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   const stats = useMemo(() => {
     const totalKWh = chargeSessions.reduce((s, c) => s + c.kWh, 0);
@@ -39,7 +66,7 @@ export const ChargingPage: React.FC = () => {
       return;
     }
     const session: ChargeSession = {
-      id: crypto.randomUUID(),
+      id: editingId || crypto.randomUUID(),
       date: new Date(date).toISOString(),
       kWh: parsed.data.kWh,
       cost: parsed.data.cost,
@@ -48,11 +75,14 @@ export const ChargingPage: React.FC = () => {
       location,
       station: station.trim() || undefined,
     };
-    addChargeSession(session);
-    toast.success('Şarj kaydı eklendi.');
-    setKWh('');
-    setCost('');
-    setStation('');
+    if (editingId) {
+      updateChargeSession(session);
+      toast.success('Şarj kaydı güncellendi.');
+    } else {
+      addChargeSession(session);
+      toast.success('Şarj kaydı eklendi.');
+    }
+    resetForm();
   };
 
   return (
@@ -97,7 +127,8 @@ export const ChargingPage: React.FC = () => {
           </label>
           <label className="block">
             <span className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">İstasyon (ops.)</span>
-            <input value={station} onChange={(e) => setStation(e.target.value)} placeholder="Ev / Trugo / Eşarj…" className="mt-1 w-full px-3 py-2.5 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 border-0 focus:ring-2 focus:ring-primary-500" />
+            <input list="charge-stations" value={station} onChange={(e) => setStation(e.target.value)} placeholder="Ev / Trugo / Eşarj…" className="mt-1 w-full px-3 py-2.5 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 border-0 focus:ring-2 focus:ring-primary-500" />
+            <datalist id="charge-stations">{stationOptions.map((s) => <option key={s} value={s} />)}</datalist>
           </label>
           <label className="block">
             <span className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Enerji (kWh)</span>
@@ -122,9 +153,16 @@ export const ChargingPage: React.FC = () => {
             </select>
           </label>
         </div>
-        <button type="submit" className="w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl transition-colors">
-          <Zap className="w-4 h-4" /> Şarj Kaydı Ekle
-        </button>
+        <div className="flex gap-2">
+          {editingId && (
+            <button type="button" onClick={resetForm} className="flex items-center justify-center gap-1 px-4 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 font-bold py-3 rounded-xl">
+              <X className="w-4 h-4" /> Vazgeç
+            </button>
+          )}
+          <button type="submit" className="flex-1 flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl transition-colors">
+            <Zap className="w-4 h-4" /> {editingId ? 'Güncelle' : 'Şarj Kaydı Ekle'}
+          </button>
+        </div>
       </form>
 
       {/* List */}
@@ -142,9 +180,14 @@ export const ChargingPage: React.FC = () => {
                 {formatDate(c.date)} · {c.chargeType === 'dc' ? 'DC' : 'AC'} · {c.location === 'home' ? 'Ev' : c.station || 'İstasyon'}
               </p>
             </div>
-            <button onClick={() => { deleteChargeSession(c.id); toast.info('Kayıt silindi.', { action: { label: 'Geri Al', onClick: () => addChargeSession(c) } }); }} className="p-2 text-gray-400 hover:text-red-500" aria-label="Sil">
-              <Trash2 className="w-4 h-4" />
-            </button>
+            <div className="flex items-center">
+              <button onClick={() => startEdit(c)} className="p-2 text-gray-400 hover:text-primary-500" aria-label="Düzenle">
+                <Pencil className="w-4 h-4" />
+              </button>
+              <button onClick={() => { deleteChargeSession(c.id); toast.info('Kayıt silindi.', { action: { label: 'Geri Al', onClick: () => addChargeSession(c) } }); }} className="p-2 text-gray-400 hover:text-red-500" aria-label="Sil">
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         ))}
       </div>

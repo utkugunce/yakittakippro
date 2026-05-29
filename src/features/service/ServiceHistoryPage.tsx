@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Wrench, Trash2, ArrowLeft, PlusCircle, Image as ImageIcon } from 'lucide-react';
+import { Wrench, Trash2, ArrowLeft, PlusCircle, Image as ImageIcon, Pencil, X } from 'lucide-react';
 import { useAppStore } from '../../stores/appStore';
 import { toast } from '../../stores/toastStore';
 import { serviceInputSchema, firstIssueMessage } from '../../lib/validation';
@@ -11,8 +11,10 @@ import type { ServiceRecord } from '../../types';
 const today = () => new Date().toISOString().split('T')[0];
 
 export const ServiceHistoryPage: React.FC = () => {
-  const { serviceRecords, addServiceRecord, deleteServiceRecord } = useAppStore();
+  const { serviceRecords, addServiceRecord, deleteServiceRecord, updateServiceRecord } = useAppStore();
 
+  const [query, setQuery] = useState('');
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [date, setDate] = useState(today());
   const [title, setTitle] = useState('');
   const [cost, setCost] = useState('');
@@ -20,7 +22,34 @@ export const ServiceHistoryPage: React.FC = () => {
   const [provider, setProvider] = useState('');
   const [photoUrl, setPhotoUrl] = useState<string | undefined>(undefined);
 
+  const resetForm = () => {
+    setEditingId(null);
+    setDate(today());
+    setTitle('');
+    setCost('');
+    setOdometer('');
+    setProvider('');
+    setPhotoUrl(undefined);
+  };
+
+  const startEdit = (r: ServiceRecord) => {
+    setEditingId(r.id);
+    setDate(r.date.split('T')[0]);
+    setTitle(r.title);
+    setCost(String(r.cost));
+    setOdometer(r.odometer != null ? String(r.odometer) : '');
+    setProvider(r.provider || '');
+    setPhotoUrl(r.photoUrl);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const totalCost = useMemo(() => serviceRecords.reduce((s, r) => s + r.cost, 0), [serviceRecords]);
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return serviceRecords;
+    return serviceRecords.filter((r) => `${r.title} ${r.provider || ''}`.toLowerCase().includes(q));
+  }, [serviceRecords, query]);
 
   const handlePhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -39,7 +68,7 @@ export const ServiceHistoryPage: React.FC = () => {
       return;
     }
     const record: ServiceRecord = {
-      id: crypto.randomUUID(),
+      id: editingId || crypto.randomUUID(),
       date: new Date(date).toISOString(),
       title: parsed.data.title,
       cost: parsed.data.cost,
@@ -47,13 +76,14 @@ export const ServiceHistoryPage: React.FC = () => {
       provider: provider.trim() || undefined,
       photoUrl,
     };
-    addServiceRecord(record);
-    toast.success('Servis kaydı eklendi.');
-    setTitle('');
-    setCost('');
-    setOdometer('');
-    setProvider('');
-    setPhotoUrl(undefined);
+    if (editingId) {
+      updateServiceRecord(record);
+      toast.success('Servis kaydı güncellendi.');
+    } else {
+      addServiceRecord(record);
+      toast.success('Servis kaydı eklendi.');
+    }
+    resetForm();
   };
 
   return (
@@ -106,14 +136,33 @@ export const ServiceHistoryPage: React.FC = () => {
           <span>{photoUrl ? 'Fatura eklendi ✓' : 'Fatura fotoğrafı ekle (ops.)'}</span>
           <input type="file" accept="image/*" onChange={handlePhoto} className="hidden" />
         </label>
-        <button type="submit" className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-colors">
-          <PlusCircle className="w-4 h-4" /> Servis Kaydı Ekle
-        </button>
+        <div className="flex gap-2">
+          {editingId && (
+            <button type="button" onClick={resetForm} className="flex items-center justify-center gap-1 px-4 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 font-bold py-3 rounded-xl">
+              <X className="w-4 h-4" /> Vazgeç
+            </button>
+          )}
+          <button type="submit" className="flex-1 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-colors">
+            <PlusCircle className="w-4 h-4" /> {editingId ? 'Güncelle' : 'Servis Kaydı Ekle'}
+          </button>
+        </div>
       </form>
 
+      {serviceRecords.length > 0 && (
+        <input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Servislerde ara (işlem, servis adı)…"
+          aria-label="Servislerde ara"
+          className="w-full px-4 py-2.5 rounded-xl bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 border-0 focus:ring-2 focus:ring-primary-500"
+        />
+      )}
       <div className="space-y-2">
         {serviceRecords.length === 0 && <EmptyStateCompact message="Henüz servis kaydı yok. Yapılan bakımları ekle." emoji="🔧" />}
-        {serviceRecords.map((r) => (
+        {serviceRecords.length > 0 && filtered.length === 0 && (
+          <p className="text-center text-sm text-gray-400 py-4">Eşleşen kayıt yok.</p>
+        )}
+        {filtered.map((r) => (
           <div key={r.id} className="flex items-center justify-between bg-white dark:bg-gray-800 rounded-xl p-3 border border-gray-100 dark:border-gray-700">
             <div className="flex items-center gap-3 min-w-0">
               {r.photoUrl && <img src={r.photoUrl} alt="" className="w-10 h-10 rounded-lg object-cover shrink-0" />}
@@ -124,9 +173,14 @@ export const ServiceHistoryPage: React.FC = () => {
                 </p>
               </div>
             </div>
-            <button onClick={() => { deleteServiceRecord(r.id); toast.info('Kayıt silindi.', { action: { label: 'Geri Al', onClick: () => addServiceRecord(r) } }); }} className="p-2 text-gray-400 hover:text-red-500 shrink-0" aria-label="Sil">
-              <Trash2 className="w-4 h-4" />
-            </button>
+            <div className="flex items-center shrink-0">
+              <button onClick={() => startEdit(r)} className="p-2 text-gray-400 hover:text-primary-500" aria-label="Düzenle">
+                <Pencil className="w-4 h-4" />
+              </button>
+              <button onClick={() => { deleteServiceRecord(r.id); toast.info('Kayıt silindi.', { action: { label: 'Geri Al', onClick: () => addServiceRecord(r) } }); }} className="p-2 text-gray-400 hover:text-red-500" aria-label="Sil">
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         ))}
       </div>
